@@ -616,7 +616,28 @@ async function saveMonthData() {
   const monthKey = getCurrentMonthKey();
   const docRef = doc(db, "users", currentUser.uid, "months", monthKey);
 
-  currentMonthData.metadata.updatedAt = new Date();
+  // Ensure metadata exists for legacy data before saving to Firestore
+  if (!currentMonthData.metadata || typeof currentMonthData.metadata !== "object") {
+    currentMonthData.metadata = {
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  } else {
+    if (!currentMonthData.metadata.createdAt) {
+      currentMonthData.metadata.createdAt = new Date();
+    }
+    currentMonthData.metadata.updatedAt = new Date();
+  }
+
+  // Normalise potential legacy structures to avoid runtime errors
+  if (!Array.isArray(currentMonthData.incomes)) {
+    currentMonthData.incomes = [];
+  }
+
+  if (!Array.isArray(currentMonthData.expenses)) {
+    currentMonthData.expenses = [];
+  }
+
   await setDoc(docRef, currentMonthData);
 }
 
