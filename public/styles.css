@@ -267,6 +267,9 @@ body {
 .summary-card.balance::before {
   background: var(--info-color);
 }
+.summary-card.savings::before {
+  background: var(--accent-color);
+}
 
 .summary-value-container {
   display: flex;
@@ -358,6 +361,24 @@ body {
   border: 1px solid var(--border-color);
 }
 
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.table-actions .form-input,
+.table-actions .form-select {
+  min-width: 160px;
+}
+
+.table-select {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -378,6 +399,48 @@ body {
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+.table-sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.table-sort-button:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.sort-indicator {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1;
+  transition: transform 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+  opacity: 0.4;
+}
+
+.sort-indicator::before {
+  content: "\2195";
+}
+
+.sort-indicator.is-active {
+  opacity: 1;
+}
+
+.sort-indicator[data-direction="asc"]::before {
+  content: "\2191";
+}
+
+.sort-indicator[data-direction="desc"]::before {
+  content: "\2193";
 }
 
 .table tbody tr:hover {
@@ -425,6 +488,31 @@ body {
   font-weight: 500;
 }
 
+.category-meta {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.category-color-chip {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+}
+
+.category-color-label {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+[data-theme="dark"] .category-color-chip {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
 /* Forms */
 .form-group {
   margin-bottom: 20px;
@@ -435,6 +523,13 @@ body {
   margin-bottom: 8px;
   color: var(--text-primary);
   font-weight: 500;
+}
+
+.form-subtitle {
+  margin: 0 0 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
 }
 
 .form-input,
