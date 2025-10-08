@@ -361,6 +361,24 @@ body {
   border: 1px solid var(--border-color);
 }
 
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.table-actions .form-input,
+.table-actions .form-select {
+  min-width: 160px;
+}
+
+.table-select {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
