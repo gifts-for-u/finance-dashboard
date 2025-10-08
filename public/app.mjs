@@ -167,6 +167,7 @@ async function signOut(isForced = false) {
     localStorage.removeItem("userEmail");
     localStorage.removeItem("userPhotoURL");
     localStorage.removeItem("loginTimestamp");
+    localStorage.removeItem("lastActivityTimestamp");
 
     // Show appropriate message
     if (isForced) {
