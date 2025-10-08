@@ -1,4 +1,7 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+import {
+  initializeApp,
+  getApps,
+} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
 import {
   getFirestore,
   doc,
@@ -18,21 +21,29 @@ import {
   onAuthStateChanged,
   signOut as firebaseSignOut,
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+import { loadFirebaseConfig } from "./firebase-config.js";
 
-// Firebase Configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDxmGNxzxbX8UGBm82jn3PmzhiGq0GQT7Y",
-  authDomain: "finance-dashboard-10nfl.firebaseapp.com",
-  projectId: "finance-dashboard-10nfl",
-  storageBucket: "finance-dashboard-10nfl.firebasestorage.app",
-  messagingSenderId: "875656039609",
-  appId: "1:875656039609:web:4f5e11a81c58de312f9f68",
-};
+let app = null;
+let db = null;
+let auth = null;
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+const firebaseReady = initializeFirebase();
+
+async function initializeFirebase() {
+  const config = await loadFirebaseConfig();
+  if (!config?.apiKey) {
+    throw new Error(
+      "Firebase configuration is missing. Provide a valid config before using app.mjs.",
+    );
+  }
+
+  const existingApp = getApps()[0];
+  app = existingApp ?? initializeApp(config);
+  db = getFirestore(app);
+  auth = getAuth(app);
+
+  return { app, db, auth };
+}
 
 // Import session manager
 let sessionManager = null;
@@ -118,23 +129,30 @@ async function initializeSessionManager() {
 }
 
 // Check Authentication on Page Load
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    currentUser = user;
-    updateUserProfile(user);
+firebaseReady
+  .then(({ auth: resolvedAuth }) => {
+    onAuthStateChanged(resolvedAuth, async (user) => {
+      if (user) {
+        currentUser = user;
+        updateUserProfile(user);
 
-    // Initialize session manager after authentication
-    await initializeSessionManager();
-
-    await initializeDashboard();
-  } else {
-    // Not authenticated, redirect to login
-    if (sessionManager) {
-      sessionManager.destroy();
-    }
-    window.location.href = "/login.html";
-  }
-});
+        await initializeSessionManager();
+        await initializeDashboard();
+      } else {
+        if (sessionManager) {
+          sessionManager.destroy();
+        }
+        window.location.href = "/login.html";
+      }
+    });
+  })
+  .catch((error) => {
+    console.error("Failed to initialise Firebase auth state listener:", error);
+    showToast(
+      "Konfigurasi Firebase tidak valid. Perbarui pengaturan Firebase Anda dan muat ulang.",
+      "error",
+    );
+  });
 
 // Update User Profile Display
 function updateUserProfile(user) {
@@ -154,6 +172,7 @@ function updateUserProfile(user) {
 // Sign Out Function (updated to handle forced logout)
 async function signOut(isForced = false) {
   try {
+    await firebaseReady;
     // Destroy session manager
     if (sessionManager) {
       sessionManager.destroy();
@@ -167,6 +186,7 @@ async function signOut(isForced = false) {
     localStorage.removeItem("userEmail");
     localStorage.removeItem("userPhotoURL");
     localStorage.removeItem("loginTimestamp");
+    localStorage.removeItem("lastActivityTimestamp");
 
     // Show appropriate message
     if (isForced) {
@@ -195,6 +215,10 @@ function formatCurrency(amount) {
     currency: "IDR",
     minimumFractionDigits: 0,
   }).format(amount);
+}
+
+function formatPercentage(value) {
+  return `${value.toFixed(0)}%`;
 }
 
 function formatDate(date) {
@@ -392,6 +416,7 @@ function convertFirestoreDate(date) {
 async function initializeDashboard() {
   showLoading();
   try {
+    await firebaseReady;
     await loadCategories();
     await loadTemplates();
     await loadMonthData();
@@ -616,7 +641,28 @@ async function saveMonthData() {
   const monthKey = getCurrentMonthKey();
   const docRef = doc(db, "users", currentUser.uid, "months", monthKey);
 
-  currentMonthData.metadata.updatedAt = new Date();
+  // Ensure metadata exists for legacy data before saving to Firestore
+  if (!currentMonthData.metadata || typeof currentMonthData.metadata !== "object") {
+    currentMonthData.metadata = {
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  } else {
+    if (!currentMonthData.metadata.createdAt) {
+      currentMonthData.metadata.createdAt = new Date();
+    }
+    currentMonthData.metadata.updatedAt = new Date();
+  }
+
+  // Normalise potential legacy structures to avoid runtime errors
+  if (!Array.isArray(currentMonthData.incomes)) {
+    currentMonthData.incomes = [];
+  }
+
+  if (!Array.isArray(currentMonthData.expenses)) {
+    currentMonthData.expenses = [];
+  }
+
   await setDoc(docRef, currentMonthData);
 }
 
@@ -645,12 +691,22 @@ function updateSummaryCards() {
     .filter((expense) => isDoneDescription(expense?.description))
     .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
   const balance = totalIncome - totalDoneExpense;
+  const savingsRate = totalIncome > 0 ? (balance / totalIncome) * 100 : null;
 
   document.getElementById("totalIncome").textContent =
     formatCurrency(totalIncome);
   document.getElementById("totalExpense").textContent =
     formatCurrency(totalDoneExpense);
   document.getElementById("totalBalance").textContent = formatCurrency(balance);
+
+  const savingsRateElement = document.getElementById("savingsRate");
+  if (savingsRateElement) {
+    if (savingsRate === null) {
+      savingsRateElement.textContent = "—";
+    } else {
+      savingsRateElement.textContent = formatPercentage(savingsRate);
+    }
+  }
 
   // Color coding for balance
   const balanceElement = document.getElementById("totalBalance");
@@ -660,6 +716,18 @@ function updateSummaryCards() {
     balanceElement.style.color = "var(--danger-color)";
   } else {
     balanceElement.style.color = "var(--text-primary)";
+  }
+
+  if (savingsRateElement) {
+    if (savingsRate === null) {
+      savingsRateElement.style.color = "var(--text-secondary)";
+    } else if (savingsRate >= 10) {
+      savingsRateElement.style.color = "var(--success-color)";
+    } else if (savingsRate >= 0) {
+      savingsRateElement.style.color = "var(--warning-color)";
+    } else {
+      savingsRateElement.style.color = "var(--danger-color)";
+    }
   }
 }
 
