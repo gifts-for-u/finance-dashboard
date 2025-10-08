@@ -267,6 +267,9 @@ body {
 .summary-card.balance::before {
   background: var(--info-color);
 }
+.summary-card.savings::before {
+  background: var(--accent-color);
+}
 
 .summary-value-container {
   display: flex;
@@ -356,6 +359,24 @@ body {
   overflow-x: auto;
   border-radius: 8px;
   border: 1px solid var(--border-color);
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.table-actions .form-input,
+.table-actions .form-select {
+  min-width: 160px;
+}
+
+.table-select {
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
 .table {

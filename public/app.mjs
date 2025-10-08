@@ -1,4 +1,7 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+import {
+  initializeApp,
+  getApps,
+} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
 import {
   getFirestore,
   doc,
@@ -18,21 +21,29 @@ import {
   onAuthStateChanged,
   signOut as firebaseSignOut,
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+import { loadFirebaseConfig } from "./firebase-config.js";
 
-// Firebase Configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDxmGNxzxbX8UGBm82jn3PmzhiGq0GQT7Y",
-  authDomain: "finance-dashboard-10nfl.firebaseapp.com",
-  projectId: "finance-dashboard-10nfl",
-  storageBucket: "finance-dashboard-10nfl.firebasestorage.app",
-  messagingSenderId: "875656039609",
-  appId: "1:875656039609:web:4f5e11a81c58de312f9f68",
-};
+let app = null;
+let db = null;
+let auth = null;
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+const firebaseReady = initializeFirebase();
+
+async function initializeFirebase() {
+  const config = await loadFirebaseConfig();
+  if (!config?.apiKey) {
+    throw new Error(
+      "Firebase configuration is missing. Provide a valid config before using app.mjs.",
+    );
+  }
+
+  const existingApp = getApps()[0];
+  app = existingApp ?? initializeApp(config);
+  db = getFirestore(app);
+  auth = getAuth(app);
+
+  return { app, db, auth };
+}
 
 // Import session manager
 let sessionManager = null;
@@ -44,6 +55,27 @@ let currentMonthData = null;
 let expenseChart = null; // This will now hold ApexCharts instance
 let categories = [];
 let templates = [];
+
+// Table controls state
+let incomeSortOption = "date-desc";
+let expenseSortOption = "date-desc";
+let expenseCategoryFilter = "all";
+
+function getSelectValue(selectId, fallback) {
+  const select = document.getElementById(selectId);
+  if (select && select.value) {
+    return select.value;
+  }
+  return fallback;
+}
+
+function onDocumentReady(callback) {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", callback, { once: true });
+  } else {
+    callback();
+  }
+}
 
 // Default Categories
 const defaultCategories = [
@@ -118,23 +150,30 @@ async function initializeSessionManager() {
 }
 
 // Check Authentication on Page Load
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    currentUser = user;
-    updateUserProfile(user);
+firebaseReady
+  .then(({ auth: resolvedAuth }) => {
+    onAuthStateChanged(resolvedAuth, async (user) => {
+      if (user) {
+        currentUser = user;
+        updateUserProfile(user);
 
-    // Initialize session manager after authentication
-    await initializeSessionManager();
-
-    await initializeDashboard();
-  } else {
-    // Not authenticated, redirect to login
-    if (sessionManager) {
-      sessionManager.destroy();
-    }
-    window.location.href = "/login.html";
-  }
-});
+        await initializeSessionManager();
+        await initializeDashboard();
+      } else {
+        if (sessionManager) {
+          sessionManager.destroy();
+        }
+        window.location.href = "/login.html";
+      }
+    });
+  })
+  .catch((error) => {
+    console.error("Failed to initialise Firebase auth state listener:", error);
+    showToast(
+      "Konfigurasi Firebase tidak valid. Perbarui pengaturan Firebase Anda dan muat ulang.",
+      "error",
+    );
+  });
 
 // Update User Profile Display
 function updateUserProfile(user) {
@@ -154,6 +193,7 @@ function updateUserProfile(user) {
 // Sign Out Function (updated to handle forced logout)
 async function signOut(isForced = false) {
   try {
+    await firebaseReady;
     // Destroy session manager
     if (sessionManager) {
       sessionManager.destroy();
@@ -167,6 +207,7 @@ async function signOut(isForced = false) {
     localStorage.removeItem("userEmail");
     localStorage.removeItem("userPhotoURL");
     localStorage.removeItem("loginTimestamp");
+    localStorage.removeItem("lastActivityTimestamp");
 
     // Show appropriate message
     if (isForced) {
@@ -195,6 +236,10 @@ function formatCurrency(amount) {
     currency: "IDR",
     minimumFractionDigits: 0,
   }).format(amount);
+}
+
+function formatPercentage(value) {
+  return `${value.toFixed(0)}%`;
 }
 
 function formatDate(date) {
@@ -232,6 +277,74 @@ function formatShortDate(date) {
     month: "2-digit",
     year: "numeric",
   }).format(dateObj);
+}
+
+function formatDateForInput(date) {
+  if (!date) return "";
+  const parsed = convertFirestoreDate(date);
+  if (Number.isNaN(parsed.getTime())) {
+    return "";
+  }
+
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function parseDateInput(value) {
+  if (!value) {
+    return new Date();
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+  const parsed = new Date(year, (month || 1) - 1, day || 1);
+  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+}
+
+function getComparableDateValue(date) {
+  const parsed = convertFirestoreDate(date);
+  return parsed.getTime();
+}
+
+function getCategoryName(categoryId) {
+  const category = categories.find((cat) => cat.id === categoryId);
+  return category ? category.name : categoryId || "-";
+}
+
+function getDefaultEntryDate() {
+  const reference = currentDate instanceof Date ? new Date(currentDate) : null;
+  const today = new Date();
+
+  if (reference) {
+    if (
+      reference.getFullYear() === today.getFullYear() &&
+      reference.getMonth() === today.getMonth()
+    ) {
+      return today;
+    }
+    return reference;
+  }
+
+  return today;
+}
+
+function reapplyTableSearch(tableBodyId, searchInputId) {
+  const searchInput = document.getElementById(searchInputId);
+  if (!searchInput) {
+    return;
+  }
+
+  const searchTerm = searchInput.value.toLowerCase();
+  if (!searchTerm) {
+    return;
+  }
+
+  const rows = document.querySelectorAll(`#${tableBodyId} tr`);
+  rows.forEach((row) => {
+    const text = row.textContent.toLowerCase();
+    row.style.display = text.includes(searchTerm) ? "" : "none";
+  });
 }
 
 function isDoneDescription(text) {
@@ -341,6 +454,13 @@ function loadTheme() {
 function convertFirestoreData(data) {
   if (!data) return data;
 
+  if (data.incomes && Array.isArray(data.incomes)) {
+    data.incomes = data.incomes.map((income) => ({
+      ...income,
+      date: convertFirestoreDate(income.date),
+    }));
+  }
+
   // Convert expense dates
   if (data.expenses && Array.isArray(data.expenses)) {
     data.expenses = data.expenses.map((expense) => ({
@@ -392,6 +512,7 @@ function convertFirestoreDate(date) {
 async function initializeDashboard() {
   showLoading();
   try {
+    await firebaseReady;
     await loadCategories();
     await loadTemplates();
     await loadMonthData();
@@ -480,7 +601,7 @@ async function loadMonthData() {
           id: generateId(),
           amount: currentMonthData.income,
           source: "Migrated Income",
-          date: new Date(),
+          date: getDefaultEntryDate(),
           description: "Data pemasukan lama",
         },
       ];
@@ -616,7 +737,38 @@ async function saveMonthData() {
   const monthKey = getCurrentMonthKey();
   const docRef = doc(db, "users", currentUser.uid, "months", monthKey);
 
-  currentMonthData.metadata.updatedAt = new Date();
+  // Ensure metadata exists for legacy data before saving to Firestore
+  if (!currentMonthData.metadata || typeof currentMonthData.metadata !== "object") {
+    currentMonthData.metadata = {
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  } else {
+    if (!currentMonthData.metadata.createdAt) {
+      currentMonthData.metadata.createdAt = new Date();
+    }
+    currentMonthData.metadata.updatedAt = new Date();
+  }
+
+  // Normalise potential legacy structures to avoid runtime errors
+  if (!Array.isArray(currentMonthData.incomes)) {
+    currentMonthData.incomes = [];
+  }
+
+  if (!Array.isArray(currentMonthData.expenses)) {
+    currentMonthData.expenses = [];
+  }
+
+  currentMonthData.incomes = currentMonthData.incomes.map((income) => ({
+    ...income,
+    date: convertFirestoreDate(income.date),
+  }));
+
+  currentMonthData.expenses = currentMonthData.expenses.map((expense) => ({
+    ...expense,
+    date: convertFirestoreDate(expense.date),
+  }));
+
   await setDoc(docRef, currentMonthData);
 }
 
@@ -645,12 +797,22 @@ function updateSummaryCards() {
     .filter((expense) => isDoneDescription(expense?.description))
     .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
   const balance = totalIncome - totalDoneExpense;
+  const savingsRate = totalIncome > 0 ? (balance / totalIncome) * 100 : null;
 
   document.getElementById("totalIncome").textContent =
     formatCurrency(totalIncome);
   document.getElementById("totalExpense").textContent =
     formatCurrency(totalDoneExpense);
   document.getElementById("totalBalance").textContent = formatCurrency(balance);
+
+  const savingsRateElement = document.getElementById("savingsRate");
+  if (savingsRateElement) {
+    if (savingsRate === null) {
+      savingsRateElement.textContent = "—";
+    } else {
+      savingsRateElement.textContent = formatPercentage(savingsRate);
+    }
+  }
 
   // Color coding for balance
   const balanceElement = document.getElementById("totalBalance");
@@ -661,19 +823,58 @@ function updateSummaryCards() {
   } else {
     balanceElement.style.color = "var(--text-primary)";
   }
+
+  if (savingsRateElement) {
+    if (savingsRate === null) {
+      savingsRateElement.style.color = "var(--text-secondary)";
+    } else if (savingsRate >= 10) {
+      savingsRateElement.style.color = "var(--success-color)";
+    } else if (savingsRate >= 0) {
+      savingsRateElement.style.color = "var(--warning-color)";
+    } else {
+      savingsRateElement.style.color = "var(--danger-color)";
+    }
+  }
 }
 
 function updateIncomeTable() {
   const tbody = document.getElementById("incomeTableBody");
-  const incomes = currentMonthData?.incomes || [];
+  const incomes = Array.isArray(currentMonthData?.incomes)
+    ? [...currentMonthData.incomes]
+    : [];
 
-  if (incomes.length === 0) {
+  const activeSortOption = getSelectValue("incomeSort", incomeSortOption);
+  const sortedIncomes = incomes.sort((a, b) => {
+    switch (activeSortOption) {
+      case "date-asc":
+        return getComparableDateValue(a.date) - getComparableDateValue(b.date);
+      case "amount-desc":
+        return (b.amount || 0) - (a.amount || 0);
+      case "amount-asc":
+        return (a.amount || 0) - (b.amount || 0);
+      case "alpha-desc": {
+        const sourceA = (a.source || "").toLowerCase();
+        const sourceB = (b.source || "").toLowerCase();
+        return sourceB.localeCompare(sourceA, "id");
+      }
+      case "alpha-asc": {
+        const sourceA = (a.source || "").toLowerCase();
+        const sourceB = (b.source || "").toLowerCase();
+        return sourceA.localeCompare(sourceB, "id");
+      }
+      case "date-desc":
+      default:
+        return getComparableDateValue(b.date) - getComparableDateValue(a.date);
+    }
+  });
+
+  if (sortedIncomes.length === 0) {
     tbody.innerHTML =
       '<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">Belum ada pemasukan</td></tr>';
     return;
   }
 
-  tbody.innerHTML = incomes
+  tbody.innerHTML = sortedIncomes
     .map((income) => {
       // Safely format the date
       let formattedDate = "N/A";
@@ -708,22 +909,73 @@ function updateIncomeTable() {
       `;
     })
     .join("");
+
+  reapplyTableSearch("incomeTableBody", "searchIncome");
 }
 
 function updateExpenseTable() {
   const tbody = document.getElementById("expenseTableBody");
-  const expenses = currentMonthData?.expenses || [];
+  const expenses = Array.isArray(currentMonthData?.expenses)
+    ? [...currentMonthData.expenses]
+    : [];
 
-  if (expenses.length === 0) {
+  const activeCategoryFilter = getSelectValue(
+    "expenseCategoryFilter",
+    expenseCategoryFilter,
+  );
+
+  const filteredExpenses = expenses.filter((expense) => {
+    if (activeCategoryFilter === "all") {
+      return true;
+    }
+    return expense.category === activeCategoryFilter;
+  });
+
+  const activeSortOption = getSelectValue("expenseSort", expenseSortOption);
+  const sortedExpenses = filteredExpenses.sort((a, b) => {
+    switch (activeSortOption) {
+      case "date-asc":
+        return getComparableDateValue(a.date) - getComparableDateValue(b.date);
+      case "amount-desc":
+        return (b.amount || 0) - (a.amount || 0);
+      case "amount-asc":
+        return (a.amount || 0) - (b.amount || 0);
+      case "alpha-desc": {
+        const descA = (a.description || getCategoryName(a.category) || "").toLowerCase();
+        const descB = (b.description || getCategoryName(b.category) || "").toLowerCase();
+        return descB.localeCompare(descA, "id");
+      }
+      case "alpha-asc": {
+        const descA = (a.description || getCategoryName(a.category) || "").toLowerCase();
+        const descB = (b.description || getCategoryName(b.category) || "").toLowerCase();
+        return descA.localeCompare(descB, "id");
+      }
+      case "category-desc": {
+        const categoryA = getCategoryName(a.category).toLowerCase();
+        const categoryB = getCategoryName(b.category).toLowerCase();
+        return categoryB.localeCompare(categoryA, "id");
+      }
+      case "category-asc": {
+        const categoryA = getCategoryName(a.category).toLowerCase();
+        const categoryB = getCategoryName(b.category).toLowerCase();
+        return categoryA.localeCompare(categoryB, "id");
+      }
+      case "date-desc":
+      default:
+        return getComparableDateValue(b.date) - getComparableDateValue(a.date);
+    }
+  });
+
+  if (sortedExpenses.length === 0) {
     tbody.innerHTML =
       '<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">Belum ada pengeluaran</td></tr>';
     return;
   }
 
-  tbody.innerHTML = expenses
+  tbody.innerHTML = sortedExpenses
     .map((expense) => {
       const category = categories.find((cat) => cat.id === expense.category);
-      const categoryName = category ? category.name : expense.category;
+      const categoryName = getCategoryName(expense.category);
 
       // Safely format the date
       let formattedDate = "N/A";
@@ -767,6 +1019,8 @@ function updateExpenseTable() {
       `;
     })
     .join("");
+
+  reapplyTableSearch("expenseTableBody", "searchExpense");
 }
 
 function updateChart() {
@@ -905,11 +1159,35 @@ function updateChart() {
 
 function updateCategorySelect() {
   const select = document.getElementById("expenseCategory");
-  select.innerHTML = categories
-    .map(
-      (category) => `<option value="${category.id}">${category.name}</option>`
-    )
-    .join("");
+  if (select) {
+    select.innerHTML = categories
+      .map(
+        (category) => `<option value="${category.id}">${category.name}</option>`
+      )
+      .join("");
+  }
+
+  const filterSelect = document.getElementById("expenseCategoryFilter");
+  if (filterSelect) {
+    const previousValue = expenseCategoryFilter;
+    const options = [
+      '<option value="all">Semua Kategori</option>',
+      ...categories.map(
+        (category) =>
+          `<option value="${category.id}">${category.name}</option>`
+      ),
+    ];
+    filterSelect.innerHTML = options.join("");
+
+    if (
+      previousValue !== "all" &&
+      !categories.some((category) => category.id === previousValue)
+    ) {
+      expenseCategoryFilter = "all";
+    }
+
+    filterSelect.value = expenseCategoryFilter;
+  }
 }
 
 function updateCategoryList() {
@@ -997,6 +1275,7 @@ function showIncomeModal(incomeId = null) {
   const modalTitle = document.getElementById("incomeModalTitle");
   const submitText = document.getElementById("incomeSubmitText");
   const incomeHint = document.getElementById("incomeHint");
+  const incomeDateInput = document.getElementById("incomeDate");
 
   // Reset form
   document.getElementById("incomeForm").reset();
@@ -1009,6 +1288,11 @@ function showIncomeModal(incomeId = null) {
       incomeSourceInput.value = income.source || "";
       document.getElementById("incomeDescription").value =
         income.description || "";
+      if (incomeDateInput) {
+        const formattedDate = formatDateForInput(income.date);
+        incomeDateInput.value =
+          formattedDate || formatDateForInput(getDefaultEntryDate());
+      }
 
       modalTitle.textContent = "Edit Pemasukan";
       submitText.textContent = "Update";
@@ -1028,6 +1312,9 @@ function showIncomeModal(incomeId = null) {
 
     // Clear income ID
     incomeAmountInput.removeAttribute("data-income-id");
+    if (incomeDateInput) {
+      incomeDateInput.value = formatDateForInput(getDefaultEntryDate());
+    }
   }
 
   showModal("incomeModal");
@@ -1069,12 +1356,15 @@ function deleteIncome(incomeId) {
 
 // Expense Modal Functions
 function showExpenseModal(expenseId = null) {
-  const modal = document.getElementById("expenseModal");
   const form = document.getElementById("expenseForm");
+  const expenseDateInput = document.getElementById("expenseDate");
 
   // Reset form
   form.reset();
   document.getElementById("expenseId").value = expenseId || "";
+  if (expenseDateInput) {
+    expenseDateInput.value = formatDateForInput(getDefaultEntryDate());
+  }
 
   if (expenseId) {
     const expense = currentMonthData.expenses.find(
@@ -1087,6 +1377,11 @@ function showExpenseModal(expenseId = null) {
         expense.description || "";
       document.getElementById("expenseRecurring").checked =
         expense.isRecurring || false;
+      if (expenseDateInput) {
+        const formattedExpenseDate = formatDateForInput(expense.date);
+        expenseDateInput.value =
+          formattedExpenseDate || formatDateForInput(getDefaultEntryDate());
+      }
     }
   }
 
@@ -1195,7 +1490,7 @@ async function applyTemplates() {
           category: template.category,
           amount: template.amount,
           description: template.description,
-          date: new Date(),
+          date: getDefaultEntryDate(),
           isRecurring: true,
         }));
 
@@ -1585,7 +1880,7 @@ function importData() {
 }
 
 // Form Handlers
-document.addEventListener("DOMContentLoaded", () => {
+onDocumentReady(() => {
   // Income form handler
   document
     .getElementById("incomeForm")
@@ -1598,6 +1893,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const description = document
           .getElementById("incomeDescription")
           .value.trim();
+        const incomeDateElement = document.getElementById("incomeDate");
+        const dateValue = incomeDateElement ? incomeDateElement.value : "";
+        const date = parseDateInput(dateValue);
 
         // Get income ID if editing
         const incomeId = document
@@ -1631,6 +1929,7 @@ document.addEventListener("DOMContentLoaded", () => {
               amount,
               source,
               description,
+              date,
             };
             showToast("Pemasukan berhasil diperbarui", "success");
           }
@@ -1641,7 +1940,7 @@ document.addEventListener("DOMContentLoaded", () => {
             amount,
             source,
             description,
-            date: new Date(),
+            date,
           };
           currentMonthData.incomes.push(newIncome);
           showToast("Pemasukan berhasil ditambah", "success");
@@ -1668,6 +1967,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const amount = parseInt(document.getElementById("expenseAmount").value);
         const description = document.getElementById("expenseDescription").value;
         const isRecurring = document.getElementById("expenseRecurring").checked;
+        const expenseDateElement = document.getElementById("expenseDate");
+        const expenseDateValue = expenseDateElement
+          ? expenseDateElement.value
+          : "";
+        const date = parseDateInput(expenseDateValue);
 
         if (!currentMonthData) {
           currentMonthData = {
@@ -1692,6 +1996,7 @@ document.addEventListener("DOMContentLoaded", () => {
               category,
               amount,
               description,
+              date,
               isRecurring,
             };
           }
@@ -1702,7 +2007,7 @@ document.addEventListener("DOMContentLoaded", () => {
             category,
             amount,
             description,
-            date: new Date(),
+            date,
             isRecurring,
           };
           currentMonthData.expenses.push(newExpense);
@@ -1802,6 +2107,39 @@ document.addEventListener("DOMContentLoaded", () => {
       row.style.display = text.includes(searchTerm) ? "" : "none";
     });
   });
+
+  const incomeSortSelect = document.getElementById("incomeSort");
+  if (incomeSortSelect) {
+    incomeSortOption = incomeSortSelect.value || incomeSortOption;
+    incomeSortSelect.value = incomeSortOption;
+    incomeSortSelect.addEventListener("change", (event) => {
+      incomeSortOption = event.target.value;
+      updateIncomeTable();
+    });
+  }
+
+  const expenseSortSelect = document.getElementById("expenseSort");
+  if (expenseSortSelect) {
+    expenseSortOption = expenseSortSelect.value || expenseSortOption;
+    expenseSortSelect.value = expenseSortOption;
+    expenseSortSelect.addEventListener("change", (event) => {
+      expenseSortOption = event.target.value;
+      updateExpenseTable();
+    });
+  }
+
+  const expenseCategoryFilterSelect = document.getElementById(
+    "expenseCategoryFilter"
+  );
+  if (expenseCategoryFilterSelect) {
+    expenseCategoryFilter =
+      expenseCategoryFilterSelect.value || expenseCategoryFilter;
+    expenseCategoryFilterSelect.value = expenseCategoryFilter;
+    expenseCategoryFilterSelect.addEventListener("change", (event) => {
+      expenseCategoryFilter = event.target.value;
+      updateExpenseTable();
+    });
+  }
 
   // Initialize theme
   loadTheme();
