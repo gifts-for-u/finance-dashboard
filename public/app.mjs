@@ -61,6 +61,22 @@ let incomeSortOption = "date-desc";
 let expenseSortOption = "date-desc";
 let expenseCategoryFilter = "all";
 
+function getSelectValue(selectId, fallback) {
+  const select = document.getElementById(selectId);
+  if (select && select.value) {
+    return select.value;
+  }
+  return fallback;
+}
+
+function onDocumentReady(callback) {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", callback, { once: true });
+  } else {
+    callback();
+  }
+}
+
 // Default Categories
 const defaultCategories = [
   {
@@ -827,6 +843,9 @@ function updateIncomeTable() {
     ? [...currentMonthData.incomes]
     : [];
 
+  const activeSortOption = getSelectValue("incomeSort", incomeSortOption);
+  const sortedIncomes = incomes.sort((a, b) => {
+    switch (activeSortOption) {
   const sortedIncomes = incomes.sort((a, b) => {
     switch (incomeSortOption) {
       case "date-asc":
@@ -901,6 +920,54 @@ function updateExpenseTable() {
   const expenses = Array.isArray(currentMonthData?.expenses)
     ? [...currentMonthData.expenses]
     : [];
+
+  const activeCategoryFilter = getSelectValue(
+    "expenseCategoryFilter",
+    expenseCategoryFilter,
+  );
+
+  const filteredExpenses = expenses.filter((expense) => {
+    if (activeCategoryFilter === "all") {
+      return true;
+    }
+    return expense.category === activeCategoryFilter;
+  });
+
+  const activeSortOption = getSelectValue("expenseSort", expenseSortOption);
+  const sortedExpenses = filteredExpenses.sort((a, b) => {
+    switch (activeSortOption) {
+      case "date-asc":
+        return getComparableDateValue(a.date) - getComparableDateValue(b.date);
+      case "amount-desc":
+        return (b.amount || 0) - (a.amount || 0);
+      case "amount-asc":
+        return (a.amount || 0) - (b.amount || 0);
+      case "alpha-desc": {
+        const descA = (a.description || getCategoryName(a.category) || "").toLowerCase();
+        const descB = (b.description || getCategoryName(b.category) || "").toLowerCase();
+        return descB.localeCompare(descA, "id");
+      }
+      case "alpha-asc": {
+        const descA = (a.description || getCategoryName(a.category) || "").toLowerCase();
+        const descB = (b.description || getCategoryName(b.category) || "").toLowerCase();
+        return descA.localeCompare(descB, "id");
+      }
+      case "category-desc": {
+        const categoryA = getCategoryName(a.category).toLowerCase();
+        const categoryB = getCategoryName(b.category).toLowerCase();
+        return categoryB.localeCompare(categoryA, "id");
+      }
+      case "category-asc": {
+        const categoryA = getCategoryName(a.category).toLowerCase();
+        const categoryB = getCategoryName(b.category).toLowerCase();
+        return categoryA.localeCompare(categoryB, "id");
+      }
+      case "date-desc":
+      default:
+        return getComparableDateValue(b.date) - getComparableDateValue(a.date);
+    }
+  });
+
 
   const filteredExpenses = expenses.filter((expense) => {
     if (expenseCategoryFilter === "all") {
@@ -1857,7 +1924,7 @@ function importData() {
 }
 
 // Form Handlers
-document.addEventListener("DOMContentLoaded", () => {
+onDocumentReady(() => {
   // Income form handler
   document
     .getElementById("incomeForm")
@@ -2087,6 +2154,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const incomeSortSelect = document.getElementById("incomeSort");
   if (incomeSortSelect) {
+    incomeSortOption = incomeSortSelect.value || incomeSortOption;
     incomeSortSelect.value = incomeSortOption;
     incomeSortSelect.addEventListener("change", (event) => {
       incomeSortOption = event.target.value;
@@ -2096,6 +2164,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const expenseSortSelect = document.getElementById("expenseSort");
   if (expenseSortSelect) {
+    expenseSortOption = expenseSortSelect.value || expenseSortOption;
     expenseSortSelect.value = expenseSortOption;
     expenseSortSelect.addEventListener("change", (event) => {
       expenseSortOption = event.target.value;
@@ -2107,6 +2176,8 @@ document.addEventListener("DOMContentLoaded", () => {
     "expenseCategoryFilter"
   );
   if (expenseCategoryFilterSelect) {
+    expenseCategoryFilter =
+      expenseCategoryFilterSelect.value || expenseCategoryFilter;
     expenseCategoryFilterSelect.value = expenseCategoryFilter;
     expenseCategoryFilterSelect.addEventListener("change", (event) => {
       expenseCategoryFilter = event.target.value;
