@@ -846,6 +846,8 @@ function updateIncomeTable() {
   const activeSortOption = getSelectValue("incomeSort", incomeSortOption);
   const sortedIncomes = incomes.sort((a, b) => {
     switch (activeSortOption) {
+  const sortedIncomes = incomes.sort((a, b) => {
+    switch (incomeSortOption) {
       case "date-asc":
         return getComparableDateValue(a.date) - getComparableDateValue(b.date);
       case "amount-desc":
@@ -934,6 +936,48 @@ function updateExpenseTable() {
   const activeSortOption = getSelectValue("expenseSort", expenseSortOption);
   const sortedExpenses = filteredExpenses.sort((a, b) => {
     switch (activeSortOption) {
+      case "date-asc":
+        return getComparableDateValue(a.date) - getComparableDateValue(b.date);
+      case "amount-desc":
+        return (b.amount || 0) - (a.amount || 0);
+      case "amount-asc":
+        return (a.amount || 0) - (b.amount || 0);
+      case "alpha-desc": {
+        const descA = (a.description || getCategoryName(a.category) || "").toLowerCase();
+        const descB = (b.description || getCategoryName(b.category) || "").toLowerCase();
+        return descB.localeCompare(descA, "id");
+      }
+      case "alpha-asc": {
+        const descA = (a.description || getCategoryName(a.category) || "").toLowerCase();
+        const descB = (b.description || getCategoryName(b.category) || "").toLowerCase();
+        return descA.localeCompare(descB, "id");
+      }
+      case "category-desc": {
+        const categoryA = getCategoryName(a.category).toLowerCase();
+        const categoryB = getCategoryName(b.category).toLowerCase();
+        return categoryB.localeCompare(categoryA, "id");
+      }
+      case "category-asc": {
+        const categoryA = getCategoryName(a.category).toLowerCase();
+        const categoryB = getCategoryName(b.category).toLowerCase();
+        return categoryA.localeCompare(categoryB, "id");
+      }
+      case "date-desc":
+      default:
+        return getComparableDateValue(b.date) - getComparableDateValue(a.date);
+    }
+  });
+
+
+  const filteredExpenses = expenses.filter((expense) => {
+    if (expenseCategoryFilter === "all") {
+      return true;
+    }
+    return expense.category === expenseCategoryFilter;
+  });
+
+  const sortedExpenses = filteredExpenses.sort((a, b) => {
+    switch (expenseSortOption) {
       case "date-asc":
         return getComparableDateValue(a.date) - getComparableDateValue(b.date);
       case "amount-desc":
