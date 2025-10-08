@@ -3,14 +3,12 @@ import {
   getApps,
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
 import {
-  getAuth,
   signInWithPopup,
   GoogleAuthProvider,
   onAuthStateChanged,
   signOut,
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import {
-  getFirestore,
   doc,
   getDoc,
   setDoc,
@@ -18,6 +16,8 @@ import {
   query,
   getDocs,
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { ensureFirebase } from "./firebase-core.js";
+
 import { loadFirebaseConfig } from "./firebase-config.js";
 
 let firebaseApp = null;
@@ -25,6 +25,14 @@ let auth = null;
 let db = null;
 let provider = null;
 
+const firebaseReady = ensureFirebase().then((services) => {
+  auth = services.auth;
+  db = services.db;
+  provider = new GoogleAuthProvider();
+  provider.addScope("email");
+  provider.addScope("profile");
+  return { auth, db };
+});
 const firebaseReady = initializeFirebase();
 
 async function initializeFirebase() {

@@ -3,7 +3,6 @@ import {
   getApps,
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
 import {
-  getFirestore,
   doc,
   getDoc,
   setDoc,
@@ -17,10 +16,19 @@ import {
   disableNetwork,
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import {
-  getAuth,
   onAuthStateChanged,
   signOut as firebaseSignOut,
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+import { ensureFirebase } from "./firebase-core.js";
+
+let db = null;
+let auth = null;
+
+const firebaseReady = ensureFirebase().then((services) => {
+  db = services.db;
+  auth = services.auth;
+  return services;
+});
 import { loadFirebaseConfig } from "./firebase-config.js";
 
 let firebaseApp = null;
@@ -1009,6 +1017,9 @@ function updateIncomeTable() {
 
   updateSortIndicators("income", incomeSortOption);
 
+
+  updateSortIndicators("income", incomeSortOption);
+
   const sortedIncomes = incomes.sort((a, b) => {
     switch (incomeSortOption) {
       case "date-asc":
@@ -1118,6 +1129,16 @@ function updateExpenseTable() {
   const expenses = Array.isArray(currentMonthData?.expenses)
     ? [...currentMonthData.expenses]
     : [];
+
+  const activeCategoryFilter = getSelectValue(
+    "expenseCategoryFilter",
+    expenseCategoryFilter,
+  );
+
+  if (activeCategoryFilter !== expenseCategoryFilter) {
+    expenseCategoryFilter = activeCategoryFilter;
+  }
+
 
   const activeCategoryFilter = getSelectValue(
     "expenseCategoryFilter",
@@ -2453,6 +2474,7 @@ onDocumentReady(() => {
             color,
             isDefault: false,
           };
+
 
 
           await saveCategories();
