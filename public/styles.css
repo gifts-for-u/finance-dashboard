@@ -267,6 +267,9 @@ body {
 .summary-card.balance::before {
   background: var(--info-color);
 }
+.summary-card.savings::before {
+  background: var(--accent-color);
+}
 
 .summary-value-container {
   display: flex;

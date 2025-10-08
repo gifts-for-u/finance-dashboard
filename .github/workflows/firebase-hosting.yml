@@ -1,0 +1,51 @@
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Firebase CLI
+        uses: FirebaseExtended/action-install-cli@v1
+
+      - name: Deploy to Firebase Hosting
+        id: deploy
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+          projectId: finance-dashboard-10nfl
+
+      - name: Publish deployment summary
+        shell: bash
+        run: |
+          DETAILS_URL="${{ steps.deploy.outputs.details_url }}"
+          CHANNEL_ID="${{ steps.deploy.outputs.channel_id }}"
+
+          {
+            echo "### Firebase Hosting deployment"
+            echo
+            echo "- **Site**: https://finance-dashboard-10nfl.web.app"
+            if [ -n "$CHANNEL_ID" ]; then
+              echo "- **Channel**: $CHANNEL_ID"
+            fi
+            if [ -n "$DETAILS_URL" ]; then
+              echo "- **Release details**: $DETAILS_URL"
+            fi
+            echo "- **Workflow run**: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          } >> "$GITHUB_STEP_SUMMARY"
