@@ -32,12 +32,7 @@ The workflow performs the following steps:
 
 ### 4. Monitor deployments
 
-After each run, review the workflow logs in the **Actions** tab to confirm that the deploy succeeded. The workflow now publishes a run summary that includes the deployed channel, a direct link to the release in Firebase Hosting, and a link back to the workflow run for auditing.
-
-If you prefer to double-check outside of GitHub:
-
-* Open the [Firebase console](https://console.firebase.google.com/project/finance-dashboard-10nfl/hosting/sites) and confirm that the latest release timestamp matches your push.
-* Or, from your terminal, run `firebase hosting:releases:list --site finance-dashboard-10nfl --limit 1` to inspect the most recent production deploy.
+After each run, review the workflow logs in the **Actions** tab to confirm that the deploy succeeded. Firebase will show the new release in the Hosting panel, and the action output includes a direct link to the deployed site.
 
 ## Local development
 
