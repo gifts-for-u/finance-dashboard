@@ -215,6 +215,7 @@ async function signInWithGoogle() {
     localStorage.setItem("userEmail", user.email);
     localStorage.setItem("userPhotoURL", user.photoURL);
     localStorage.setItem("loginTimestamp", Date.now().toString());
+    localStorage.setItem("lastActivityTimestamp", Date.now().toString());
 
     // Redirect to dashboard
     window.location.href = "/dashboard";
@@ -256,6 +257,7 @@ onAuthStateChanged(auth, (user) => {
     if (window.location.pathname.includes("login.html")) {
       // Update login timestamp
       localStorage.setItem("loginTimestamp", Date.now().toString());
+      localStorage.setItem("lastActivityTimestamp", Date.now().toString());
       window.location.href = "/dashboard";
     }
   } else {
@@ -267,6 +269,7 @@ onAuthStateChanged(auth, (user) => {
     localStorage.removeItem("userEmail");
     localStorage.removeItem("userPhotoURL");
     localStorage.removeItem("loginTimestamp");
+    localStorage.removeItem("lastActivityTimestamp");
 
     // If not on login page, redirect to login
     if (!window.location.pathname.includes("login.html")) {

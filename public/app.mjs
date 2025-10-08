@@ -167,6 +167,7 @@ async function signOut(isForced = false) {
     localStorage.removeItem("userEmail");
     localStorage.removeItem("userPhotoURL");
     localStorage.removeItem("loginTimestamp");
+    localStorage.removeItem("lastActivityTimestamp");
 
     // Show appropriate message
     if (isForced) {
@@ -195,6 +196,10 @@ function formatCurrency(amount) {
     currency: "IDR",
     minimumFractionDigits: 0,
   }).format(amount);
+}
+
+function formatPercentage(value) {
+  return `${value.toFixed(0)}%`;
 }
 
 function formatDate(date) {
@@ -616,7 +621,28 @@ async function saveMonthData() {
   const monthKey = getCurrentMonthKey();
   const docRef = doc(db, "users", currentUser.uid, "months", monthKey);
 
-  currentMonthData.metadata.updatedAt = new Date();
+  // Ensure metadata exists for legacy data before saving to Firestore
+  if (!currentMonthData.metadata || typeof currentMonthData.metadata !== "object") {
+    currentMonthData.metadata = {
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  } else {
+    if (!currentMonthData.metadata.createdAt) {
+      currentMonthData.metadata.createdAt = new Date();
+    }
+    currentMonthData.metadata.updatedAt = new Date();
+  }
+
+  // Normalise potential legacy structures to avoid runtime errors
+  if (!Array.isArray(currentMonthData.incomes)) {
+    currentMonthData.incomes = [];
+  }
+
+  if (!Array.isArray(currentMonthData.expenses)) {
+    currentMonthData.expenses = [];
+  }
+
   await setDoc(docRef, currentMonthData);
 }
 
@@ -645,12 +671,22 @@ function updateSummaryCards() {
     .filter((expense) => isDoneDescription(expense?.description))
     .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
   const balance = totalIncome - totalDoneExpense;
+  const savingsRate = totalIncome > 0 ? (balance / totalIncome) * 100 : null;
 
   document.getElementById("totalIncome").textContent =
     formatCurrency(totalIncome);
   document.getElementById("totalExpense").textContent =
     formatCurrency(totalDoneExpense);
   document.getElementById("totalBalance").textContent = formatCurrency(balance);
+
+  const savingsRateElement = document.getElementById("savingsRate");
+  if (savingsRateElement) {
+    if (savingsRate === null) {
+      savingsRateElement.textContent = "—";
+    } else {
+      savingsRateElement.textContent = formatPercentage(savingsRate);
+    }
+  }
 
   // Color coding for balance
   const balanceElement = document.getElementById("totalBalance");
@@ -660,6 +696,18 @@ function updateSummaryCards() {
     balanceElement.style.color = "var(--danger-color)";
   } else {
     balanceElement.style.color = "var(--text-primary)";
+  }
+
+  if (savingsRateElement) {
+    if (savingsRate === null) {
+      savingsRateElement.style.color = "var(--text-secondary)";
+    } else if (savingsRate >= 10) {
+      savingsRateElement.style.color = "var(--success-color)";
+    } else if (savingsRate >= 0) {
+      savingsRateElement.style.color = "var(--warning-color)";
+    } else {
+      savingsRateElement.style.color = "var(--danger-color)";
+    }
   }
 }
 
