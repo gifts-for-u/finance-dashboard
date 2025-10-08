@@ -18,7 +18,7 @@ import {
 
 // Firebase Configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDxmGNxzxbX8UGBm82jn3PmzhiGq0GQT7Y",
+  apiKey: "FIREBASE_API",
   authDomain: "finance-dashboard-10nfl.firebaseapp.com",
   projectId: "finance-dashboard-10nfl",
   storageBucket: "finance-dashboard-10nfl.firebasestorage.app",
