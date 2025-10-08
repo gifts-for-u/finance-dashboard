@@ -2,6 +2,18 @@
 
 This project is a Firebase-hosted personal finance dashboard. The app uses Firebase Authentication and Firestore to manage user sessions, budgets, and spending data.
 
+## Application overview
+
+The dashboard helps you keep a running pulse on your monthly finances with a blend of quick-glance KPIs and drill-down views:
+
+* **Income & expense tracking** – Enter monthly income streams and categorised expenses to build a picture of where your money is going. The app separates mandatory bills, flexible spending, and savings goals so you can see exactly which buckets drive the totals.
+* **Budget variance highlights** – Each category shows both the planned amount and the actual amount captured that month, with colour-coded status indicators that make overspending or underspending easy to spot without reading raw numbers.
+* **Savings rate insight** – A "Rasio Tabungan" card compares leftover income with earnings to show how efficiently you are converting revenue into savings. The rate automatically shifts colour between positive and negative territory to emphasise progress or highlight risk.
+* **Historic context** – Navigate between months to spot trends in income, recurring expenses, and discretionary spending. The app keeps the context of the selected month so you can focus on a single period or flip quickly between them.
+* **Responsive presentation** – The interface is designed to work well on desktops and tablets, with summary metrics arranged in a grid and detailed category tables beneath so you can read the most important information first.
+
+Behind the scenes the application stores each month's data in Firestore, making it easy to load historical records, collaborate with a partner, or access the dashboard across devices without needing to manage infrastructure yourself.
+
 ## Continuous Deployment
 
 The repository includes a GitHub Actions workflow that automatically deploys the site to Firebase Hosting whenever changes are pushed to the `main` branch. You can also run the workflow manually from the **Actions** tab if you need to redeploy without making new commits.
