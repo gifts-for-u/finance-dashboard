@@ -23,6 +23,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
 import { loadFirebaseConfig } from "./firebase-config.js";
 
+let firebaseApp = null;
 let app = null;
 let db = null;
 let auth = null;
@@ -43,6 +44,13 @@ async function initializeFirebase() {
       "Firebase configuration is missing. Provide a valid config before using app.mjs.",
     );
   }
+
+  const existingApp = getApps()[0];
+  firebaseApp = existingApp ?? initializeApp(config);
+  db = getFirestore(firebaseApp);
+  auth = getAuth(firebaseApp);
+
+  return { app: firebaseApp, db, auth };
 
   const existingApp = getApps()[0];
   app = existingApp ?? initializeApp(config);
@@ -1001,6 +1009,38 @@ function updateIncomeTable() {
 
   updateSortIndicators("income", incomeSortOption);
 
+  const sortedIncomes = incomes.sort((a, b) => {
+    switch (incomeSortOption) {
+      case "date-asc":
+        return getComparableDateValue(a.date) - getComparableDateValue(b.date);
+      case "amount-desc":
+        return (b.amount || 0) - (a.amount || 0);
+      case "amount-asc":
+        return (a.amount || 0) - (b.amount || 0);
+      case "alpha-desc": {
+        const sourceA = (a.source || "").toLowerCase();
+        const sourceB = (b.source || "").toLowerCase();
+        return sourceB.localeCompare(sourceA, "id");
+      }
+      case "alpha-asc": {
+        const sourceA = (a.source || "").toLowerCase();
+        const sourceB = (b.source || "").toLowerCase();
+        return sourceA.localeCompare(sourceB, "id");
+      }
+      case "date-desc":
+      default:
+        return getComparableDateValue(b.date) - getComparableDateValue(a.date);
+    }
+  });
+
+
+  const selectedSort = getSelectValue("incomeSort", incomeSortOption);
+  if (selectedSort !== incomeSortOption) {
+    incomeSortOption = selectedSort;
+  }
+
+  updateSortIndicators("income", incomeSortOption);
+
   const activeSortOption = getSelectValue("incomeSort", incomeSortOption);
   const sortedIncomes = incomes.sort((a, b) => {
     switch (activeSortOption) {
@@ -1088,6 +1128,11 @@ function updateExpenseTable() {
     expenseCategoryFilter = activeCategoryFilter;
   }
 
+
+  if (activeCategoryFilter !== expenseCategoryFilter) {
+    expenseCategoryFilter = activeCategoryFilter;
+  }
+
   const filteredExpenses = expenses.filter((expense) => {
     if (activeCategoryFilter === "all") {
       return true;
@@ -1110,6 +1155,12 @@ function updateExpenseTable() {
     return expense.category === activeCategoryFilter;
   });
 
+  const selectedSort = getSelectValue("expenseSort", expenseSortOption);
+  if (selectedSort !== expenseSortOption) {
+    expenseSortOption = selectedSort;
+  }
+
+  updateSortIndicators("expense", expenseSortOption);
   const activeSortOption = getSelectValue("expenseSort", expenseSortOption);
   const sortedExpenses = filteredExpenses.sort((a, b) => {
     switch (activeSortOption) {
@@ -2386,6 +2437,23 @@ onDocumentReady(() => {
             name,
             color,
           };
+
+          await saveCategories();
+          updateCategoryList();
+          updateCategorySelect();
+          updateExpenseTable();
+          updateChart();
+          updateTemplatesList();
+          hideAddCategoryForm();
+          showToast("Kategori berhasil diperbarui", "success");
+        } else {
+          const newCategory = {
+            id: generateId(),
+            name,
+            color,
+            isDefault: false,
+          };
+
 
           await saveCategories();
           updateCategoryList();
