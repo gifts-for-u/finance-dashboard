@@ -1,8 +1,4 @@
 import {
-  initializeApp,
-  getApps,
-} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-import {
   doc,
   getDoc,
   setDoc,
@@ -29,55 +25,37 @@ const firebaseReady = ensureFirebase().then((services) => {
   auth = services.auth;
   return services;
 });
-import { loadFirebaseConfig } from "./firebase-config.js";
-
-let firebaseApp = null;
-let app = null;
-let db = null;
-let auth = null;
-
-const firebaseReady = initializeFirebase();
-
-
-let app = null;
-let db = null;
-let auth = null;
-
-const firebaseReady = initializeFirebase();
-
-async function initializeFirebase() {
-  const config = await loadFirebaseConfig();
-  if (!config?.apiKey) {
-    throw new Error(
-      "Firebase configuration is missing. Provide a valid config before using app.mjs.",
-    );
-  }
-
-  const existingApp = getApps()[0];
-  firebaseApp = existingApp ?? initializeApp(config);
-  db = getFirestore(firebaseApp);
-  auth = getAuth(firebaseApp);
-
-  return { app: firebaseApp, db, auth };
-
-  const existingApp = getApps()[0];
-  app = existingApp ?? initializeApp(config);
-  db = getFirestore(app);
-  auth = getAuth(app);
-
-  return { app, db, auth };
-}
 
 // Import session manager
 let sessionManager = null;
 
 // Global Variables
-let currentUser = null;
 let currentDate = new Date();
 let currentMonthData = null;
 let expenseChart = null; // This will now hold ApexCharts instance
 let categories = [];
 let templates = [];
+
+function getCurrentUser() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  return window.__FINANCE_DASHBOARD_CURRENT_USER__ ?? null;
+}
+
+function setCurrentUser(user) {
+  if (typeof window !== "undefined") {
+    window.__FINANCE_DASHBOARD_CURRENT_USER__ = user ?? null;
+  }
+}
+
+function requireCurrentUser() {
+  const user = getCurrentUser();
+  if (!user) {
+    throw new Error("No authenticated user is available for this operation.");
+  }
+  return user;
+}
 
 // Table controls state
 let incomeSortOption = "date-desc";
@@ -215,12 +193,13 @@ firebaseReady
   .then(({ auth: resolvedAuth }) => {
     onAuthStateChanged(resolvedAuth, async (user) => {
       if (user) {
-        currentUser = user;
+        setCurrentUser(user);
         updateUserProfile(user);
 
         await initializeSessionManager();
         await initializeDashboard();
       } else {
+        setCurrentUser(null);
         if (sessionManager) {
           sessionManager.destroy();
         }
@@ -262,6 +241,7 @@ async function signOut(isForced = false) {
     }
 
     await firebaseSignOut(auth);
+    setCurrentUser(null);
 
     // Clear any stored data
     localStorage.removeItem("userDisplayName");
@@ -716,25 +696,27 @@ async function initializeDashboard() {
 }
 
 async function loadCategories() {
-  const docRef = doc(db, "users", currentUser.uid, "categories", "main");
+  const user = requireCurrentUser();
+  const docRef = doc(db, "users", user.uid, "categories", "main");
   const docSnap = await getDoc(docRef);
 
   if (docSnap.exists()) {
     categories = docSnap.data().categories || [];
   } else {
-    // Initialize with default categories
     categories = [...defaultCategories];
     await saveCategories();
   }
 }
 
 async function saveCategories() {
-  const docRef = doc(db, "users", currentUser.uid, "categories", "main");
+  const user = requireCurrentUser();
+  const docRef = doc(db, "users", user.uid, "categories", "main");
   await setDoc(docRef, { categories });
 }
 
 async function loadTemplates() {
-  const docRef = doc(db, "users", currentUser.uid, "templates", "recurring");
+  const user = requireCurrentUser();
+  const docRef = doc(db, "users", user.uid, "templates", "recurring");
   const docSnap = await getDoc(docRef);
 
   if (docSnap.exists()) {
@@ -745,13 +727,15 @@ async function loadTemplates() {
 }
 
 async function saveTemplates() {
-  const docRef = doc(db, "users", currentUser.uid, "templates", "recurring");
+  const user = requireCurrentUser();
+  const docRef = doc(db, "users", user.uid, "templates", "recurring");
   await setDoc(docRef, { templates });
 }
 
 async function loadMonthData() {
   const monthKey = getCurrentMonthKey();
-  const docRef = doc(db, "users", currentUser.uid, "months", monthKey);
+  const user = requireCurrentUser();
+  const docRef = doc(db, "users", user.uid, "months", monthKey);
   const docSnap = await getDoc(docRef);
 
   if (docSnap.exists()) {
@@ -793,14 +777,15 @@ async function loadMonthData() {
 async function migrateOctoberDataManually() {
   // Only run if explicitly called and for specific user
   const AUTHORIZED_USER_ID = "YOUR_USER_ID_HERE"; // Replace with your actual user ID
+  const user = requireCurrentUser();
 
-  if (currentUser.uid !== AUTHORIZED_USER_ID) {
+  if (user.uid !== AUTHORIZED_USER_ID) {
     showToast("Migration not authorized for this user", "warning");
     return;
   }
 
   // Check if already migrated
-  const migrationRef = doc(db, "users", currentUser.uid, "migration", "status");
+  const migrationRef = doc(db, "users", user.uid, "migration", "status");
   const migrationDoc = await getDoc(migrationRef);
 
   if (migrationDoc.exists() && migrationDoc.data().completed) {
@@ -892,7 +877,7 @@ async function migrateOctoberDataManually() {
   await setDoc(migrationRef, {
     completed: true,
     completedAt: new Date(),
-    userId: currentUser.uid,
+    userId: user.uid,
   });
 
   showToast("Data Oktober berhasil dimigrasikan", "success");
@@ -902,7 +887,8 @@ async function saveMonthData() {
   if (!currentMonthData) return;
 
   const monthKey = getCurrentMonthKey();
-  const docRef = doc(db, "users", currentUser.uid, "months", monthKey);
+  const user = requireCurrentUser();
+  const docRef = doc(db, "users", user.uid, "months", monthKey);
 
   // Ensure metadata exists for legacy data before saving to Firestore
   if (!currentMonthData.metadata || typeof currentMonthData.metadata !== "object") {
@@ -1017,44 +1003,6 @@ function updateIncomeTable() {
 
   updateSortIndicators("income", incomeSortOption);
 
-
-  updateSortIndicators("income", incomeSortOption);
-
-  const sortedIncomes = incomes.sort((a, b) => {
-    switch (incomeSortOption) {
-      case "date-asc":
-        return getComparableDateValue(a.date) - getComparableDateValue(b.date);
-      case "amount-desc":
-        return (b.amount || 0) - (a.amount || 0);
-      case "amount-asc":
-        return (a.amount || 0) - (b.amount || 0);
-      case "alpha-desc": {
-        const sourceA = (a.source || "").toLowerCase();
-        const sourceB = (b.source || "").toLowerCase();
-        return sourceB.localeCompare(sourceA, "id");
-      }
-      case "alpha-asc": {
-        const sourceA = (a.source || "").toLowerCase();
-        const sourceB = (b.source || "").toLowerCase();
-        return sourceA.localeCompare(sourceB, "id");
-      }
-      case "date-desc":
-      default:
-        return getComparableDateValue(b.date) - getComparableDateValue(a.date);
-    }
-  });
-
-
-  const selectedSort = getSelectValue("incomeSort", incomeSortOption);
-  if (selectedSort !== incomeSortOption) {
-    incomeSortOption = selectedSort;
-  }
-
-  updateSortIndicators("income", incomeSortOption);
-
-  const activeSortOption = getSelectValue("incomeSort", incomeSortOption);
-  const sortedIncomes = incomes.sort((a, b) => {
-    switch (activeSortOption) {
   const sortedIncomes = incomes.sort((a, b) => {
     switch (incomeSortOption) {
       case "date-asc":
@@ -1139,21 +1087,6 @@ function updateExpenseTable() {
     expenseCategoryFilter = activeCategoryFilter;
   }
 
-
-  const activeCategoryFilter = getSelectValue(
-    "expenseCategoryFilter",
-    expenseCategoryFilter,
-  );
-
-  if (activeCategoryFilter !== expenseCategoryFilter) {
-    expenseCategoryFilter = activeCategoryFilter;
-  }
-
-
-  if (activeCategoryFilter !== expenseCategoryFilter) {
-    expenseCategoryFilter = activeCategoryFilter;
-  }
-
   const filteredExpenses = expenses.filter((expense) => {
     if (activeCategoryFilter === "all") {
       return true;
@@ -1167,63 +1100,6 @@ function updateExpenseTable() {
   }
 
   updateSortIndicators("expense", expenseSortOption);
-
-
-  const filteredExpenses = expenses.filter((expense) => {
-    if (activeCategoryFilter === "all") {
-      return true;
-    }
-    return expense.category === activeCategoryFilter;
-  });
-
-  const selectedSort = getSelectValue("expenseSort", expenseSortOption);
-  if (selectedSort !== expenseSortOption) {
-    expenseSortOption = selectedSort;
-  }
-
-  updateSortIndicators("expense", expenseSortOption);
-  const activeSortOption = getSelectValue("expenseSort", expenseSortOption);
-  const sortedExpenses = filteredExpenses.sort((a, b) => {
-    switch (activeSortOption) {
-      case "date-asc":
-        return getComparableDateValue(a.date) - getComparableDateValue(b.date);
-      case "amount-desc":
-        return (b.amount || 0) - (a.amount || 0);
-      case "amount-asc":
-        return (a.amount || 0) - (b.amount || 0);
-      case "alpha-desc": {
-        const descA = (a.description || getCategoryName(a.category) || "").toLowerCase();
-        const descB = (b.description || getCategoryName(b.category) || "").toLowerCase();
-        return descB.localeCompare(descA, "id");
-      }
-      case "alpha-asc": {
-        const descA = (a.description || getCategoryName(a.category) || "").toLowerCase();
-        const descB = (b.description || getCategoryName(b.category) || "").toLowerCase();
-        return descA.localeCompare(descB, "id");
-      }
-      case "category-desc": {
-        const categoryA = getCategoryName(a.category).toLowerCase();
-        const categoryB = getCategoryName(b.category).toLowerCase();
-        return categoryB.localeCompare(categoryA, "id");
-      }
-      case "category-asc": {
-        const categoryA = getCategoryName(a.category).toLowerCase();
-        const categoryB = getCategoryName(b.category).toLowerCase();
-        return categoryA.localeCompare(categoryB, "id");
-      }
-      case "date-desc":
-      default:
-        return getComparableDateValue(b.date) - getComparableDateValue(a.date);
-    }
-  });
-
-
-  const filteredExpenses = expenses.filter((expense) => {
-    if (expenseCategoryFilter === "all") {
-      return true;
-    }
-    return expense.category === expenseCategoryFilter;
-  });
 
   const sortedExpenses = filteredExpenses.sort((a, b) => {
     switch (expenseSortOption) {
@@ -2458,24 +2334,6 @@ onDocumentReady(() => {
             name,
             color,
           };
-
-          await saveCategories();
-          updateCategoryList();
-          updateCategorySelect();
-          updateExpenseTable();
-          updateChart();
-          updateTemplatesList();
-          hideAddCategoryForm();
-          showToast("Kategori berhasil diperbarui", "success");
-        } else {
-          const newCategory = {
-            id: generateId(),
-            name,
-            color,
-            isDefault: false,
-          };
-
-
 
           await saveCategories();
           updateCategoryList();
