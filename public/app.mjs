@@ -197,6 +197,10 @@ function formatCurrency(amount) {
   }).format(amount);
 }
 
+function formatPercentage(value) {
+  return `${value.toFixed(0)}%`;
+}
+
 function formatDate(date) {
   return new Intl.DateTimeFormat("id-ID", {
     year: "numeric",
@@ -666,12 +670,22 @@ function updateSummaryCards() {
     .filter((expense) => isDoneDescription(expense?.description))
     .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
   const balance = totalIncome - totalDoneExpense;
+  const savingsRate = totalIncome > 0 ? (balance / totalIncome) * 100 : null;
 
   document.getElementById("totalIncome").textContent =
     formatCurrency(totalIncome);
   document.getElementById("totalExpense").textContent =
     formatCurrency(totalDoneExpense);
   document.getElementById("totalBalance").textContent = formatCurrency(balance);
+
+  const savingsRateElement = document.getElementById("savingsRate");
+  if (savingsRateElement) {
+    if (savingsRate === null) {
+      savingsRateElement.textContent = "—";
+    } else {
+      savingsRateElement.textContent = formatPercentage(savingsRate);
+    }
+  }
 
   // Color coding for balance
   const balanceElement = document.getElementById("totalBalance");
@@ -681,6 +695,18 @@ function updateSummaryCards() {
     balanceElement.style.color = "var(--danger-color)";
   } else {
     balanceElement.style.color = "var(--text-primary)";
+  }
+
+  if (savingsRateElement) {
+    if (savingsRate === null) {
+      savingsRateElement.style.color = "var(--text-secondary)";
+    } else if (savingsRate >= 10) {
+      savingsRateElement.style.color = "var(--success-color)";
+    } else if (savingsRate >= 0) {
+      savingsRateElement.style.color = "var(--warning-color)";
+    } else {
+      savingsRateElement.style.color = "var(--danger-color)";
+    }
   }
 }
 
