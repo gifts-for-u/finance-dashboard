@@ -71,6 +71,10 @@
             <div class="summary-value" id="totalBalance">Rp 0</div>
             <div class="summary-label">Saldo</div>
           </div>
+          <div class="summary-card savings">
+            <div class="summary-value" id="savingsRate">—</div>
+            <div class="summary-label">Rasio Tabungan</div>
+          </div>
         </div>
 
         <!-- Action Buttons -->
@@ -122,14 +126,25 @@
         <div class="card">
           <div class="card-header">
             <h3 class="card-title">Daftar Pemasukan</h3>
-            <div>
+            <div class="table-actions">
               <input
                 type="text"
                 placeholder="Cari pemasukan..."
                 id="searchIncome"
                 class="form-input"
-                style="width: 200px"
               />
+              <select
+                id="incomeSort"
+                class="form-select table-select"
+                aria-label="Urutkan pemasukan"
+              >
+                <option value="date-desc">Tanggal Terbaru</option>
+                <option value="date-asc">Tanggal Terlama</option>
+                <option value="amount-desc">Jumlah Terbesar</option>
+                <option value="amount-asc">Jumlah Terkecil</option>
+                <option value="alpha-asc">Nama A-Z</option>
+                <option value="alpha-desc">Nama Z-A</option>
+              </select>
             </div>
           </div>
           <div class="table-container">
@@ -154,14 +169,34 @@
         <div class="card">
           <div class="card-header">
             <h3 class="card-title">Daftar Pengeluaran</h3>
-            <div>
+            <div class="table-actions">
               <input
                 type="text"
                 placeholder="Cari pengeluaran..."
                 id="searchExpense"
                 class="form-input"
-                style="width: 200px"
               />
+              <select
+                id="expenseSort"
+                class="form-select table-select"
+                aria-label="Urutkan pengeluaran"
+              >
+                <option value="date-desc">Tanggal Terbaru</option>
+                <option value="date-asc">Tanggal Terlama</option>
+                <option value="amount-desc">Jumlah Terbesar</option>
+                <option value="amount-asc">Jumlah Terkecil</option>
+                <option value="alpha-asc">Nama A-Z</option>
+                <option value="alpha-desc">Nama Z-A</option>
+                <option value="category-asc">Kategori A-Z</option>
+                <option value="category-desc">Kategori Z-A</option>
+              </select>
+              <select
+                id="expenseCategoryFilter"
+                class="form-select table-select"
+                aria-label="Filter kategori pengeluaran"
+              >
+                <option value="all">Semua Kategori</option>
+              </select>
             </div>
           </div>
           <div class="table-container">
@@ -243,6 +278,10 @@
             ></textarea>
           </div>
           <div class="form-group">
+            <label class="form-label">Tanggal</label>
+            <input type="date" id="incomeDate" class="form-input" required />
+          </div>
+          <div class="form-group">
             <button type="submit" class="btn">
               <i class="fas fa-save"></i>
               <span id="incomeSubmitText">Simpan</span>
@@ -278,6 +317,10 @@
               placeholder="Masukkan jumlah pengeluaran"
               required
             />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tanggal</label>
+            <input type="date" id="expenseDate" class="form-input" required />
           </div>
           <div class="form-group">
             <label class="form-label">Keterangan</label>
