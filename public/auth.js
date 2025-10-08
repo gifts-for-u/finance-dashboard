@@ -1,4 +1,8 @@
 import {
+  initializeApp,
+  getApps,
+} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+import {
   signInWithPopup,
   GoogleAuthProvider,
   onAuthStateChanged,
@@ -14,6 +18,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import { ensureFirebase } from "./firebase-core.js";
 
+import { loadFirebaseConfig } from "./firebase-config.js";
+
+let firebaseApp = null;
 let auth = null;
 let db = null;
 let provider = null;
@@ -26,6 +33,26 @@ const firebaseReady = ensureFirebase().then((services) => {
   provider.addScope("profile");
   return { auth, db };
 });
+const firebaseReady = initializeFirebase();
+
+async function initializeFirebase() {
+  const config = await loadFirebaseConfig();
+  if (!config?.apiKey) {
+    throw new Error(
+      "Firebase configuration is missing. Provide a valid config before using auth.js.",
+    );
+  }
+
+  const existingApp = getApps()[0];
+  firebaseApp = existingApp ?? initializeApp(config);
+  auth = getAuth(firebaseApp);
+  db = getFirestore(firebaseApp);
+  provider = new GoogleAuthProvider();
+  provider.addScope("email");
+  provider.addScope("profile");
+
+  return { auth, db };
+}
 
 // Theme Functions
 function toggleTheme() {
