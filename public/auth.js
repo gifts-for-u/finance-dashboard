@@ -1,4 +1,7 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+import {
+  initializeApp,
+  getApps,
+} from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
 import {
   getAuth,
   signInWithPopup,
@@ -15,26 +18,33 @@ import {
   query,
   getDocs,
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+import { loadFirebaseConfig } from "./firebase-config.js";
 
-// Firebase Configuration
-const firebaseConfig = {
-  apiKey: "FIREBASE_API",
-  authDomain: "finance-dashboard-10nfl.firebaseapp.com",
-  projectId: "finance-dashboard-10nfl",
-  storageBucket: "finance-dashboard-10nfl.firebasestorage.app",
-  messagingSenderId: "875656039609",
-  appId: "1:875656039609:web:4f5e11a81c58de312f9f68",
-};
+let firebaseApp = null;
+let auth = null;
+let db = null;
+let provider = null;
 
-// Initialize Firebase
-const firebaseApp = initializeApp(firebaseConfig);
-const auth = getAuth(firebaseApp);
-const db = getFirestore(firebaseApp);
-const provider = new GoogleAuthProvider();
+const firebaseReady = initializeFirebase();
 
-// Configure Google provider
-provider.addScope("email");
-provider.addScope("profile");
+async function initializeFirebase() {
+  const config = await loadFirebaseConfig();
+  if (!config?.apiKey) {
+    throw new Error(
+      "Firebase configuration is missing. Provide a valid config before using auth.js.",
+    );
+  }
+
+  const existingApp = getApps()[0];
+  firebaseApp = existingApp ?? initializeApp(config);
+  auth = getAuth(firebaseApp);
+  db = getFirestore(firebaseApp);
+  provider = new GoogleAuthProvider();
+  provider.addScope("email");
+  provider.addScope("profile");
+
+  return { auth, db };
+}
 
 // Theme Functions
 function toggleTheme() {
@@ -81,7 +91,7 @@ function showError(message) {
 }
 
 // Check if user is accessing protected pages without authentication
-function checkPageAccess() {
+async function checkPageAccess() {
   const currentPath = window.location.pathname;
   const protectedPaths = ["/index.html", "/dashboard", "/"];
 
@@ -92,11 +102,11 @@ function checkPageAccess() {
 
   // If on protected path, check authentication
   if (protectedPaths.includes(currentPath) || currentPath === "/") {
+    await firebaseReady;
     return new Promise((resolve) => {
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         unsubscribe();
         if (!user) {
-          // Not authenticated, redirect to login
           window.location.href = "/login.html";
         }
         resolve(user);
@@ -108,6 +118,7 @@ function checkPageAccess() {
 // Data Migration Function - Now only runs if user has existing anonymous data
 async function migrateAnonymousData(newUserId) {
   try {
+    await firebaseReady;
     // Get the anonymous user ID from localStorage if exists
     const anonymousUserId = localStorage.getItem("anonymousUserId");
 
@@ -196,6 +207,7 @@ async function signInWithGoogle() {
   showLoading();
 
   try {
+    await firebaseReady;
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
 
@@ -239,6 +251,11 @@ async function signInWithGoogle() {
       case "auth/too-many-requests":
         errorMessage += "Terlalu banyak percobaan login. Coba lagi nanti.";
         break;
+      case "auth/invalid-api-key":
+      case "auth/api-key-not-valid":
+        errorMessage +=
+          "Konfigurasi Firebase tidak valid. Pastikan API key dan kredensial proyek sudah diperbarui.";
+        break;
       default:
         errorMessage += error.message;
     }
@@ -247,38 +264,41 @@ async function signInWithGoogle() {
   }
 }
 
-// Check Authentication State
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    // User is signed in
-    console.log("User already signed in, redirecting to dashboard");
+firebaseReady
+  .then(({ auth: resolvedAuth }) => {
+    onAuthStateChanged(resolvedAuth, (user) => {
+      if (user) {
+        console.log("User already signed in, redirecting to dashboard");
 
-    // Check if user is on login page
-    if (window.location.pathname.includes("login.html")) {
-      // Update login timestamp
-      localStorage.setItem("loginTimestamp", Date.now().toString());
-      localStorage.setItem("lastActivityTimestamp", Date.now().toString());
-      window.location.href = "/dashboard";
-    }
-  } else {
-    // User is signed out
-    console.log("User not authenticated");
+        if (window.location.pathname.includes("login.html")) {
+          localStorage.setItem("loginTimestamp", Date.now().toString());
+          localStorage.setItem("lastActivityTimestamp", Date.now().toString());
+          window.location.href = "/dashboard";
+        }
+      } else {
+        console.log("User not authenticated");
 
-    // Clear user data from localStorage
-    localStorage.removeItem("userDisplayName");
-    localStorage.removeItem("userEmail");
-    localStorage.removeItem("userPhotoURL");
-    localStorage.removeItem("loginTimestamp");
-    localStorage.removeItem("lastActivityTimestamp");
+        localStorage.removeItem("userDisplayName");
+        localStorage.removeItem("userEmail");
+        localStorage.removeItem("userPhotoURL");
+        localStorage.removeItem("loginTimestamp");
+        localStorage.removeItem("lastActivityTimestamp");
 
-    // If not on login page, redirect to login
-    if (!window.location.pathname.includes("login.html")) {
-      window.location.href = "/login.html";
-    } else {
-      hideLoading();
-    }
-  }
-});
+        if (!window.location.pathname.includes("login.html")) {
+          window.location.href = "/login.html";
+        } else {
+          hideLoading();
+        }
+      }
+    });
+  })
+  .catch((error) => {
+    console.error("Failed to initialise Firebase auth state listener:", error);
+    showError(
+      "Konfigurasi Firebase tidak valid. Perbarui pengaturan proyek Anda dan coba lagi.",
+    );
+    hideLoading();
+  });
 
 // Make functions available globally
 window.signInWithGoogle = signInWithGoogle;
@@ -287,5 +307,7 @@ window.toggleTheme = toggleTheme;
 // Initialize theme and check page access on load
 document.addEventListener("DOMContentLoaded", () => {
   loadTheme();
-  checkPageAccess();
+  checkPageAccess().catch((error) => {
+    console.error("Failed to verify authentication status:", error);
+  });
 });

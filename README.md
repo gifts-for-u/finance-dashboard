@@ -71,3 +71,20 @@ If you prefer to double-check outside of GitHub:
 4. Open http://localhost:5000 to view the app with live-reloading.
 
 When you are satisfied with your changes, commit and push them to `main` to trigger an automated deployment.
+
+## Firebase configuration
+
+The application now reads its Firebase credentials at runtime so deployments automatically use the correct project without hard-coding keys in source control.
+
+### Hosting deployments
+
+When the site runs on Firebase Hosting, the scripts fetch the environment-specific configuration from `https://<your-site>/__/firebase/init.json`. No additional setup is required beyond linking the hosting site to the desired project.
+
+### Local previews or custom domains
+
+If you run the app outside Firebase Hosting, supply credentials through one of the following options:
+
+1. **Edit the fallback config** – Update the values in [`public/firebase-config.js`](public/firebase-config.js) with your project's API key, auth domain, project ID, and related IDs. These values are only used when no runtime config is provided.
+2. **Inject at runtime** – Define `window.__FIREBASE_CONFIG__` in a script tag before loading `auth.js`/`app.mjs`, or add a `<meta name="firebase-config" content='{"apiKey":"..."}'>` tag containing your JSON config. This keeps secrets out of version control while letting you serve the app from another host.
+
+If you encounter `auth/invalid-api-key` errors during sign-in, double-check that one of the methods above is providing the correct Firebase project credentials.
