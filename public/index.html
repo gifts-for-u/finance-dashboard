@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Keuangan Personal</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" href="/money.svg?v=2" type="image/svg+xml" />
+  </head>
+  <body data-theme="light">
+    <div class="container">
+      <!-- Header -->
+      <header class="header">
+        <div>
+          <h1><i class="fas fa-chart-pie"></i> Dashboard Keuangan</h1>
+          <small id="userInfo">Loading...</small>
+        </div>
+        <div class="header-controls">
+          <div class="user-profile" id="userProfile">
+            <!-- User profile will be loaded here -->
+          </div>
+          <div class="month-nav">
+            <button onclick="changeMonth(-1)">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="month-display" id="currentMonth">Oktober 2025</div>
+            <button onclick="changeMonth(1)">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+          <button class="theme-toggle" onclick="toggleTheme()">
+            <i class="fas fa-moon"></i>
+          </button>
+          <button class="logout-btn" onclick="signOut()" title="Logout">
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Loading State -->
+      <div class="loading" id="mainLoading">
+        <div class="spinner"></div>
+        <p>Memuat data...</p>
+      </div>
+
+      <!-- Main Content -->
+      <div id="mainContent" style="display: none">
+        <!-- Summary Cards -->
+        <div class="summary-grid">
+          <div class="summary-card income">
+            <div class="summary-value-container">
+              <div class="summary-value" id="totalIncome">Rp 0</div>
+              <button
+                class="edit-income-btn"
+                onclick="showIncomeModal()"
+                title="Edit pemasukan"
+              >
+                <i class="fas fa-edit"></i>
+              </button>
+            </div>
+            <div class="summary-label">Total Pemasukan</div>
+          </div>
+          <div class="summary-card expense">
+            <div class="summary-value" id="totalExpense">Rp 0</div>
+            <div class="summary-label">Total Pengeluaran</div>
+          </div>
+          <div class="summary-card balance">
+            <div class="summary-value" id="totalBalance">Rp 0</div>
+            <div class="summary-label">Saldo</div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <div class="action-buttons-left">
+            <button class="btn" onclick="showIncomeModal()">
+              <i class="fas fa-plus"></i> Tambah Pemasukan
+            </button>
+            <button class="btn" onclick="showExpenseModal()">
+              <i class="fas fa-minus"></i> Tambah Pengeluaran
+            </button>
+            <button class="btn btn-secondary" onclick="showCategoryModal()">
+              <i class="fas fa-tags"></i> Kelola Kategori
+            </button>
+            <button class="btn btn-secondary" onclick="showTemplateModal()">
+              <i class="fas fa-sync"></i> Template Rutin
+            </button>
+          </div>
+          <div class="action-buttons-right">
+            <button class="btn btn-secondary" onclick="exportData()">
+              <i class="fas fa-upload"></i> Export
+            </button>
+            <button class="btn btn-secondary" onclick="importData()">
+              <i class="fas fa-download"></i> Import
+            </button>
+            <!-- Optional: Manual migration button (remove after use) -->
+            <button
+              class="btn btn-secondary"
+              onclick="migrateOctoberDataManually()"
+              style="display: none"
+              id="migrationBtn"
+            >
+              <i class="fas fa-database"></i> Migrate October Data
+            </button>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Visualisasi Pengeluaran</h3>
+          </div>
+          <div class="chart-container">
+            <canvas id="expenseChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Income Table -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Daftar Pemasukan</h3>
+            <div>
+              <input
+                type="text"
+                placeholder="Cari pemasukan..."
+                id="searchIncome"
+                class="form-input"
+                style="width: 200px"
+              />
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Sumber</th>
+                  <th>Jumlah</th>
+                  <th>Keterangan</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="incomeTableBody">
+                <!-- Dynamic content -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Expenses Table -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Daftar Pengeluaran</h3>
+            <div>
+              <input
+                type="text"
+                placeholder="Cari pengeluaran..."
+                id="searchExpense"
+                class="form-input"
+                style="width: 200px"
+              />
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Kategori</th>
+                  <th>Jumlah</th>
+                  <th>Keterangan</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="expenseTableBody">
+                <!-- Dynamic content -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recurring Templates -->
+        <div class="card recurring-templates">
+          <div class="card-header">
+            <h3 class="card-title">Template Pengeluaran Rutin</h3>
+          </div>
+          <div id="templatesContainer">
+            <!-- Dynamic content -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Income Modal -->
+    <div class="modal" id="incomeModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title" id="incomeModalTitle">Tambah Pemasukan</h3>
+          <button class="modal-close" onclick="closeModal('incomeModal')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form id="incomeForm">
+          <div class="form-group">
+            <label class="form-label">Jumlah Pemasukan</label>
+            <input
+              type="number"
+              id="incomeAmount"
+              class="form-input"
+              placeholder="Masukkan jumlah pemasukan"
+              required
+            />
+            <small
+              class="form-hint"
+              id="incomeHint"
+              style="
+                color: var(--text-secondary);
+                margin-top: 5px;
+                display: block;
+              "
+            ></small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sumber Pemasukan</label>
+            <input
+              type="text"
+              id="incomeSource"
+              class="form-input"
+              placeholder="Contoh: Gaji, Bonus, Freelance"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Keterangan</label>
+            <textarea
+              id="incomeDescription"
+              class="form-textarea"
+              placeholder="Keterangan tambahan (opsional)"
+              rows="3"
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <button type="submit" class="btn">
+              <i class="fas fa-save"></i>
+              <span id="incomeSubmitText">Simpan</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Expense Modal -->
+    <div class="modal" id="expenseModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Tambah/Edit Pengeluaran</h3>
+          <button class="modal-close" onclick="closeModal('expenseModal')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form id="expenseForm">
+          <input type="hidden" id="expenseId" />
+          <div class="form-group">
+            <label class="form-label">Kategori</label>
+            <select id="expenseCategory" class="form-select" required>
+              <!-- Dynamic options -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Jumlah</label>
+            <input
+              type="number"
+              id="expenseAmount"
+              class="form-input"
+              placeholder="Masukkan jumlah pengeluaran"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Keterangan</label>
+            <textarea
+              id="expenseDescription"
+              class="form-textarea"
+              placeholder="Keterangan (opsional)"
+              rows="3"
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">
+              <input type="checkbox" id="expenseRecurring" /> Jadikan template
+              rutin bulanan
+            </label>
+          </div>
+          <div class="form-group">
+            <button type="submit" class="btn">
+              <i class="fas fa-save"></i> Simpan
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div class="modal" id="categoryModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Kelola Kategori</h3>
+          <button class="modal-close" onclick="closeModal('categoryModal')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div style="margin-bottom: 20px">
+          <button class="btn btn-sm" onclick="showAddCategoryForm()">
+            <i class="fas fa-plus"></i> Tambah Kategori
+          </button>
+        </div>
+        <div
+          id="addCategoryForm"
+          style="
+            display: none;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+          "
+        >
+          <form id="categoryForm">
+            <div class="form-group">
+              <input
+                type="text"
+                id="categoryName"
+                class="form-input"
+                placeholder="Nama kategori"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <input
+                type="color"
+                id="categoryColor"
+                class="form-input"
+                value="#4CAF50"
+              />
+            </div>
+            <button type="submit" class="btn btn-sm">Tambah</button>
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              onclick="hideAddCategoryForm()"
+            >
+              Batal
+            </button>
+          </form>
+        </div>
+        <div id="categoryList">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Template Modal -->
+    <div class="modal" id="templateModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Template Pengeluaran Rutin</h3>
+          <button class="modal-close" onclick="closeModal('templateModal')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div style="margin-bottom: 20px">
+          <button class="btn" onclick="applyTemplates()">
+            <i class="fas fa-copy"></i> Terapkan Template ke Bulan Ini
+          </button>
+        </div>
+        <div id="templateList">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+      <i class="fas fa-info-circle"></i>
+      <span id="toastMessage">Message</span>
+    </div>
+
+    <!-- Confirmation Dialog -->
+    <div class="modal" id="confirmModal">
+      <div class="modal-content" style="max-width: 400px">
+        <div class="modal-header">
+          <h3 class="modal-title">Konfirmasi</h3>
+          <button class="modal-close" onclick="closeModal('confirmModal')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <p id="confirmMessage">Apakah Anda yakin?</p>
+        <div
+          style="
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+          "
+        >
+          <button
+            class="btn btn-secondary"
+            onclick="closeModal('confirmModal')"
+          >
+            Batal
+          </button>
+          <button class="btn btn-danger" id="confirmButton">Ya</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Load JavaScript -->
+    <script type="module" src="app.mjs"></script>
+  </body>
+</html>
+
