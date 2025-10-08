@@ -151,9 +151,51 @@
             <table class="table">
               <thead>
                 <tr>
-                  <th>Tanggal</th>
-                  <th>Sumber</th>
-                  <th>Jumlah</th>
+                  <th>
+                    <button
+                      type="button"
+                      class="table-sort-button"
+                      data-sort-target="income"
+                      data-sort-key="date"
+                    >
+                      Tanggal
+                      <span
+                        class="sort-indicator"
+                        data-sort-target="income"
+                        data-sort-key="date"
+                      ></span>
+                    </button>
+                  </th>
+                  <th>
+                    <button
+                      type="button"
+                      class="table-sort-button"
+                      data-sort-target="income"
+                      data-sort-key="source"
+                    >
+                      Sumber
+                      <span
+                        class="sort-indicator"
+                        data-sort-target="income"
+                        data-sort-key="source"
+                      ></span>
+                    </button>
+                  </th>
+                  <th>
+                    <button
+                      type="button"
+                      class="table-sort-button"
+                      data-sort-target="income"
+                      data-sort-key="amount"
+                    >
+                      Jumlah
+                      <span
+                        class="sort-indicator"
+                        data-sort-target="income"
+                        data-sort-key="amount"
+                      ></span>
+                    </button>
+                  </th>
                   <th>Keterangan</th>
                   <th>Aksi</th>
                 </tr>
@@ -203,10 +245,66 @@
             <table class="table">
               <thead>
                 <tr>
-                  <th>Tanggal</th>
-                  <th>Kategori</th>
-                  <th>Jumlah</th>
-                  <th>Keterangan</th>
+                  <th>
+                    <button
+                      type="button"
+                      class="table-sort-button"
+                      data-sort-target="expense"
+                      data-sort-key="date"
+                    >
+                      Tanggal
+                      <span
+                        class="sort-indicator"
+                        data-sort-target="expense"
+                        data-sort-key="date"
+                      ></span>
+                    </button>
+                  </th>
+                  <th>
+                    <button
+                      type="button"
+                      class="table-sort-button"
+                      data-sort-target="expense"
+                      data-sort-key="category"
+                    >
+                      Kategori
+                      <span
+                        class="sort-indicator"
+                        data-sort-target="expense"
+                        data-sort-key="category"
+                      ></span>
+                    </button>
+                  </th>
+                  <th>
+                    <button
+                      type="button"
+                      class="table-sort-button"
+                      data-sort-target="expense"
+                      data-sort-key="amount"
+                    >
+                      Jumlah
+                      <span
+                        class="sort-indicator"
+                        data-sort-target="expense"
+                        data-sort-key="amount"
+                      ></span>
+                    </button>
+                  </th>
+                  <th>
+                    <button
+                      type="button"
+                      class="table-sort-button"
+                      data-sort-target="expense"
+                      data-sort-key="description"
+                    >
+                      Keterangan
+                      <span
+                        class="sort-indicator"
+                        data-sort-target="expense"
+                        data-sort-key="description"
+                      ></span>
+                    </button>
+                  </th>
                   <th>Aksi</th>
                 </tr>
               </thead>
@@ -370,7 +468,11 @@
             border-radius: 8px;
           "
         >
-          <form id="categoryForm">
+          <form id="categoryForm" data-mode="add">
+            <input type="hidden" id="categoryId" />
+            <p class="form-subtitle" id="categoryFormTitle">
+              Tambah kategori baru
+            </p>
             <div class="form-group">
               <input
                 type="text"
@@ -388,7 +490,9 @@
                 value="#4CAF50"
               />
             </div>
-            <button type="submit" class="btn btn-sm">Tambah</button>
+            <button type="submit" class="btn btn-sm" id="categoryFormSubmitButton">
+              <span id="categoryFormSubmitLabel">Tambah</span>
+            </button>
             <button
               type="button"
               class="btn btn-secondary btn-sm"

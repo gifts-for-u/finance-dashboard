@@ -29,6 +29,13 @@ let auth = null;
 
 const firebaseReady = initializeFirebase();
 
+
+let app = null;
+let db = null;
+let auth = null;
+
+const firebaseReady = initializeFirebase();
+
 async function initializeFirebase() {
   const config = await loadFirebaseConfig();
   if (!config?.apiKey) {
@@ -128,6 +135,44 @@ const defaultCategories = [
     isDefault: true,
   },
 ];
+
+const defaultCategoryColor = defaultCategories[0]?.color ?? "#4CAF50";
+
+const TABLE_SORT_CONFIG = {
+  income: {
+    date: { asc: "date-asc", desc: "date-desc", defaultDirection: "desc" },
+    amount: { asc: "amount-asc", desc: "amount-desc", defaultDirection: "desc" },
+    source: { asc: "alpha-asc", desc: "alpha-desc", defaultDirection: "asc" },
+  },
+  expense: {
+    date: { asc: "date-asc", desc: "date-desc", defaultDirection: "desc" },
+    amount: { asc: "amount-asc", desc: "amount-desc", defaultDirection: "desc" },
+    description: {
+      asc: "alpha-asc",
+      desc: "alpha-desc",
+      defaultDirection: "asc",
+    },
+    category: {
+      asc: "category-asc",
+      desc: "category-desc",
+      defaultDirection: "asc",
+    },
+  },
+};
+
+const TABLE_SORT_LABELS = {
+  income: {
+    date: "Tanggal",
+    amount: "Jumlah",
+    source: "Sumber",
+  },
+  expense: {
+    date: "Tanggal",
+    amount: "Jumlah",
+    description: "Keterangan",
+    category: "Kategori",
+  },
+};
 
 // Initialize session manager
 async function initializeSessionManager() {
@@ -344,6 +389,112 @@ function reapplyTableSearch(tableBodyId, searchInputId) {
   rows.forEach((row) => {
     const text = row.textContent.toLowerCase();
     row.style.display = text.includes(searchTerm) ? "" : "none";
+  });
+}
+
+function getSortKeyFromOption(target, option) {
+  const config = TABLE_SORT_CONFIG[target];
+  if (!config || !option) {
+    return null;
+  }
+
+  return (
+    Object.entries(config).find(([, values]) =>
+      values.asc === option || values.desc === option
+    )?.[0] ?? null
+  );
+}
+
+function determineNextSortOption(target, key) {
+  const config = TABLE_SORT_CONFIG[target]?.[key];
+  if (!config) {
+    return null;
+  }
+
+  const currentOption =
+    target === "income" ? incomeSortOption : expenseSortOption;
+
+  if (currentOption === config.asc) {
+    return config.desc;
+  }
+
+  if (currentOption === config.desc) {
+    return config.asc;
+  }
+
+  const defaultDirection = config.defaultDirection === "asc" ? "asc" : "desc";
+  return config[defaultDirection];
+}
+
+function updateSortIndicators(target, option) {
+  const activeKey = getSortKeyFromOption(target, option);
+  const direction = option?.endsWith("-asc") ? "asc" : "desc";
+
+  document
+    .querySelectorAll(`.sort-indicator[data-sort-target="${target}"]`)
+    .forEach((indicator) => {
+      if (indicator.dataset.sortKey === activeKey) {
+        indicator.dataset.direction = direction;
+        indicator.classList.add("is-active");
+      } else {
+        delete indicator.dataset.direction;
+        indicator.classList.remove("is-active");
+      }
+    });
+
+  document
+    .querySelectorAll(`.table-sort-button[data-sort-target="${target}"]`)
+    .forEach((button) => {
+      const buttonKey = button.dataset.sortKey;
+      const label =
+        TABLE_SORT_LABELS[target]?.[buttonKey] ||
+        button.textContent.trim() ||
+        "Kolom";
+
+      if (buttonKey === activeKey) {
+        button.setAttribute("aria-pressed", "true");
+        button.dataset.direction = direction;
+        const directionLabel = direction === "asc" ? "menaik" : "menurun";
+        button.title = `Urutkan ${label} (${directionLabel})`;
+      } else {
+        button.setAttribute("aria-pressed", "false");
+        delete button.dataset.direction;
+        button.title = `Urutkan ${label}`;
+      }
+    });
+}
+
+function toggleSortOption(target, key) {
+  const nextOption = determineNextSortOption(target, key);
+  if (!nextOption) {
+    return;
+  }
+
+  if (target === "income") {
+    incomeSortOption = nextOption;
+    const select = document.getElementById("incomeSort");
+    if (select && select.value !== nextOption) {
+      select.value = nextOption;
+    }
+    updateIncomeTable();
+  } else if (target === "expense") {
+    expenseSortOption = nextOption;
+    const select = document.getElementById("expenseSort");
+    if (select && select.value !== nextOption) {
+      select.value = nextOption;
+    }
+    updateExpenseTable();
+  }
+}
+
+function registerTableSortButtons() {
+  const buttons = document.querySelectorAll(".table-sort-button");
+  buttons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const target = button.dataset.sortTarget;
+      const key = button.dataset.sortKey;
+      toggleSortOption(target, key);
+    });
   });
 }
 
@@ -843,6 +994,13 @@ function updateIncomeTable() {
     ? [...currentMonthData.incomes]
     : [];
 
+  const selectedSort = getSelectValue("incomeSort", incomeSortOption);
+  if (selectedSort !== incomeSortOption) {
+    incomeSortOption = selectedSort;
+  }
+
+  updateSortIndicators("income", incomeSortOption);
+
   const activeSortOption = getSelectValue("incomeSort", incomeSortOption);
   const sortedIncomes = incomes.sort((a, b) => {
     switch (activeSortOption) {
@@ -925,6 +1083,25 @@ function updateExpenseTable() {
     "expenseCategoryFilter",
     expenseCategoryFilter,
   );
+
+  if (activeCategoryFilter !== expenseCategoryFilter) {
+    expenseCategoryFilter = activeCategoryFilter;
+  }
+
+  const filteredExpenses = expenses.filter((expense) => {
+    if (activeCategoryFilter === "all") {
+      return true;
+    }
+    return expense.category === activeCategoryFilter;
+  });
+
+  const selectedSort = getSelectValue("expenseSort", expenseSortOption);
+  if (selectedSort !== expenseSortOption) {
+    expenseSortOption = selectedSort;
+  }
+
+  updateSortIndicators("expense", expenseSortOption);
+
 
   const filteredExpenses = expenses.filter((expense) => {
     if (activeCategoryFilter === "all") {
@@ -1237,11 +1414,11 @@ function updateCategorySelect() {
 function updateCategoryList() {
   const container = document.getElementById("categoryList");
   container.innerHTML = categories
-    .map(
-      (category) => `
-        <div class="template-item" style="border-left: 4px solid ${
-          category.color
-        }">
+    .map((category) => {
+      const colorValue = category.color || defaultCategoryColor;
+      const colorDisplay = String(colorValue).toUpperCase();
+      return `
+        <div class="template-item" style="border-left: 4px solid ${colorValue}">
           <div>
             <strong>${category.name}</strong>
             ${
@@ -1249,8 +1426,21 @@ function updateCategoryList() {
                 ? '<small style="color: var(--text-secondary)"> (Default)</small>'
                 : ""
             }
+            <div class="category-meta">
+              <span
+                class="category-color-chip"
+                style="background-color: ${colorValue};"
+                aria-hidden="true"
+              ></span>
+              <small class="category-color-label">${colorDisplay}</small>
+            </div>
           </div>
           <div>
+            <button class="btn btn-sm btn-secondary" onclick="editCategory('${
+              category.id
+            }')">
+              <i class="fas fa-pen"></i>
+            </button>
             ${
               !category.isDefault
                 ? `
@@ -1262,8 +1452,8 @@ function updateCategoryList() {
             }
           </div>
         </div>
-      `
-    )
+      `;
+    })
     .join("");
 }
 
@@ -1456,19 +1646,79 @@ function deleteExpense(expenseId) {
 }
 
 // Category Modal Functions
+function configureCategoryForm(mode, category = null) {
+  const form = document.getElementById("categoryForm");
+  const title = document.getElementById("categoryFormTitle");
+  const submitLabel = document.getElementById("categoryFormSubmitLabel");
+  const nameInput = document.getElementById("categoryName");
+  const colorInput = document.getElementById("categoryColor");
+  const idInput = document.getElementById("categoryId");
+
+  if (!form || !title || !submitLabel || !nameInput || !colorInput || !idInput) {
+    return;
+  }
+
+  if (mode === "edit" && category) {
+    form.dataset.mode = "edit";
+    idInput.value = category.id;
+    nameInput.value = category.name;
+    colorInput.value = category.color || defaultCategoryColor;
+    title.textContent = "Edit kategori";
+    submitLabel.textContent = "Simpan";
+  } else {
+    form.reset();
+    form.dataset.mode = "add";
+    idInput.value = "";
+    colorInput.value = defaultCategoryColor;
+    title.textContent = "Tambah kategori baru";
+    submitLabel.textContent = "Tambah";
+  }
+}
+
 function showCategoryModal() {
+  hideAddCategoryForm();
   updateCategoryList();
   showModal("categoryModal");
 }
 
 function showAddCategoryForm() {
-  document.getElementById("addCategoryForm").style.display = "block";
-  document.getElementById("categoryName").focus();
+  configureCategoryForm("add");
+  const container = document.getElementById("addCategoryForm");
+  if (container) {
+    container.style.display = "block";
+  }
+  const nameInput = document.getElementById("categoryName");
+  if (nameInput) {
+    nameInput.focus();
+  }
 }
 
 function hideAddCategoryForm() {
-  document.getElementById("addCategoryForm").style.display = "none";
-  document.getElementById("categoryForm").reset();
+  const container = document.getElementById("addCategoryForm");
+  if (container) {
+    container.style.display = "none";
+  }
+  configureCategoryForm("add");
+}
+
+function editCategory(categoryId) {
+  const category = categories.find((cat) => cat.id === categoryId);
+  if (!category) {
+    showToast("Kategori tidak ditemukan", "error");
+    return;
+  }
+
+  configureCategoryForm("edit", category);
+  const container = document.getElementById("addCategoryForm");
+  if (container) {
+    container.style.display = "block";
+  }
+
+  const nameInput = document.getElementById("categoryName");
+  if (nameInput) {
+    nameInput.focus();
+    nameInput.select();
+  }
 }
 
 function deleteCategory(categoryId) {
@@ -1925,6 +2175,10 @@ function importData() {
 
 // Form Handlers
 onDocumentReady(() => {
+  registerTableSortButtons();
+  updateSortIndicators("income", incomeSortOption);
+  updateSortIndicators("expense", expenseSortOption);
+
   // Income form handler
   document
     .getElementById("incomeForm")
@@ -2093,43 +2347,76 @@ onDocumentReady(() => {
     });
 
   // Category form handler
-  document
-    .getElementById("categoryForm")
-    .addEventListener("submit", async (e) => {
+  const categoryForm = document.getElementById("categoryForm");
+  if (categoryForm) {
+    categoryForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
       try {
         const name = document.getElementById("categoryName").value.trim();
         const color = document.getElementById("categoryColor").value;
+        const mode = categoryForm.dataset.mode || "add";
+        const idInput = document.getElementById("categoryId");
+        const editingId = idInput ? idInput.value : "";
 
-        // Check if category name already exists
-        if (
-          categories.some(
-            (cat) => cat.name.toLowerCase() === name.toLowerCase()
-          )
-        ) {
+        const normalizedName = name.toLowerCase();
+        const duplicate = categories.some(
+          (cat) =>
+            cat.name.toLowerCase() === normalizedName &&
+            (mode === "add" || cat.id !== editingId),
+        );
+
+        if (duplicate) {
           showToast("Nama kategori sudah ada", "warning");
           return;
         }
 
-        const newCategory = {
-          id: generateId(),
-          name,
-          color,
-          isDefault: false,
-        };
+        if (mode === "edit" && editingId) {
+          const categoryIndex = categories.findIndex(
+            (cat) => cat.id === editingId,
+          );
 
-        categories.push(newCategory);
-        await saveCategories();
-        updateCategoryList();
-        updateCategorySelect();
-        hideAddCategoryForm();
-        showToast("Kategori berhasil ditambah", "success");
+          if (categoryIndex === -1) {
+            showToast("Kategori tidak ditemukan", "error");
+            return;
+          }
+
+          categories[categoryIndex] = {
+            ...categories[categoryIndex],
+            name,
+            color,
+          };
+
+          await saveCategories();
+          updateCategoryList();
+          updateCategorySelect();
+          updateExpenseTable();
+          updateChart();
+          updateTemplatesList();
+          hideAddCategoryForm();
+          showToast("Kategori berhasil diperbarui", "success");
+        } else {
+          const newCategory = {
+            id: generateId(),
+            name,
+            color,
+            isDefault: false,
+          };
+
+          categories.push(newCategory);
+          await saveCategories();
+          updateCategoryList();
+          updateCategorySelect();
+          updateTemplatesList();
+          hideAddCategoryForm();
+          showToast("Kategori berhasil ditambah", "success");
+        }
       } catch (error) {
-        console.error("Add category error:", error);
-        showToast("Gagal menambah kategori", "error");
+        console.error("Category save error:", error);
+        showToast("Gagal menyimpan kategori", "error");
       }
     });
+  }
 
   // Search functions
   document.getElementById("searchExpense").addEventListener("input", (e) => {
@@ -2233,6 +2520,7 @@ window.deleteExpense = deleteExpense;
 window.showCategoryModal = showCategoryModal;
 window.showAddCategoryForm = showAddCategoryForm;
 window.hideAddCategoryForm = hideAddCategoryForm;
+window.editCategory = editCategory;
 window.deleteCategory = deleteCategory;
 window.showTemplateModal = showTemplateModal;
 window.deleteTemplate = deleteTemplate;
