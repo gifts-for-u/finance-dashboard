@@ -35,8 +35,12 @@ Ensure GitHub Actions is enabled for the repository. Once enabled, every push to
 The workflow performs the following steps:
 
 1. Checks out the repository.
-2. Installs the Firebase CLI.
-3. Deploys the latest build to Firebase Hosting using the credentials stored in `FIREBASE_SERVICE_ACCOUNT`.
+2. Sets up Node.js 20 for consistent CLI behaviour.
+3. Writes the `FIREBASE_SERVICE_ACCOUNT` secret to a temporary credentials file and points the Firebase CLI at it.
+4. Installs the Firebase CLI globally with `npm install -g firebase-tools`.
+5. Runs `npm run build` if a `package.json` is present (static sites without a build step simply skip it).
+6. Calls `firebase deploy --only hosting --project finance-dashboard-10nfl` to publish the latest assets.
+7. Publishes a run summary that links to the deployed site and release in the Firebase console.
 
 ### 5. Monitor deployments
 
