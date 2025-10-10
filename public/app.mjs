@@ -502,6 +502,20 @@ function isDoneDescription(text) {
   return String(text).toLowerCase().includes("done");
 }
 
+function isSavingsCategory(expense) {
+  if (!expense) {
+    return false;
+  }
+
+  const category = categories.find((cat) => cat.id === expense.category);
+  if (!category) {
+    return false;
+  }
+
+  const normalisedName = String(category.name || "").toLowerCase();
+  return category.id === "savings" || normalisedName.includes("tabungan");
+}
+
 function generateId() {
   const cryptoRef = globalThis.crypto;
   if (cryptoRef?.randomUUID) {
@@ -945,36 +959,84 @@ function updateSummaryCards() {
   const incomes = currentMonthData?.incomes || [];
   const expenses = currentMonthData?.expenses || [];
 
-  const totalIncome = incomes.reduce((sum, income) => sum + income.amount, 0);
-  const totalDoneExpense = expenses
+  const totalIncome = incomes.reduce(
+    (sum, income) => sum + Number(income.amount || 0),
+    0
+  );
+  const totalPlannedExpense = expenses.reduce(
+    (sum, expense) => sum + Number(expense.amount || 0),
+    0
+  );
+  const totalActualExpense = expenses
     .filter((expense) => isDoneDescription(expense?.description))
     .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
-  const balance = totalIncome - totalDoneExpense;
-  const savingsRate = totalIncome > 0 ? (balance / totalIncome) * 100 : null;
+  const actualBalance = totalIncome - totalActualExpense;
+  const plannedRemaining = totalIncome - totalPlannedExpense;
+  const totalSavingsExpense = expenses
+    .filter((expense) => isSavingsCategory(expense))
+    .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+  const savingsRate =
+    totalIncome > 0 ? (totalSavingsExpense / totalIncome) * 100 : null;
 
-  document.getElementById("totalIncome").textContent =
-    formatCurrency(totalIncome);
-  document.getElementById("totalExpense").textContent =
-    formatCurrency(totalDoneExpense);
-  document.getElementById("totalBalance").textContent = formatCurrency(balance);
+  const totalIncomeElement = document.getElementById("totalIncome");
+  if (totalIncomeElement) {
+    totalIncomeElement.textContent = formatCurrency(totalIncome);
+  }
+
+  const plannedExpenseElement = document.getElementById("totalExpensePlanned");
+  if (plannedExpenseElement) {
+    plannedExpenseElement.textContent = formatCurrency(totalPlannedExpense);
+  }
+
+  const actualExpenseElement = document.getElementById("totalExpenseActual");
+  if (actualExpenseElement) {
+    actualExpenseElement.textContent = formatCurrency(totalActualExpense);
+  }
+
+  const actualBalanceElement = document.getElementById("actualBalance");
+  if (actualBalanceElement) {
+    actualBalanceElement.textContent = formatCurrency(actualBalance);
+
+    if (actualBalance > 0) {
+      actualBalanceElement.style.color = "var(--success-color)";
+    } else if (actualBalance < 0) {
+      actualBalanceElement.style.color = "var(--danger-color)";
+    } else {
+      actualBalanceElement.style.color = "var(--text-primary)";
+    }
+  }
+
+  const plannedRemainingElement = document.getElementById("plannedRemaining");
+  if (plannedRemainingElement) {
+    plannedRemainingElement.textContent = formatCurrency(plannedRemaining);
+
+    if (plannedRemaining > 0) {
+      plannedRemainingElement.style.color = "var(--success-color)";
+    } else if (plannedRemaining < 0) {
+      plannedRemainingElement.style.color = "var(--danger-color)";
+    } else {
+      plannedRemainingElement.style.color = "var(--text-primary)";
+    }
+  }
 
   const savingsRateElement = document.getElementById("savingsRate");
   if (savingsRateElement) {
     if (savingsRate === null) {
       savingsRateElement.textContent = "—";
+      savingsRateElement.style.color = "var(--text-secondary)";
     } else {
       savingsRateElement.textContent = formatPercentage(savingsRate);
-    }
-  }
 
-  // Color coding for balance
-  const balanceElement = document.getElementById("totalBalance");
-  if (balance > 0) {
-    balanceElement.style.color = "var(--success-color)";
-  } else if (balance < 0) {
-    balanceElement.style.color = "var(--danger-color)";
-  } else {
-    balanceElement.style.color = "var(--text-primary)";
+      if (savingsRate >= 20) {
+        savingsRateElement.style.color = "var(--success-color)";
+      } else if (savingsRate >= 10) {
+        savingsRateElement.style.color = "var(--warning-color)";
+      } else if (savingsRate >= 0) {
+        savingsRateElement.style.color = "var(--text-primary)";
+      } else {
+        savingsRateElement.style.color = "var(--danger-color)";
+      }
+    }
   }
 
   if (savingsRateElement) {

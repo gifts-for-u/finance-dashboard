@@ -261,11 +261,17 @@ body {
 .summary-card.income::before {
   background: var(--success-color);
 }
-.summary-card.expense::before {
+.summary-card.expense-planned::before {
+  background: var(--warning-color);
+}
+.summary-card.expense-actual::before {
   background: var(--danger-color);
 }
-.summary-card.balance::before {
+.summary-card.balance-actual::before {
   background: var(--info-color);
+}
+.summary-card.balance-planned::before {
+  background: var(--secondary-color);
 }
 .summary-card.savings::before {
   background: var(--accent-color);
