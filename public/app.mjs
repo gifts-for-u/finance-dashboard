@@ -1038,6 +1038,18 @@ function updateSummaryCards() {
       }
     }
   }
+
+  if (savingsRateElement) {
+    if (savingsRate === null) {
+      savingsRateElement.style.color = "var(--text-secondary)";
+    } else if (savingsRate >= 10) {
+      savingsRateElement.style.color = "var(--success-color)";
+    } else if (savingsRate >= 0) {
+      savingsRateElement.style.color = "var(--warning-color)";
+    } else {
+      savingsRateElement.style.color = "var(--danger-color)";
+    }
+  }
 }
 
 function updateIncomeTable() {
