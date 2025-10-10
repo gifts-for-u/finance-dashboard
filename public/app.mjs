@@ -299,11 +299,7 @@ function formatCurrency(amount) {
   }).format(value);
 }
 
-function formatPercentage(value) {
-  return `${value.toFixed(0)}%`;
-}
-
-function formatPercentage(value) {
+function formatPercentageText(value) {
   return `${value.toFixed(0)}%`;
 }
 
@@ -1072,7 +1068,7 @@ function updateSummaryCards() {
       savingsRateElement.textContent = "—";
       savingsRateElement.style.color = "var(--text-secondary)";
     } else {
-      savingsRateElement.textContent = formatPercentage(savingsRate);
+      savingsRateElement.textContent = formatPercentageText(savingsRate);
 
       if (savingsRate >= 20) {
         savingsRateElement.style.color = "var(--success-color)";
