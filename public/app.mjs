@@ -299,8 +299,14 @@ function formatCurrency(amount) {
   }).format(value);
 }
 
-function formatPercentageText(value) {
-  return `${value.toFixed(0)}%`;
+var formatPercentageText =
+  (typeof window !== "undefined" && window.formatPercentageText) ||
+  function (value) {
+    return `${value.toFixed(0)}%`;
+  };
+
+if (typeof window !== "undefined") {
+  window.formatPercentageText = formatPercentageText;
 }
 
 function formatDate(date) {
