@@ -271,12 +271,36 @@ async function signOut(isForced = false) {
 }
 
 // Utility Functions
+function normalizeAmount(value) {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  if (typeof value === "string") {
+    const cleaned = value.replace(/[^0-9-]/g, "");
+    if (!cleaned) {
+      return 0;
+    }
+
+    const parsed = Number(cleaned);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 function formatCurrency(amount) {
+  const value = normalizeAmount(amount);
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
     minimumFractionDigits: 0,
-  }).format(amount);
+  }).format(value);
+}
+
+function formatPercentage(value) {
+  return `${value.toFixed(0)}%`;
 }
 
 function formatPercentage(value) {
@@ -616,16 +640,18 @@ function convertFirestoreData(data) {
   if (!data) return data;
 
   if (data.incomes && Array.isArray(data.incomes)) {
-    data.incomes = data.incomes.map((income) => ({
+    data.incomes = data.incomes.filter(Boolean).map((income) => ({
       ...income,
+      amount: normalizeAmount(income.amount),
       date: convertFirestoreDate(income.date),
     }));
   }
 
   // Convert expense dates
   if (data.expenses && Array.isArray(data.expenses)) {
-    data.expenses = data.expenses.map((expense) => ({
+    data.expenses = data.expenses.filter(Boolean).map((expense) => ({
       ...expense,
+      amount: normalizeAmount(expense.amount),
       date: convertFirestoreDate(expense.date),
     }));
   }
@@ -734,7 +760,12 @@ async function loadTemplates() {
   const docSnap = await getDoc(docRef);
 
   if (docSnap.exists()) {
-    templates = docSnap.data().templates || [];
+    templates = (docSnap.data().templates || [])
+      .filter(Boolean)
+      .map((template) => ({
+        ...template,
+        amount: normalizeAmount(template.amount),
+      }));
   } else {
     templates = [];
   }
@@ -743,7 +774,13 @@ async function loadTemplates() {
 async function saveTemplates() {
   const user = requireCurrentUser();
   const docRef = doc(db, "users", user.uid, "templates", "recurring");
-  await setDoc(docRef, { templates });
+  const normalizedTemplates = templates
+    .filter(Boolean)
+    .map((template) => ({
+      ...template,
+      amount: normalizeAmount(template.amount),
+    }));
+  await setDoc(docRef, { templates: normalizedTemplates });
 }
 
 async function loadMonthData() {
@@ -764,7 +801,7 @@ async function loadMonthData() {
       currentMonthData.incomes = [
         {
           id: generateId(),
-          amount: currentMonthData.income,
+          amount: normalizeAmount(currentMonthData.income),
           source: "Migrated Income",
           date: getDefaultEntryDate(),
           description: "Data pemasukan lama",
@@ -926,15 +963,21 @@ async function saveMonthData() {
     currentMonthData.expenses = [];
   }
 
-  currentMonthData.incomes = currentMonthData.incomes.map((income) => ({
-    ...income,
-    date: convertFirestoreDate(income.date),
-  }));
+  currentMonthData.incomes = currentMonthData.incomes
+    .filter(Boolean)
+    .map((income) => ({
+      ...income,
+      amount: normalizeAmount(income.amount),
+      date: convertFirestoreDate(income.date),
+    }));
 
-  currentMonthData.expenses = currentMonthData.expenses.map((expense) => ({
-    ...expense,
-    date: convertFirestoreDate(expense.date),
-  }));
+  currentMonthData.expenses = currentMonthData.expenses
+    .filter(Boolean)
+    .map((expense) => ({
+      ...expense,
+      amount: normalizeAmount(expense.amount),
+      date: convertFirestoreDate(expense.date),
+    }));
 
   await setDoc(docRef, currentMonthData);
 }
@@ -956,25 +999,29 @@ function updateCurrentMonthDisplay() {
 }
 
 function updateSummaryCards() {
-  const incomes = currentMonthData?.incomes || [];
-  const expenses = currentMonthData?.expenses || [];
+  const incomes = Array.isArray(currentMonthData?.incomes)
+    ? currentMonthData.incomes.filter(Boolean)
+    : [];
+  const expenses = Array.isArray(currentMonthData?.expenses)
+    ? currentMonthData.expenses.filter(Boolean)
+    : [];
 
   const totalIncome = incomes.reduce(
-    (sum, income) => sum + Number(income.amount || 0),
+    (sum, income) => sum + normalizeAmount(income.amount),
     0
   );
   const totalPlannedExpense = expenses.reduce(
-    (sum, expense) => sum + Number(expense.amount || 0),
+    (sum, expense) => sum + normalizeAmount(expense.amount),
     0
   );
   const totalActualExpense = expenses
     .filter((expense) => isDoneDescription(expense?.description))
-    .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+    .reduce((sum, expense) => sum + normalizeAmount(expense.amount), 0);
   const actualBalance = totalIncome - totalActualExpense;
   const plannedRemaining = totalIncome - totalPlannedExpense;
   const totalSavingsExpense = expenses
     .filter((expense) => isSavingsCategory(expense))
-    .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+    .reduce((sum, expense) => sum + normalizeAmount(expense.amount), 0);
   const savingsRate =
     totalIncome > 0 ? (totalSavingsExpense / totalIncome) * 100 : null;
 
@@ -1038,24 +1085,17 @@ function updateSummaryCards() {
       }
     }
   }
-
-  if (savingsRateElement) {
-    if (savingsRate === null) {
-      savingsRateElement.style.color = "var(--text-secondary)";
-    } else if (savingsRate >= 10) {
-      savingsRateElement.style.color = "var(--success-color)";
-    } else if (savingsRate >= 0) {
-      savingsRateElement.style.color = "var(--warning-color)";
-    } else {
-      savingsRateElement.style.color = "var(--danger-color)";
-    }
-  }
 }
 
 function updateIncomeTable() {
   const tbody = document.getElementById("incomeTableBody");
   const incomes = Array.isArray(currentMonthData?.incomes)
-    ? [...currentMonthData.incomes]
+    ? currentMonthData.incomes
+        .filter(Boolean)
+        .map((income) => ({
+          ...income,
+          amount: normalizeAmount(income.amount),
+        }))
     : [];
 
   const selectedSort = getSelectValue("incomeSort", incomeSortOption);
@@ -1070,9 +1110,9 @@ function updateIncomeTable() {
       case "date-asc":
         return getComparableDateValue(a.date) - getComparableDateValue(b.date);
       case "amount-desc":
-        return (b.amount || 0) - (a.amount || 0);
+        return normalizeAmount(b.amount) - normalizeAmount(a.amount);
       case "amount-asc":
-        return (a.amount || 0) - (b.amount || 0);
+        return normalizeAmount(a.amount) - normalizeAmount(b.amount);
       case "alpha-desc": {
         const sourceA = (a.source || "").toLowerCase();
         const sourceB = (b.source || "").toLowerCase();
@@ -1111,7 +1151,7 @@ function updateIncomeTable() {
           <td>${formattedDate}</td>
           <td style="font-weight: 500;">${income.source || "-"}</td>
           <td style="font-weight: 600; color: var(--success-color);">${formatCurrency(
-            income.amount
+            normalizeAmount(income.amount)
           )}</td>
           <td>${income.description || "-"}</td>
           <td>
@@ -1137,7 +1177,12 @@ function updateIncomeTable() {
 function updateExpenseTable() {
   const tbody = document.getElementById("expenseTableBody");
   const expenses = Array.isArray(currentMonthData?.expenses)
-    ? [...currentMonthData.expenses]
+    ? currentMonthData.expenses
+        .filter(Boolean)
+        .map((expense) => ({
+          ...expense,
+          amount: normalizeAmount(expense.amount),
+        }))
     : [];
 
   const activeCategoryFilter = getSelectValue(
@@ -1168,9 +1213,9 @@ function updateExpenseTable() {
       case "date-asc":
         return getComparableDateValue(a.date) - getComparableDateValue(b.date);
       case "amount-desc":
-        return (b.amount || 0) - (a.amount || 0);
+        return normalizeAmount(b.amount) - normalizeAmount(a.amount);
       case "amount-asc":
-        return (a.amount || 0) - (b.amount || 0);
+        return normalizeAmount(a.amount) - normalizeAmount(b.amount);
       case "alpha-desc": {
         const descA = (a.description || getCategoryName(a.category) || "").toLowerCase();
         const descB = (b.description || getCategoryName(b.category) || "").toLowerCase();
@@ -1232,7 +1277,9 @@ function updateExpenseTable() {
               ${categoryName}
             </span>
           </td>
-          <td style="font-weight: 600;">${formatCurrency(expense.amount)}</td>
+          <td style="font-weight: 600;">${formatCurrency(
+            normalizeAmount(expense.amount)
+          )}</td>
           <td>${description || "-"}</td>
           <td>
             <button class="btn btn-sm btn-secondary" onclick="editExpense('${
@@ -1270,7 +1317,9 @@ function updateChart() {
       expenseChart.destroy();
     }
 
-    const expenses = currentMonthData?.expenses || [];
+    const expenses = Array.isArray(currentMonthData?.expenses)
+      ? currentMonthData.expenses.filter(Boolean)
+      : [];
     if (expenses.length === 0) {
       // Clear canvas and show message
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1291,10 +1340,11 @@ function updateChart() {
     // Group expenses by category
     const categoryTotals = {};
     expenses.forEach((expense) => {
+      const amount = normalizeAmount(expense.amount);
       if (categoryTotals[expense.category]) {
-        categoryTotals[expense.category] += expense.amount;
+        categoryTotals[expense.category] += amount;
       } else {
-        categoryTotals[expense.category] = expense.amount;
+        categoryTotals[expense.category] = amount;
       }
     });
 
@@ -1792,7 +1842,7 @@ async function applyTemplates() {
         const newExpenses = templates.map((template) => ({
           id: generateId(),
           category: template.category,
-          amount: template.amount,
+          amount: normalizeAmount(template.amount),
           description: template.description,
           date: getDefaultEntryDate(),
           isRecurring: true,
@@ -1836,10 +1886,7 @@ async function exportData() {
 
     const worksheet = workbook.addWorksheet("Ringkasan Keuangan");
 
-    const toNumber = (value) => {
-      const parsed = Number(value);
-      return Number.isFinite(parsed) ? parsed : 0;
-    };
+    const toNumber = (value) => normalizeAmount(value);
 
     const toDate = (value) => {
       if (!value) {
@@ -2196,7 +2243,9 @@ onDocumentReady(() => {
       e.preventDefault();
 
       try {
-        const amount = parseInt(document.getElementById("incomeAmount").value);
+        const amount = normalizeAmount(
+          document.getElementById("incomeAmount").value,
+        );
         const source = document.getElementById("incomeSource").value.trim();
         const description = document
           .getElementById("incomeDescription")
@@ -2272,7 +2321,9 @@ onDocumentReady(() => {
       try {
         const expenseId = document.getElementById("expenseId").value;
         const category = document.getElementById("expenseCategory").value;
-        const amount = parseInt(document.getElementById("expenseAmount").value);
+        const amount = normalizeAmount(
+          document.getElementById("expenseAmount").value,
+        );
         const description = document.getElementById("expenseDescription").value;
         const isRecurring = document.getElementById("expenseRecurring").checked;
         const expenseDateElement = document.getElementById("expenseDate");
@@ -2326,7 +2377,7 @@ onDocumentReady(() => {
           const existingTemplate = templates.find(
             (t) =>
               t.category === category &&
-              t.amount === amount &&
+              normalizeAmount(t.amount) === amount &&
               t.description === description
           );
 
@@ -2334,7 +2385,7 @@ onDocumentReady(() => {
             templates.push({
               id: generateId(),
               category,
-              amount,
+              amount: normalizeAmount(amount),
               description,
             });
             await saveTemplates();
