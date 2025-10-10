@@ -7,6 +7,10 @@ class SessionManager {
     this.warningTimer = null;
     this.lastActivity = Date.now();
     this.isWarningShown = false;
+    this.hasExpired = false;
+    this.ACTIVITY_STORAGE_KEY = "lastActivityTimestamp";
+    this.LOGIN_TIMESTAMP_KEY = "loginTimestamp";
+    this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
 
     // Bind methods to preserve 'this' context
     this.resetTimer = this.resetTimer.bind(this);
@@ -20,8 +24,23 @@ class SessionManager {
     this.auth = auth;
     this.signOutCallback = signOutCallback;
 
+    // Restore persisted activity timestamp if available
+    const persistedActivity = this.getStoredTimestamp(this.ACTIVITY_STORAGE_KEY);
+    if (persistedActivity) {
+      this.lastActivity = persistedActivity;
+    } else {
+      this.persistTimestamp(this.ACTIVITY_STORAGE_KEY, this.lastActivity);
+    }
+
+    if (!this.isSessionActive()) {
+      this.handleExpiredSession();
+      return;
+    }
+
     // Start activity monitoring
     this.startActivityMonitoring();
+
+    document.addEventListener("visibilitychange", this.handleVisibilityChange);
 
     // Reset timer on initialization
     this.resetTimer();
@@ -56,6 +75,7 @@ class SessionManager {
   // Handle user activity
   handleUserActivity() {
     this.lastActivity = Date.now();
+    this.persistTimestamp(this.ACTIVITY_STORAGE_KEY, this.lastActivity);
 
     // Hide warning if it's shown
     if (this.isWarningShown) {
@@ -68,6 +88,9 @@ class SessionManager {
 
   // Reset the inactivity timer
   resetTimer() {
+    this.lastActivity = Date.now();
+    this.persistTimestamp(this.ACTIVITY_STORAGE_KEY, this.lastActivity);
+
     // Clear existing timers
     if (this.inactivityTimer) {
       clearTimeout(this.inactivityTimer);
@@ -171,6 +194,26 @@ class SessionManager {
     this.showToast("Sesi berhasil diperpanjang", "success");
   }
 
+  handleVisibilityChange() {
+    if (document.visibilityState === "visible") {
+      if (!this.isSessionActive()) {
+        this.handleExpiredSession();
+      }
+    }
+  }
+
+  handleExpiredSession() {
+    if (this.hasExpired) {
+      return;
+    }
+
+    this.hasExpired = true;
+    this.showToast("Sesi berakhir karena tidak ada aktivitas", "warning");
+    setTimeout(() => {
+      this.signOutCallback(true);
+    }, 500);
+  }
+
   // Force logout due to inactivity
   forceLogout() {
     console.log("Force logout due to inactivity");
@@ -262,8 +305,11 @@ class SessionManager {
 
     window.removeEventListener("focus", this.handleUserActivity);
     window.removeEventListener("blur", this.handleUserActivity);
+    document.removeEventListener("visibilitychange", this.handleVisibilityChange);
 
     this.hideWarning();
+
+    this.hasExpired = false;
 
     console.log("Session manager destroyed");
   }
@@ -274,6 +320,37 @@ class SessionManager {
     this.WARNING_TIME = Math.min(5 * 60 * 1000, this.INACTIVITY_TIMEOUT / 2);
     this.resetTimer();
     console.log(`Inactivity timeout updated to ${minutes} minutes`);
+  }
+
+  isSessionActive() {
+    const now = Date.now();
+    const loginTimestamp = this.getStoredTimestamp(this.LOGIN_TIMESTAMP_KEY);
+    const lastActivity = this.getStoredTimestamp(this.ACTIVITY_STORAGE_KEY);
+    const referenceTime = lastActivity ?? loginTimestamp;
+
+    if (!referenceTime) {
+      return true;
+    }
+
+    return now - referenceTime <= this.INACTIVITY_TIMEOUT;
+  }
+
+  getStoredTimestamp(key) {
+    try {
+      const value = window?.localStorage?.getItem(key);
+      return value ? Number.parseInt(value, 10) : null;
+    } catch (error) {
+      console.warn("Unable to read from localStorage:", error);
+      return null;
+    }
+  }
+
+  persistTimestamp(key, value) {
+    try {
+      window?.localStorage?.setItem(key, String(value));
+    } catch (error) {
+      console.warn("Unable to persist session timestamp:", error);
+    }
   }
 }
 
