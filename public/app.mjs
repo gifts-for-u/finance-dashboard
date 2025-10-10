@@ -303,6 +303,10 @@ function formatPercentage(value) {
   return `${value.toFixed(0)}%`;
 }
 
+function formatPercentage(value) {
+  return `${value.toFixed(0)}%`;
+}
+
 function formatDate(date) {
   return new Intl.DateTimeFormat("id-ID", {
     year: "numeric",
