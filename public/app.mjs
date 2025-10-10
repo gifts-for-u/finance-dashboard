@@ -1,6 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
 import {
-  getFirestore,
   doc,
   getDoc,
   setDoc,
@@ -14,36 +12,71 @@ import {
   disableNetwork,
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
 import {
-  getAuth,
   onAuthStateChanged,
   signOut as firebaseSignOut,
 } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js";
+import { ensureFirebase } from "./firebase-core.js";
 
-// Firebase Configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyDxmGNxzxbX8UGBm82jn3PmzhiGq0GQT7Y",
-  authDomain: "finance-dashboard-10nfl.firebaseapp.com",
-  projectId: "finance-dashboard-10nfl",
-  storageBucket: "finance-dashboard-10nfl.firebasestorage.app",
-  messagingSenderId: "875656039609",
-  appId: "1:875656039609:web:4f5e11a81c58de312f9f68",
-};
+let db = null;
+let auth = null;
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+const firebaseReady = ensureFirebase().then((services) => {
+  db = services.db;
+  auth = services.auth;
+  return services;
+});
 
 // Import session manager
 let sessionManager = null;
 
 // Global Variables
-let currentUser = null;
 let currentDate = new Date();
 let currentMonthData = null;
 let expenseChart = null; // This will now hold ApexCharts instance
 let categories = [];
 let templates = [];
+
+function getCurrentUser() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  return window.__FINANCE_DASHBOARD_CURRENT_USER__ ?? null;
+}
+
+function setCurrentUser(user) {
+  if (typeof window !== "undefined") {
+    window.__FINANCE_DASHBOARD_CURRENT_USER__ = user ?? null;
+  }
+}
+
+function requireCurrentUser() {
+  const user = getCurrentUser();
+  if (!user) {
+    throw new Error("No authenticated user is available for this operation.");
+  }
+  return user;
+}
+
+// Table controls state
+let incomeSortOption = "date-desc";
+let expenseSortOption = "date-desc";
+let expenseCategoryFilter = "all";
+
+function getSelectValue(selectId, fallback) {
+  const select = document.getElementById(selectId);
+  if (select && select.value) {
+    return select.value;
+  }
+  return fallback;
+}
+
+function onDocumentReady(callback) {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", callback, { once: true });
+  } else {
+    callback();
+  }
+}
 
 // Default Categories
 const defaultCategories = [
@@ -97,6 +130,44 @@ const defaultCategories = [
   },
 ];
 
+const defaultCategoryColor = defaultCategories[0]?.color ?? "#4CAF50";
+
+const TABLE_SORT_CONFIG = {
+  income: {
+    date: { asc: "date-asc", desc: "date-desc", defaultDirection: "desc" },
+    amount: { asc: "amount-asc", desc: "amount-desc", defaultDirection: "desc" },
+    source: { asc: "alpha-asc", desc: "alpha-desc", defaultDirection: "asc" },
+  },
+  expense: {
+    date: { asc: "date-asc", desc: "date-desc", defaultDirection: "desc" },
+    amount: { asc: "amount-asc", desc: "amount-desc", defaultDirection: "desc" },
+    description: {
+      asc: "alpha-asc",
+      desc: "alpha-desc",
+      defaultDirection: "asc",
+    },
+    category: {
+      asc: "category-asc",
+      desc: "category-desc",
+      defaultDirection: "asc",
+    },
+  },
+};
+
+const TABLE_SORT_LABELS = {
+  income: {
+    date: "Tanggal",
+    amount: "Jumlah",
+    source: "Sumber",
+  },
+  expense: {
+    date: "Tanggal",
+    amount: "Jumlah",
+    description: "Keterangan",
+    category: "Kategori",
+  },
+};
+
 // Initialize session manager
 async function initializeSessionManager() {
   try {
@@ -118,23 +189,31 @@ async function initializeSessionManager() {
 }
 
 // Check Authentication on Page Load
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    currentUser = user;
-    updateUserProfile(user);
+firebaseReady
+  .then(({ auth: resolvedAuth }) => {
+    onAuthStateChanged(resolvedAuth, async (user) => {
+      if (user) {
+        setCurrentUser(user);
+        updateUserProfile(user);
 
-    // Initialize session manager after authentication
-    await initializeSessionManager();
-
-    await initializeDashboard();
-  } else {
-    // Not authenticated, redirect to login
-    if (sessionManager) {
-      sessionManager.destroy();
-    }
-    window.location.href = "/login.html";
-  }
-});
+        await initializeSessionManager();
+        await initializeDashboard();
+      } else {
+        setCurrentUser(null);
+        if (sessionManager) {
+          sessionManager.destroy();
+        }
+        window.location.href = "/login.html";
+      }
+    });
+  })
+  .catch((error) => {
+    console.error("Failed to initialise Firebase auth state listener:", error);
+    showToast(
+      "Konfigurasi Firebase tidak valid. Perbarui pengaturan Firebase Anda dan muat ulang.",
+      "error",
+    );
+  });
 
 // Update User Profile Display
 function updateUserProfile(user) {
@@ -154,6 +233,7 @@ function updateUserProfile(user) {
 // Sign Out Function (updated to handle forced logout)
 async function signOut(isForced = false) {
   try {
+    await firebaseReady;
     // Destroy session manager
     if (sessionManager) {
       sessionManager.destroy();
@@ -161,12 +241,14 @@ async function signOut(isForced = false) {
     }
 
     await firebaseSignOut(auth);
+    setCurrentUser(null);
 
     // Clear any stored data
     localStorage.removeItem("userDisplayName");
     localStorage.removeItem("userEmail");
     localStorage.removeItem("userPhotoURL");
     localStorage.removeItem("loginTimestamp");
+    localStorage.removeItem("lastActivityTimestamp");
 
     // Show appropriate message
     if (isForced) {
@@ -195,6 +277,10 @@ function formatCurrency(amount) {
     currency: "IDR",
     minimumFractionDigits: 0,
   }).format(amount);
+}
+
+function formatPercentage(value) {
+  return `${value.toFixed(0)}%`;
 }
 
 function formatDate(date) {
@@ -234,12 +320,200 @@ function formatShortDate(date) {
   }).format(dateObj);
 }
 
+function formatDateForInput(date) {
+  if (!date) return "";
+  const parsed = convertFirestoreDate(date);
+  if (Number.isNaN(parsed.getTime())) {
+    return "";
+  }
+
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function parseDateInput(value) {
+  if (!value) {
+    return new Date();
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+  const parsed = new Date(year, (month || 1) - 1, day || 1);
+  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+}
+
+function getComparableDateValue(date) {
+  const parsed = convertFirestoreDate(date);
+  return parsed.getTime();
+}
+
+function getCategoryName(categoryId) {
+  const category = categories.find((cat) => cat.id === categoryId);
+  return category ? category.name : categoryId || "-";
+}
+
+function getDefaultEntryDate() {
+  const reference = currentDate instanceof Date ? new Date(currentDate) : null;
+  const today = new Date();
+
+  if (reference) {
+    if (
+      reference.getFullYear() === today.getFullYear() &&
+      reference.getMonth() === today.getMonth()
+    ) {
+      return today;
+    }
+    return reference;
+  }
+
+  return today;
+}
+
+function reapplyTableSearch(tableBodyId, searchInputId) {
+  const searchInput = document.getElementById(searchInputId);
+  if (!searchInput) {
+    return;
+  }
+
+  const searchTerm = searchInput.value.toLowerCase();
+  if (!searchTerm) {
+    return;
+  }
+
+  const rows = document.querySelectorAll(`#${tableBodyId} tr`);
+  rows.forEach((row) => {
+    const text = row.textContent.toLowerCase();
+    row.style.display = text.includes(searchTerm) ? "" : "none";
+  });
+}
+
+function getSortKeyFromOption(target, option) {
+  const config = TABLE_SORT_CONFIG[target];
+  if (!config || !option) {
+    return null;
+  }
+
+  return (
+    Object.entries(config).find(([, values]) =>
+      values.asc === option || values.desc === option
+    )?.[0] ?? null
+  );
+}
+
+function determineNextSortOption(target, key) {
+  const config = TABLE_SORT_CONFIG[target]?.[key];
+  if (!config) {
+    return null;
+  }
+
+  const currentOption =
+    target === "income" ? incomeSortOption : expenseSortOption;
+
+  if (currentOption === config.asc) {
+    return config.desc;
+  }
+
+  if (currentOption === config.desc) {
+    return config.asc;
+  }
+
+  const defaultDirection = config.defaultDirection === "asc" ? "asc" : "desc";
+  return config[defaultDirection];
+}
+
+function updateSortIndicators(target, option) {
+  const activeKey = getSortKeyFromOption(target, option);
+  const direction = option?.endsWith("-asc") ? "asc" : "desc";
+
+  document
+    .querySelectorAll(`.sort-indicator[data-sort-target="${target}"]`)
+    .forEach((indicator) => {
+      if (indicator.dataset.sortKey === activeKey) {
+        indicator.dataset.direction = direction;
+        indicator.classList.add("is-active");
+      } else {
+        delete indicator.dataset.direction;
+        indicator.classList.remove("is-active");
+      }
+    });
+
+  document
+    .querySelectorAll(`.table-sort-button[data-sort-target="${target}"]`)
+    .forEach((button) => {
+      const buttonKey = button.dataset.sortKey;
+      const label =
+        TABLE_SORT_LABELS[target]?.[buttonKey] ||
+        button.textContent.trim() ||
+        "Kolom";
+
+      if (buttonKey === activeKey) {
+        button.setAttribute("aria-pressed", "true");
+        button.dataset.direction = direction;
+        const directionLabel = direction === "asc" ? "menaik" : "menurun";
+        button.title = `Urutkan ${label} (${directionLabel})`;
+      } else {
+        button.setAttribute("aria-pressed", "false");
+        delete button.dataset.direction;
+        button.title = `Urutkan ${label}`;
+      }
+    });
+}
+
+function toggleSortOption(target, key) {
+  const nextOption = determineNextSortOption(target, key);
+  if (!nextOption) {
+    return;
+  }
+
+  if (target === "income") {
+    incomeSortOption = nextOption;
+    const select = document.getElementById("incomeSort");
+    if (select && select.value !== nextOption) {
+      select.value = nextOption;
+    }
+    updateIncomeTable();
+  } else if (target === "expense") {
+    expenseSortOption = nextOption;
+    const select = document.getElementById("expenseSort");
+    if (select && select.value !== nextOption) {
+      select.value = nextOption;
+    }
+    updateExpenseTable();
+  }
+}
+
+function registerTableSortButtons() {
+  const buttons = document.querySelectorAll(".table-sort-button");
+  buttons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const target = button.dataset.sortTarget;
+      const key = button.dataset.sortKey;
+      toggleSortOption(target, key);
+    });
+  });
+}
+
 function isDoneDescription(text) {
   if (!text) {
     return false;
   }
 
   return String(text).toLowerCase().includes("done");
+}
+
+function isSavingsCategory(expense) {
+  if (!expense) {
+    return false;
+  }
+
+  const category = categories.find((cat) => cat.id === expense.category);
+  if (!category) {
+    return false;
+  }
+
+  const normalisedName = String(category.name || "").toLowerCase();
+  return category.id === "savings" || normalisedName.includes("tabungan");
 }
 
 function generateId() {
@@ -341,6 +615,13 @@ function loadTheme() {
 function convertFirestoreData(data) {
   if (!data) return data;
 
+  if (data.incomes && Array.isArray(data.incomes)) {
+    data.incomes = data.incomes.map((income) => ({
+      ...income,
+      date: convertFirestoreDate(income.date),
+    }));
+  }
+
   // Convert expense dates
   if (data.expenses && Array.isArray(data.expenses)) {
     data.expenses = data.expenses.map((expense) => ({
@@ -392,6 +673,7 @@ function convertFirestoreDate(date) {
 async function initializeDashboard() {
   showLoading();
   try {
+    await firebaseReady;
     await loadCategories();
     await loadTemplates();
     await loadMonthData();
@@ -428,25 +710,27 @@ async function initializeDashboard() {
 }
 
 async function loadCategories() {
-  const docRef = doc(db, "users", currentUser.uid, "categories", "main");
+  const user = requireCurrentUser();
+  const docRef = doc(db, "users", user.uid, "categories", "main");
   const docSnap = await getDoc(docRef);
 
   if (docSnap.exists()) {
     categories = docSnap.data().categories || [];
   } else {
-    // Initialize with default categories
     categories = [...defaultCategories];
     await saveCategories();
   }
 }
 
 async function saveCategories() {
-  const docRef = doc(db, "users", currentUser.uid, "categories", "main");
+  const user = requireCurrentUser();
+  const docRef = doc(db, "users", user.uid, "categories", "main");
   await setDoc(docRef, { categories });
 }
 
 async function loadTemplates() {
-  const docRef = doc(db, "users", currentUser.uid, "templates", "recurring");
+  const user = requireCurrentUser();
+  const docRef = doc(db, "users", user.uid, "templates", "recurring");
   const docSnap = await getDoc(docRef);
 
   if (docSnap.exists()) {
@@ -457,13 +741,15 @@ async function loadTemplates() {
 }
 
 async function saveTemplates() {
-  const docRef = doc(db, "users", currentUser.uid, "templates", "recurring");
+  const user = requireCurrentUser();
+  const docRef = doc(db, "users", user.uid, "templates", "recurring");
   await setDoc(docRef, { templates });
 }
 
 async function loadMonthData() {
   const monthKey = getCurrentMonthKey();
-  const docRef = doc(db, "users", currentUser.uid, "months", monthKey);
+  const user = requireCurrentUser();
+  const docRef = doc(db, "users", user.uid, "months", monthKey);
   const docSnap = await getDoc(docRef);
 
   if (docSnap.exists()) {
@@ -480,7 +766,7 @@ async function loadMonthData() {
           id: generateId(),
           amount: currentMonthData.income,
           source: "Migrated Income",
-          date: new Date(),
+          date: getDefaultEntryDate(),
           description: "Data pemasukan lama",
         },
       ];
@@ -505,14 +791,15 @@ async function loadMonthData() {
 async function migrateOctoberDataManually() {
   // Only run if explicitly called and for specific user
   const AUTHORIZED_USER_ID = "YOUR_USER_ID_HERE"; // Replace with your actual user ID
+  const user = requireCurrentUser();
 
-  if (currentUser.uid !== AUTHORIZED_USER_ID) {
+  if (user.uid !== AUTHORIZED_USER_ID) {
     showToast("Migration not authorized for this user", "warning");
     return;
   }
 
   // Check if already migrated
-  const migrationRef = doc(db, "users", currentUser.uid, "migration", "status");
+  const migrationRef = doc(db, "users", user.uid, "migration", "status");
   const migrationDoc = await getDoc(migrationRef);
 
   if (migrationDoc.exists() && migrationDoc.data().completed) {
@@ -604,7 +891,7 @@ async function migrateOctoberDataManually() {
   await setDoc(migrationRef, {
     completed: true,
     completedAt: new Date(),
-    userId: currentUser.uid,
+    userId: user.uid,
   });
 
   showToast("Data Oktober berhasil dimigrasikan", "success");
@@ -614,9 +901,41 @@ async function saveMonthData() {
   if (!currentMonthData) return;
 
   const monthKey = getCurrentMonthKey();
-  const docRef = doc(db, "users", currentUser.uid, "months", monthKey);
+  const user = requireCurrentUser();
+  const docRef = doc(db, "users", user.uid, "months", monthKey);
 
-  currentMonthData.metadata.updatedAt = new Date();
+  // Ensure metadata exists for legacy data before saving to Firestore
+  if (!currentMonthData.metadata || typeof currentMonthData.metadata !== "object") {
+    currentMonthData.metadata = {
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  } else {
+    if (!currentMonthData.metadata.createdAt) {
+      currentMonthData.metadata.createdAt = new Date();
+    }
+    currentMonthData.metadata.updatedAt = new Date();
+  }
+
+  // Normalise potential legacy structures to avoid runtime errors
+  if (!Array.isArray(currentMonthData.incomes)) {
+    currentMonthData.incomes = [];
+  }
+
+  if (!Array.isArray(currentMonthData.expenses)) {
+    currentMonthData.expenses = [];
+  }
+
+  currentMonthData.incomes = currentMonthData.incomes.map((income) => ({
+    ...income,
+    date: convertFirestoreDate(income.date),
+  }));
+
+  currentMonthData.expenses = currentMonthData.expenses.map((expense) => ({
+    ...expense,
+    date: convertFirestoreDate(expense.date),
+  }));
+
   await setDoc(docRef, currentMonthData);
 }
 
@@ -640,40 +959,131 @@ function updateSummaryCards() {
   const incomes = currentMonthData?.incomes || [];
   const expenses = currentMonthData?.expenses || [];
 
-  const totalIncome = incomes.reduce((sum, income) => sum + income.amount, 0);
-  const totalDoneExpense = expenses
+  const totalIncome = incomes.reduce(
+    (sum, income) => sum + Number(income.amount || 0),
+    0
+  );
+  const totalPlannedExpense = expenses.reduce(
+    (sum, expense) => sum + Number(expense.amount || 0),
+    0
+  );
+  const totalActualExpense = expenses
     .filter((expense) => isDoneDescription(expense?.description))
     .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
-  const balance = totalIncome - totalDoneExpense;
+  const actualBalance = totalIncome - totalActualExpense;
+  const plannedRemaining = totalIncome - totalPlannedExpense;
+  const totalSavingsExpense = expenses
+    .filter((expense) => isSavingsCategory(expense))
+    .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+  const savingsRate =
+    totalIncome > 0 ? (totalSavingsExpense / totalIncome) * 100 : null;
 
-  document.getElementById("totalIncome").textContent =
-    formatCurrency(totalIncome);
-  document.getElementById("totalExpense").textContent =
-    formatCurrency(totalDoneExpense);
-  document.getElementById("totalBalance").textContent = formatCurrency(balance);
+  const totalIncomeElement = document.getElementById("totalIncome");
+  if (totalIncomeElement) {
+    totalIncomeElement.textContent = formatCurrency(totalIncome);
+  }
 
-  // Color coding for balance
-  const balanceElement = document.getElementById("totalBalance");
-  if (balance > 0) {
-    balanceElement.style.color = "var(--success-color)";
-  } else if (balance < 0) {
-    balanceElement.style.color = "var(--danger-color)";
-  } else {
-    balanceElement.style.color = "var(--text-primary)";
+  const plannedExpenseElement = document.getElementById("totalExpensePlanned");
+  if (plannedExpenseElement) {
+    plannedExpenseElement.textContent = formatCurrency(totalPlannedExpense);
+  }
+
+  const actualExpenseElement = document.getElementById("totalExpenseActual");
+  if (actualExpenseElement) {
+    actualExpenseElement.textContent = formatCurrency(totalActualExpense);
+  }
+
+  const actualBalanceElement = document.getElementById("actualBalance");
+  if (actualBalanceElement) {
+    actualBalanceElement.textContent = formatCurrency(actualBalance);
+
+    if (actualBalance > 0) {
+      actualBalanceElement.style.color = "var(--success-color)";
+    } else if (actualBalance < 0) {
+      actualBalanceElement.style.color = "var(--danger-color)";
+    } else {
+      actualBalanceElement.style.color = "var(--text-primary)";
+    }
+  }
+
+  const plannedRemainingElement = document.getElementById("plannedRemaining");
+  if (plannedRemainingElement) {
+    plannedRemainingElement.textContent = formatCurrency(plannedRemaining);
+
+    if (plannedRemaining > 0) {
+      plannedRemainingElement.style.color = "var(--success-color)";
+    } else if (plannedRemaining < 0) {
+      plannedRemainingElement.style.color = "var(--danger-color)";
+    } else {
+      plannedRemainingElement.style.color = "var(--text-primary)";
+    }
+  }
+
+  const savingsRateElement = document.getElementById("savingsRate");
+  if (savingsRateElement) {
+    if (savingsRate === null) {
+      savingsRateElement.textContent = "—";
+      savingsRateElement.style.color = "var(--text-secondary)";
+    } else {
+      savingsRateElement.textContent = formatPercentage(savingsRate);
+
+      if (savingsRate >= 20) {
+        savingsRateElement.style.color = "var(--success-color)";
+      } else if (savingsRate >= 10) {
+        savingsRateElement.style.color = "var(--warning-color)";
+      } else if (savingsRate >= 0) {
+        savingsRateElement.style.color = "var(--text-primary)";
+      } else {
+        savingsRateElement.style.color = "var(--danger-color)";
+      }
+    }
   }
 }
 
 function updateIncomeTable() {
   const tbody = document.getElementById("incomeTableBody");
-  const incomes = currentMonthData?.incomes || [];
+  const incomes = Array.isArray(currentMonthData?.incomes)
+    ? [...currentMonthData.incomes]
+    : [];
 
-  if (incomes.length === 0) {
+  const selectedSort = getSelectValue("incomeSort", incomeSortOption);
+  if (selectedSort !== incomeSortOption) {
+    incomeSortOption = selectedSort;
+  }
+
+  updateSortIndicators("income", incomeSortOption);
+
+  const sortedIncomes = incomes.sort((a, b) => {
+    switch (incomeSortOption) {
+      case "date-asc":
+        return getComparableDateValue(a.date) - getComparableDateValue(b.date);
+      case "amount-desc":
+        return (b.amount || 0) - (a.amount || 0);
+      case "amount-asc":
+        return (a.amount || 0) - (b.amount || 0);
+      case "alpha-desc": {
+        const sourceA = (a.source || "").toLowerCase();
+        const sourceB = (b.source || "").toLowerCase();
+        return sourceB.localeCompare(sourceA, "id");
+      }
+      case "alpha-asc": {
+        const sourceA = (a.source || "").toLowerCase();
+        const sourceB = (b.source || "").toLowerCase();
+        return sourceA.localeCompare(sourceB, "id");
+      }
+      case "date-desc":
+      default:
+        return getComparableDateValue(b.date) - getComparableDateValue(a.date);
+    }
+  });
+
+  if (sortedIncomes.length === 0) {
     tbody.innerHTML =
       '<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">Belum ada pemasukan</td></tr>';
     return;
   }
 
-  tbody.innerHTML = incomes
+  tbody.innerHTML = sortedIncomes
     .map((income) => {
       // Safely format the date
       let formattedDate = "N/A";
@@ -708,22 +1118,83 @@ function updateIncomeTable() {
       `;
     })
     .join("");
+
+  reapplyTableSearch("incomeTableBody", "searchIncome");
 }
 
 function updateExpenseTable() {
   const tbody = document.getElementById("expenseTableBody");
-  const expenses = currentMonthData?.expenses || [];
+  const expenses = Array.isArray(currentMonthData?.expenses)
+    ? [...currentMonthData.expenses]
+    : [];
 
-  if (expenses.length === 0) {
+  const activeCategoryFilter = getSelectValue(
+    "expenseCategoryFilter",
+    expenseCategoryFilter,
+  );
+
+  if (activeCategoryFilter !== expenseCategoryFilter) {
+    expenseCategoryFilter = activeCategoryFilter;
+  }
+
+  const filteredExpenses = expenses.filter((expense) => {
+    if (activeCategoryFilter === "all") {
+      return true;
+    }
+    return expense.category === activeCategoryFilter;
+  });
+
+  const selectedSort = getSelectValue("expenseSort", expenseSortOption);
+  if (selectedSort !== expenseSortOption) {
+    expenseSortOption = selectedSort;
+  }
+
+  updateSortIndicators("expense", expenseSortOption);
+
+  const sortedExpenses = filteredExpenses.sort((a, b) => {
+    switch (expenseSortOption) {
+      case "date-asc":
+        return getComparableDateValue(a.date) - getComparableDateValue(b.date);
+      case "amount-desc":
+        return (b.amount || 0) - (a.amount || 0);
+      case "amount-asc":
+        return (a.amount || 0) - (b.amount || 0);
+      case "alpha-desc": {
+        const descA = (a.description || getCategoryName(a.category) || "").toLowerCase();
+        const descB = (b.description || getCategoryName(b.category) || "").toLowerCase();
+        return descB.localeCompare(descA, "id");
+      }
+      case "alpha-asc": {
+        const descA = (a.description || getCategoryName(a.category) || "").toLowerCase();
+        const descB = (b.description || getCategoryName(b.category) || "").toLowerCase();
+        return descA.localeCompare(descB, "id");
+      }
+      case "category-desc": {
+        const categoryA = getCategoryName(a.category).toLowerCase();
+        const categoryB = getCategoryName(b.category).toLowerCase();
+        return categoryB.localeCompare(categoryA, "id");
+      }
+      case "category-asc": {
+        const categoryA = getCategoryName(a.category).toLowerCase();
+        const categoryB = getCategoryName(b.category).toLowerCase();
+        return categoryA.localeCompare(categoryB, "id");
+      }
+      case "date-desc":
+      default:
+        return getComparableDateValue(b.date) - getComparableDateValue(a.date);
+    }
+  });
+
+  if (sortedExpenses.length === 0) {
     tbody.innerHTML =
       '<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">Belum ada pengeluaran</td></tr>';
     return;
   }
 
-  tbody.innerHTML = expenses
+  tbody.innerHTML = sortedExpenses
     .map((expense) => {
       const category = categories.find((cat) => cat.id === expense.category);
-      const categoryName = category ? category.name : expense.category;
+      const categoryName = getCategoryName(expense.category);
 
       // Safely format the date
       let formattedDate = "N/A";
@@ -767,6 +1238,8 @@ function updateExpenseTable() {
       `;
     })
     .join("");
+
+  reapplyTableSearch("expenseTableBody", "searchExpense");
 }
 
 function updateChart() {
@@ -905,21 +1378,45 @@ function updateChart() {
 
 function updateCategorySelect() {
   const select = document.getElementById("expenseCategory");
-  select.innerHTML = categories
-    .map(
-      (category) => `<option value="${category.id}">${category.name}</option>`
-    )
-    .join("");
+  if (select) {
+    select.innerHTML = categories
+      .map(
+        (category) => `<option value="${category.id}">${category.name}</option>`
+      )
+      .join("");
+  }
+
+  const filterSelect = document.getElementById("expenseCategoryFilter");
+  if (filterSelect) {
+    const previousValue = expenseCategoryFilter;
+    const options = [
+      '<option value="all">Semua Kategori</option>',
+      ...categories.map(
+        (category) =>
+          `<option value="${category.id}">${category.name}</option>`
+      ),
+    ];
+    filterSelect.innerHTML = options.join("");
+
+    if (
+      previousValue !== "all" &&
+      !categories.some((category) => category.id === previousValue)
+    ) {
+      expenseCategoryFilter = "all";
+    }
+
+    filterSelect.value = expenseCategoryFilter;
+  }
 }
 
 function updateCategoryList() {
   const container = document.getElementById("categoryList");
   container.innerHTML = categories
-    .map(
-      (category) => `
-        <div class="template-item" style="border-left: 4px solid ${
-          category.color
-        }">
+    .map((category) => {
+      const colorValue = category.color || defaultCategoryColor;
+      const colorDisplay = String(colorValue).toUpperCase();
+      return `
+        <div class="template-item" style="border-left: 4px solid ${colorValue}">
           <div>
             <strong>${category.name}</strong>
             ${
@@ -927,8 +1424,21 @@ function updateCategoryList() {
                 ? '<small style="color: var(--text-secondary)"> (Default)</small>'
                 : ""
             }
+            <div class="category-meta">
+              <span
+                class="category-color-chip"
+                style="background-color: ${colorValue};"
+                aria-hidden="true"
+              ></span>
+              <small class="category-color-label">${colorDisplay}</small>
+            </div>
           </div>
           <div>
+            <button class="btn btn-sm btn-secondary" onclick="editCategory('${
+              category.id
+            }')">
+              <i class="fas fa-pen"></i>
+            </button>
             ${
               !category.isDefault
                 ? `
@@ -940,8 +1450,8 @@ function updateCategoryList() {
             }
           </div>
         </div>
-      `
-    )
+      `;
+    })
     .join("");
 }
 
@@ -997,6 +1507,7 @@ function showIncomeModal(incomeId = null) {
   const modalTitle = document.getElementById("incomeModalTitle");
   const submitText = document.getElementById("incomeSubmitText");
   const incomeHint = document.getElementById("incomeHint");
+  const incomeDateInput = document.getElementById("incomeDate");
 
   // Reset form
   document.getElementById("incomeForm").reset();
@@ -1009,6 +1520,11 @@ function showIncomeModal(incomeId = null) {
       incomeSourceInput.value = income.source || "";
       document.getElementById("incomeDescription").value =
         income.description || "";
+      if (incomeDateInput) {
+        const formattedDate = formatDateForInput(income.date);
+        incomeDateInput.value =
+          formattedDate || formatDateForInput(getDefaultEntryDate());
+      }
 
       modalTitle.textContent = "Edit Pemasukan";
       submitText.textContent = "Update";
@@ -1028,6 +1544,9 @@ function showIncomeModal(incomeId = null) {
 
     // Clear income ID
     incomeAmountInput.removeAttribute("data-income-id");
+    if (incomeDateInput) {
+      incomeDateInput.value = formatDateForInput(getDefaultEntryDate());
+    }
   }
 
   showModal("incomeModal");
@@ -1069,12 +1588,15 @@ function deleteIncome(incomeId) {
 
 // Expense Modal Functions
 function showExpenseModal(expenseId = null) {
-  const modal = document.getElementById("expenseModal");
   const form = document.getElementById("expenseForm");
+  const expenseDateInput = document.getElementById("expenseDate");
 
   // Reset form
   form.reset();
   document.getElementById("expenseId").value = expenseId || "";
+  if (expenseDateInput) {
+    expenseDateInput.value = formatDateForInput(getDefaultEntryDate());
+  }
 
   if (expenseId) {
     const expense = currentMonthData.expenses.find(
@@ -1087,6 +1609,11 @@ function showExpenseModal(expenseId = null) {
         expense.description || "";
       document.getElementById("expenseRecurring").checked =
         expense.isRecurring || false;
+      if (expenseDateInput) {
+        const formattedExpenseDate = formatDateForInput(expense.date);
+        expenseDateInput.value =
+          formattedExpenseDate || formatDateForInput(getDefaultEntryDate());
+      }
     }
   }
 
@@ -1117,19 +1644,79 @@ function deleteExpense(expenseId) {
 }
 
 // Category Modal Functions
+function configureCategoryForm(mode, category = null) {
+  const form = document.getElementById("categoryForm");
+  const title = document.getElementById("categoryFormTitle");
+  const submitLabel = document.getElementById("categoryFormSubmitLabel");
+  const nameInput = document.getElementById("categoryName");
+  const colorInput = document.getElementById("categoryColor");
+  const idInput = document.getElementById("categoryId");
+
+  if (!form || !title || !submitLabel || !nameInput || !colorInput || !idInput) {
+    return;
+  }
+
+  if (mode === "edit" && category) {
+    form.dataset.mode = "edit";
+    idInput.value = category.id;
+    nameInput.value = category.name;
+    colorInput.value = category.color || defaultCategoryColor;
+    title.textContent = "Edit kategori";
+    submitLabel.textContent = "Simpan";
+  } else {
+    form.reset();
+    form.dataset.mode = "add";
+    idInput.value = "";
+    colorInput.value = defaultCategoryColor;
+    title.textContent = "Tambah kategori baru";
+    submitLabel.textContent = "Tambah";
+  }
+}
+
 function showCategoryModal() {
+  hideAddCategoryForm();
   updateCategoryList();
   showModal("categoryModal");
 }
 
 function showAddCategoryForm() {
-  document.getElementById("addCategoryForm").style.display = "block";
-  document.getElementById("categoryName").focus();
+  configureCategoryForm("add");
+  const container = document.getElementById("addCategoryForm");
+  if (container) {
+    container.style.display = "block";
+  }
+  const nameInput = document.getElementById("categoryName");
+  if (nameInput) {
+    nameInput.focus();
+  }
 }
 
 function hideAddCategoryForm() {
-  document.getElementById("addCategoryForm").style.display = "none";
-  document.getElementById("categoryForm").reset();
+  const container = document.getElementById("addCategoryForm");
+  if (container) {
+    container.style.display = "none";
+  }
+  configureCategoryForm("add");
+}
+
+function editCategory(categoryId) {
+  const category = categories.find((cat) => cat.id === categoryId);
+  if (!category) {
+    showToast("Kategori tidak ditemukan", "error");
+    return;
+  }
+
+  configureCategoryForm("edit", category);
+  const container = document.getElementById("addCategoryForm");
+  if (container) {
+    container.style.display = "block";
+  }
+
+  const nameInput = document.getElementById("categoryName");
+  if (nameInput) {
+    nameInput.focus();
+    nameInput.select();
+  }
 }
 
 function deleteCategory(categoryId) {
@@ -1195,7 +1782,7 @@ async function applyTemplates() {
           category: template.category,
           amount: template.amount,
           description: template.description,
-          date: new Date(),
+          date: getDefaultEntryDate(),
           isRecurring: true,
         }));
 
@@ -1585,7 +2172,11 @@ function importData() {
 }
 
 // Form Handlers
-document.addEventListener("DOMContentLoaded", () => {
+onDocumentReady(() => {
+  registerTableSortButtons();
+  updateSortIndicators("income", incomeSortOption);
+  updateSortIndicators("expense", expenseSortOption);
+
   // Income form handler
   document
     .getElementById("incomeForm")
@@ -1598,6 +2189,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const description = document
           .getElementById("incomeDescription")
           .value.trim();
+        const incomeDateElement = document.getElementById("incomeDate");
+        const dateValue = incomeDateElement ? incomeDateElement.value : "";
+        const date = parseDateInput(dateValue);
 
         // Get income ID if editing
         const incomeId = document
@@ -1631,6 +2225,7 @@ document.addEventListener("DOMContentLoaded", () => {
               amount,
               source,
               description,
+              date,
             };
             showToast("Pemasukan berhasil diperbarui", "success");
           }
@@ -1641,7 +2236,7 @@ document.addEventListener("DOMContentLoaded", () => {
             amount,
             source,
             description,
-            date: new Date(),
+            date,
           };
           currentMonthData.incomes.push(newIncome);
           showToast("Pemasukan berhasil ditambah", "success");
@@ -1668,6 +2263,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const amount = parseInt(document.getElementById("expenseAmount").value);
         const description = document.getElementById("expenseDescription").value;
         const isRecurring = document.getElementById("expenseRecurring").checked;
+        const expenseDateElement = document.getElementById("expenseDate");
+        const expenseDateValue = expenseDateElement
+          ? expenseDateElement.value
+          : "";
+        const date = parseDateInput(expenseDateValue);
 
         if (!currentMonthData) {
           currentMonthData = {
@@ -1692,6 +2292,7 @@ document.addEventListener("DOMContentLoaded", () => {
               category,
               amount,
               description,
+              date,
               isRecurring,
             };
           }
@@ -1702,7 +2303,7 @@ document.addEventListener("DOMContentLoaded", () => {
             category,
             amount,
             description,
-            date: new Date(),
+            date,
             isRecurring,
           };
           currentMonthData.expenses.push(newExpense);
@@ -1744,43 +2345,76 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
   // Category form handler
-  document
-    .getElementById("categoryForm")
-    .addEventListener("submit", async (e) => {
+  const categoryForm = document.getElementById("categoryForm");
+  if (categoryForm) {
+    categoryForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
       try {
         const name = document.getElementById("categoryName").value.trim();
         const color = document.getElementById("categoryColor").value;
+        const mode = categoryForm.dataset.mode || "add";
+        const idInput = document.getElementById("categoryId");
+        const editingId = idInput ? idInput.value : "";
 
-        // Check if category name already exists
-        if (
-          categories.some(
-            (cat) => cat.name.toLowerCase() === name.toLowerCase()
-          )
-        ) {
+        const normalizedName = name.toLowerCase();
+        const duplicate = categories.some(
+          (cat) =>
+            cat.name.toLowerCase() === normalizedName &&
+            (mode === "add" || cat.id !== editingId),
+        );
+
+        if (duplicate) {
           showToast("Nama kategori sudah ada", "warning");
           return;
         }
 
-        const newCategory = {
-          id: generateId(),
-          name,
-          color,
-          isDefault: false,
-        };
+        if (mode === "edit" && editingId) {
+          const categoryIndex = categories.findIndex(
+            (cat) => cat.id === editingId,
+          );
 
-        categories.push(newCategory);
-        await saveCategories();
-        updateCategoryList();
-        updateCategorySelect();
-        hideAddCategoryForm();
-        showToast("Kategori berhasil ditambah", "success");
+          if (categoryIndex === -1) {
+            showToast("Kategori tidak ditemukan", "error");
+            return;
+          }
+
+          categories[categoryIndex] = {
+            ...categories[categoryIndex],
+            name,
+            color,
+          };
+
+          await saveCategories();
+          updateCategoryList();
+          updateCategorySelect();
+          updateExpenseTable();
+          updateChart();
+          updateTemplatesList();
+          hideAddCategoryForm();
+          showToast("Kategori berhasil diperbarui", "success");
+        } else {
+          const newCategory = {
+            id: generateId(),
+            name,
+            color,
+            isDefault: false,
+          };
+
+          categories.push(newCategory);
+          await saveCategories();
+          updateCategoryList();
+          updateCategorySelect();
+          updateTemplatesList();
+          hideAddCategoryForm();
+          showToast("Kategori berhasil ditambah", "success");
+        }
       } catch (error) {
-        console.error("Add category error:", error);
-        showToast("Gagal menambah kategori", "error");
+        console.error("Category save error:", error);
+        showToast("Gagal menyimpan kategori", "error");
       }
     });
+  }
 
   // Search functions
   document.getElementById("searchExpense").addEventListener("input", (e) => {
@@ -1802,6 +2436,39 @@ document.addEventListener("DOMContentLoaded", () => {
       row.style.display = text.includes(searchTerm) ? "" : "none";
     });
   });
+
+  const incomeSortSelect = document.getElementById("incomeSort");
+  if (incomeSortSelect) {
+    incomeSortOption = incomeSortSelect.value || incomeSortOption;
+    incomeSortSelect.value = incomeSortOption;
+    incomeSortSelect.addEventListener("change", (event) => {
+      incomeSortOption = event.target.value;
+      updateIncomeTable();
+    });
+  }
+
+  const expenseSortSelect = document.getElementById("expenseSort");
+  if (expenseSortSelect) {
+    expenseSortOption = expenseSortSelect.value || expenseSortOption;
+    expenseSortSelect.value = expenseSortOption;
+    expenseSortSelect.addEventListener("change", (event) => {
+      expenseSortOption = event.target.value;
+      updateExpenseTable();
+    });
+  }
+
+  const expenseCategoryFilterSelect = document.getElementById(
+    "expenseCategoryFilter"
+  );
+  if (expenseCategoryFilterSelect) {
+    expenseCategoryFilter =
+      expenseCategoryFilterSelect.value || expenseCategoryFilter;
+    expenseCategoryFilterSelect.value = expenseCategoryFilter;
+    expenseCategoryFilterSelect.addEventListener("change", (event) => {
+      expenseCategoryFilter = event.target.value;
+      updateExpenseTable();
+    });
+  }
 
   // Initialize theme
   loadTheme();
@@ -1851,6 +2518,7 @@ window.deleteExpense = deleteExpense;
 window.showCategoryModal = showCategoryModal;
 window.showAddCategoryForm = showAddCategoryForm;
 window.hideAddCategoryForm = hideAddCategoryForm;
+window.editCategory = editCategory;
 window.deleteCategory = deleteCategory;
 window.showTemplateModal = showTemplateModal;
 window.deleteTemplate = deleteTemplate;
