@@ -241,6 +241,7 @@ body {
   background: var(--bg-card);
   border-radius: 12px;
   padding: 25px;
+  padding-bottom: 64px;
   text-align: center;
   box-shadow: var(--shadow);
   border: 1px solid var(--border-color);
@@ -250,7 +251,7 @@ body {
 
 .summary-info-btn {
   position: absolute;
-  top: 16px;
+  bottom: 16px;
   right: 16px;
   width: 32px;
   height: 32px;
@@ -281,7 +282,7 @@ body {
 
 .summary-info-tooltip {
   position: absolute;
-  top: 64px;
+  bottom: 64px;
   right: 16px;
   min-width: 220px;
   max-width: 260px;
@@ -293,7 +294,7 @@ body {
   border: 1px solid rgba(15, 23, 42, 0.08);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-4px);
+  transform: translateY(4px);
   transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
   pointer-events: none;
   text-align: left;
@@ -330,14 +331,14 @@ body {
 
 @media (max-width: 768px) {
   .summary-info-btn {
-    top: 12px;
+    bottom: 12px;
     right: 12px;
     background: rgba(255, 255, 255, 0.95);
   }
 
   .summary-info-tooltip {
     top: auto;
-    bottom: 16px;
+    bottom: 60px;
     right: 12px;
     left: 12px;
     max-width: none;
