@@ -168,6 +168,32 @@ const TABLE_SORT_LABELS = {
   },
 };
 
+const SUMMARY_CARD_INFO = {
+  income: {
+    description: "Jumlah seluruh pemasukan yang sudah kamu catat untuk bulan ini.",
+  },
+  expensePlanned: {
+    description:
+      "Total semua pengeluaran yang direncanakan atau sudah diinput tanpa melihat status selesai.",
+  },
+  expenseActual: {
+    description:
+      "Total pengeluaran yang sudah ditandai selesai (status \"done\") pada bulan ini.",
+  },
+  balanceActual: {
+    description:
+      "Selisih antara total pemasukan dan pengeluaran aktual—menunjukkan uang yang benar-benar tersisa saat ini.",
+  },
+  balancePlanned: {
+    description:
+      "Perkiraan sisa uang jika semua pengeluaran yang direncanakan terealisasi (pemasukan dikurangi seluruh pengeluaran).",
+  },
+  savingsRatio: {
+    description:
+      "Persentase pemasukan yang dialokasikan ke kategori Tabungan dibandingkan total pemasukan bulan ini.",
+  },
+};
+
 // Initialize session manager
 async function initializeSessionManager() {
   try {
@@ -998,6 +1024,161 @@ function updateUI() {
 
 function updateCurrentMonthDisplay() {
   document.getElementById("currentMonth").textContent = formatDate(currentDate);
+}
+
+function initializeSummaryCardTooltips() {
+  const cards = document.querySelectorAll(
+    ".summary-card[data-summary-key]"
+  );
+
+  if (!cards.length) {
+    return;
+  }
+
+  const canHover = window.matchMedia
+    ? window.matchMedia("(hover: hover)").matches
+    : false;
+
+  let activeCard = null;
+
+  const hideCardTooltip = (card) => {
+    if (!card) {
+      return;
+    }
+
+    card.classList.remove("is-tooltip-visible");
+
+    const tooltip = card.querySelector(".summary-info-tooltip");
+    if (tooltip) {
+      tooltip.setAttribute("aria-hidden", "true");
+    }
+
+    const button = card.querySelector(".summary-info-btn");
+    if (button) {
+      button.setAttribute("aria-expanded", "false");
+    }
+
+    if (activeCard === card) {
+      activeCard = null;
+    }
+  };
+
+  const showCardTooltip = (card) => {
+    if (!card) {
+      return;
+    }
+
+    if (activeCard && activeCard !== card) {
+      hideCardTooltip(activeCard);
+    }
+
+    card.classList.add("is-tooltip-visible");
+
+    const tooltip = card.querySelector(".summary-info-tooltip");
+    if (tooltip) {
+      tooltip.setAttribute("aria-hidden", "false");
+    }
+
+    const button = card.querySelector(".summary-info-btn");
+    if (button) {
+      button.setAttribute("aria-expanded", "true");
+    }
+
+    activeCard = card;
+  };
+
+  cards.forEach((card) => {
+    const key = card.dataset.summaryKey;
+    const infoConfig = SUMMARY_CARD_INFO[key] ?? null;
+
+    const tooltip = card.querySelector(".summary-info-tooltip");
+    const titleElement = tooltip?.querySelector(".summary-info-title");
+    const descriptionElement = tooltip?.querySelector(
+      ".summary-info-description"
+    );
+    const labelElement = card.querySelector(".summary-label");
+
+    if (tooltip && !tooltip.id && key) {
+      tooltip.id = `summary-info-${key}`;
+    }
+
+    if (titleElement && labelElement) {
+      titleElement.textContent = labelElement.textContent.trim();
+    }
+
+    if (descriptionElement && infoConfig?.description) {
+      descriptionElement.textContent = infoConfig.description;
+    }
+
+    const infoButton = card.querySelector(".summary-info-btn");
+    if (infoButton) {
+      infoButton.setAttribute("aria-expanded", "false");
+
+      if (tooltip?.id) {
+        infoButton.setAttribute("aria-controls", tooltip.id);
+      }
+
+      infoButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (card.classList.contains("is-tooltip-visible")) {
+          hideCardTooltip(card);
+        } else {
+          showCardTooltip(card);
+        }
+      });
+
+      infoButton.addEventListener("focus", () => {
+        showCardTooltip(card);
+      });
+
+      infoButton.addEventListener("blur", () => {
+        if (!card.matches(":hover")) {
+          hideCardTooltip(card);
+        }
+      });
+
+      infoButton.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          hideCardTooltip(card);
+          infoButton.blur();
+        }
+      });
+    }
+
+    if (tooltip) {
+      tooltip.addEventListener("click", (event) => {
+        event.stopPropagation();
+      });
+    }
+
+    if (canHover) {
+      card.addEventListener("mouseenter", () => {
+        showCardTooltip(card);
+      });
+
+      card.addEventListener("mouseleave", () => {
+        hideCardTooltip(card);
+      });
+    }
+  });
+
+  document.addEventListener(
+    "click",
+    (event) => {
+      if (!activeCard) {
+        return;
+      }
+
+      if (activeCard.contains(event.target)) {
+        return;
+      }
+
+      hideCardTooltip(activeCard);
+    },
+    true
+  );
 }
 
 function updateSummaryCards() {
@@ -2234,6 +2415,7 @@ function importData() {
 
 // Form Handlers
 onDocumentReady(() => {
+  initializeSummaryCardTooltips();
   registerTableSortButtons();
   updateSortIndicators("income", incomeSortOption);
   updateSortIndicators("expense", expenseSortOption);
