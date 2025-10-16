@@ -202,10 +202,8 @@
       .google-icon {
         width: 20px;
         height: 20px;
-        background: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuNDMgOS42Nkg0LjQzVjEyLjI2SDguMjhDNy45OSAxMy42IDcuMTYgMTQuNzQgNS45NyAxNS40M0w1Ljk3IDE3LjcxTDkuNzIgMTcuN0MxMS44OSAxNS42MyAxMy4wNCAxMi44NSAxMy4wNCA5LjlDMTMuMDQgOS4yNyAxMi45OCA4LjY2IDEyLjg3IDguMDlIMTAuMDVWOS42Nkg0LjQzWiIgZmlsbD0iIzQyODVGNCIvPgo8cGF0aCBkPSJNMS4wMDIgNi4xMkMwLjM2MiA3LjM0IDAuMDAyIDguNzEgMC4wMDIgMTAuMkMwLjAwMiAxMS42OSAwLjM2MiAxMy4wNiAxLjAwMiAxNC4yOEwxLjAwMiAxNi41NEwzLjM4IDE2LjU0QzIuNDggMTQuNzEgMi40OCAxMi42OSAzLjM4IDEwLjg2TDEuMDAyIDYuMTJaIiBmaWxsPSIjRkJCQzA0Ii8+CjxwYXRoIGQ9Ik0xMC4wNSAxNi4wNUMxMi44NyAxNi4wNSAxNS4xNyAxNS4wNyAxNi44MSAxMy40M0w5LjcyIDE3LjdDOC4yOCAxOC40OSA2LjY0IDE4LjkgNC45NSAxOC45QzIuNzcgMTguOSAwLjg2IDE3LjUgMC4wMDIgMTUuNUwzLjM4IDEwLjg2QzQuMjUgMTMuMzEgNi45OCAxNS4wNyAxMC4wNSAxNi4wNVoiIGZpbGw9IiMzNEE4NTMiLz4KPHA0YWIgZmlsbD0iI0VBNDUzNSIvPgo8L3N2Zz4=");
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
+        display: block;
+        flex-shrink: 0;
       }
 
       .loading {
@@ -347,7 +345,29 @@
         id="googleLoginBtn"
         onclick="signInWithGoogle()"
       >
-        <div class="google-icon"></div>
+        <svg
+          class="google-icon"
+          viewBox="0 0 18 18"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path
+            fill="#EA4335"
+            d="M17.64 9.204c0-.639-.057-1.252-.164-1.836H9v3.473h4.845a4.14 4.14 0 01-1.798 2.714v2.256h2.908c1.703-1.57 2.685-3.882 2.685-6.607z"
+          />
+          <path
+            fill="#34A853"
+            d="M9 18c2.43 0 4.465-.806 5.952-2.189l-2.908-2.256c-.807.54-1.839.859-3.044.859-2.341 0-4.325-1.579-5.032-3.708H0v2.332C1.478 15.845 4.081 18 9 18z"
+          />
+          <path
+            fill="#4285F4"
+            d="M3.968 10.706A5.41 5.41 0 013.687 9c0-.59.101-1.164.281-1.706V4.962H0A8.994 8.994 0 000 9c0 1.448.348 2.817.968 4.038l3-2.332z"
+          />
+          <path
+            fill="#FBBC05"
+            d="M9 3.545c1.32 0 2.509.454 3.442 1.342l2.582-2.582C13.46.952 11.427 0 9 0 4.081 0 1.478 2.155 0 4.962l3.968 3.332C4.675 5.124 6.659 3.545 9 3.545z"
+          />
+        </svg>
         Masuk dengan Google
       </button>
 
