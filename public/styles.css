@@ -552,36 +552,6 @@ body[data-theme="dark"] {
   word-break: break-word;
 }
 
-.edit-income-btn {
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(11, 87, 208, 0.18);
-  color: var(--summary-accent);
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 12px;
-  transition: var(--transition);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  box-shadow: 0 12px 20px rgba(15, 38, 105, 0.12);
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
-.edit-income-btn:hover,
-.edit-income-btn:focus-visible {
-  background: var(--summary-accent);
-  color: #ffffff;
-  transform: translateY(-2px);
-  outline: none;
-}
-
-.edit-income-btn i {
-  font-size: 15px;
-}
-
 /* Buttons */
 .btn {
   background: var(--primary-color);
@@ -1117,15 +1087,6 @@ body[data-theme="dark"] {
 
   .summary-label {
     min-height: 0;
-  }
-
-  .edit-income-btn {
-    margin-top: 2px;
-  }
-
-  .edit-income-btn {
-    width: 34px;
-    height: 34px;
   }
 
   .modal-content {
