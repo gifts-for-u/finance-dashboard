@@ -311,7 +311,7 @@ body[data-theme="dark"] {
         var(--summary-bg-end) 55%, rgba(255, 255, 255, 0.92) 100%),
     var(--bg-card);
   border-radius: var(--shape-medium);
-  padding: 18px 96px 18px 28px;
+  padding: 18px 28px;
   text-align: left;
   box-shadow: var(--shadow);
   border: 1px solid var(--border-color);
@@ -320,6 +320,8 @@ body[data-theme="dark"] {
   min-height: 0;
   display: flex;
   align-items: center;
+  justify-content: flex-start;
+  gap: 24px;
   height: 130px;
 }
 
@@ -339,8 +341,8 @@ body[data-theme="dark"] {
   content: "";
   position: absolute;
   top: 18px;
-  left: 24px;
-  right: 24px;
+  left: 28px;
+  right: 28px;
   height: 6px;
   background: var(--summary-accent);
   border-radius: 999px;
@@ -365,9 +367,10 @@ body[data-theme="dark"] {
 .summary-value-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  margin-top: 0;
+  justify-content: flex-start;
+  gap: 16px;
+  width: 100%;
+  flex-wrap: wrap;
 }
 
 .summary-card.income {
@@ -401,11 +404,10 @@ body[data-theme="dark"] {
 }
 
 .summary-info-btn {
-  position: absolute;
-  top: 50%;
-  right: 24px;
-  width: 36px;
-  height: 36px;
+  position: relative;
+  order: 2;
+  width: 40px;
+  height: 40px;
   border: none;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.9);
@@ -418,7 +420,8 @@ body[data-theme="dark"] {
   transition: transform 0.25s var(--transition), box-shadow 0.25s var(--transition),
     color 0.2s ease;
   z-index: 3;
-  transform: translateY(-50%);
+  margin-left: auto;
+  align-self: center;
 }
 
 .summary-info-btn i {
@@ -428,7 +431,7 @@ body[data-theme="dark"] {
 .summary-info-btn:hover,
 .summary-info-btn:focus-visible {
   color: #ffffff;
-  transform: translateY(calc(-50% - 3px));
+  transform: translateY(-3px);
   box-shadow: var(--shadow-strong);
   background: var(--summary-accent);
   outline: none;
@@ -437,7 +440,7 @@ body[data-theme="dark"] {
 .summary-info-tooltip {
   position: absolute;
   top: 50%;
-  right: 84px;
+  right: 28px;
   min-width: 240px;
   max-width: 280px;
   padding: 18px 20px;
@@ -486,26 +489,23 @@ body[data-theme="dark"] {
 
 @media (max-width: 768px) {
   .summary-card {
-    padding: 20px 60px 20px 24px;
+    flex-direction: column;
+    align-items: flex-start;
+    height: auto;
+    padding: 24px 20px 60px;
+    gap: 16px;
   }
 
   .summary-info-btn {
-    top: auto;
-    bottom: 16px;
-    right: 16px;
-    transform: none;
-  }
-
-  .summary-info-btn:hover,
-  .summary-info-btn:focus-visible {
-    transform: translateY(-3px);
+    align-self: flex-end;
+    margin-left: 0;
   }
 
   .summary-info-tooltip {
     top: auto;
     bottom: 64px;
-    right: 16px;
-    left: 16px;
+    right: 20px;
+    left: 20px;
     max-width: none;
     transform: translateY(6px) scale(0.98);
   }
@@ -522,24 +522,24 @@ body[data-theme="dark"] {
 }
 
 .summary-value {
-  font-size: 1.6rem;
+  font-size: clamp(1.35rem, 1vw + 1rem, 1.6rem);
   font-weight: 700;
   letter-spacing: -0.01em;
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
-  word-break: break-word;
+  word-break: normal;
 }
 
 .summary-label {
   color: var(--text-secondary);
   font-size: 0.95rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   font-weight: 600;
   line-height: 1.35;
   min-height: 2.2em;
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
 }
 
 .edit-income-btn {
@@ -558,7 +558,6 @@ body[data-theme="dark"] {
   box-shadow: 0 16px 24px rgba(15, 38, 105, 0.14);
   flex-shrink: 0;
   margin-left: auto;
-  margin-top: 4px;
 }
 
 .edit-income-btn:hover,
