@@ -70,17 +70,19 @@
               <div class="summary-info-divider"></div>
               <div class="summary-info-description"></div>
             </div>
-            <div class="summary-value-container">
-              <div class="summary-value" id="totalIncome">Rp 0</div>
-              <button
-                class="edit-income-btn"
-                onclick="showIncomeModal()"
-                title="Edit pemasukan"
-              >
-                <i class="fas fa-edit"></i>
-              </button>
+            <div class="summary-body">
+              <div class="summary-value-row">
+                <div class="summary-value" id="totalIncome">Rp 0</div>
+                <button
+                  class="edit-income-btn"
+                  onclick="showIncomeModal()"
+                  title="Edit pemasukan"
+                >
+                  <i class="fas fa-edit"></i>
+                </button>
+              </div>
+              <div class="summary-label">TOTAL PEMASUKAN</div>
             </div>
-            <div class="summary-label">TOTAL PEMASUKAN</div>
           </div>
           <div class="summary-card expense-planned" data-summary-key="expensePlanned">
             <button
@@ -95,8 +97,12 @@
               <div class="summary-info-divider"></div>
               <div class="summary-info-description"></div>
             </div>
-            <div class="summary-value" id="totalExpensePlanned">Rp 0</div>
-            <div class="summary-label">TOTAL PENGELUARAN PERKIRAAN</div>
+            <div class="summary-body">
+              <div class="summary-value-row">
+                <div class="summary-value" id="totalExpensePlanned">Rp 0</div>
+              </div>
+              <div class="summary-label">TOTAL PENGELUARAN PERKIRAAN</div>
+            </div>
           </div>
           <div class="summary-card expense-actual" data-summary-key="expenseActual">
             <button
@@ -111,8 +117,12 @@
               <div class="summary-info-divider"></div>
               <div class="summary-info-description"></div>
             </div>
-            <div class="summary-value" id="totalExpenseActual">Rp 0</div>
-            <div class="summary-label">TOTAL PENGELUARAN AKTUAL</div>
+            <div class="summary-body">
+              <div class="summary-value-row">
+                <div class="summary-value" id="totalExpenseActual">Rp 0</div>
+              </div>
+              <div class="summary-label">TOTAL PENGELUARAN AKTUAL</div>
+            </div>
           </div>
           <div class="summary-card balance-actual" data-summary-key="balanceActual">
             <button
@@ -127,8 +137,12 @@
               <div class="summary-info-divider"></div>
               <div class="summary-info-description"></div>
             </div>
-            <div class="summary-value" id="actualBalance">Rp 0</div>
-            <div class="summary-label">SALDO AKTUAL</div>
+            <div class="summary-body">
+              <div class="summary-value-row">
+                <div class="summary-value" id="actualBalance">Rp 0</div>
+              </div>
+              <div class="summary-label">SALDO AKTUAL</div>
+            </div>
           </div>
           <div class="summary-card balance-planned" data-summary-key="balancePlanned">
             <button
@@ -143,8 +157,12 @@
               <div class="summary-info-divider"></div>
               <div class="summary-info-description"></div>
             </div>
-            <div class="summary-value" id="plannedRemaining">Rp 0</div>
-            <div class="summary-label">PERKIRAAN SISA UANG BULAN INI</div>
+            <div class="summary-body">
+              <div class="summary-value-row">
+                <div class="summary-value" id="plannedRemaining">Rp 0</div>
+              </div>
+              <div class="summary-label">PERKIRAAN SISA UANG BULAN INI</div>
+            </div>
           </div>
           <div class="summary-card savings" data-summary-key="savingsRatio">
             <button
@@ -159,8 +177,12 @@
               <div class="summary-info-divider"></div>
               <div class="summary-info-description"></div>
             </div>
-            <div class="summary-value" id="savingsRate">—</div>
-            <div class="summary-label">RASIO TABUNGAN</div>
+            <div class="summary-body">
+              <div class="summary-value-row">
+                <div class="summary-value" id="savingsRate">—</div>
+              </div>
+              <div class="summary-label">RASIO TABUNGAN</div>
+            </div>
           </div>
         </div>
 

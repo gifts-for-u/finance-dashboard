@@ -295,9 +295,12 @@ body[data-theme="dark"] {
 /* Summary Cards */
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-auto-rows: minmax(250px, auto);
   gap: 24px;
   margin-bottom: 36px;
+  justify-items: stretch;
+  align-items: stretch;
 }
 
 .summary-card {
@@ -308,7 +311,7 @@ body[data-theme="dark"] {
         var(--summary-bg-end) 55%, rgba(255, 255, 255, 0.92) 100%),
     var(--bg-card);
   border-radius: var(--shape-medium);
-  padding: 24px 24px 62px;
+  padding: 26px 24px 60px;
   text-align: left;
   box-shadow: var(--shadow);
   border: 1px solid var(--border-color);
@@ -317,7 +320,7 @@ body[data-theme="dark"] {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  height: 100%;
 }
 
 .summary-card::before {
@@ -335,7 +338,7 @@ body[data-theme="dark"] {
 .summary-card::after {
   content: "";
   position: absolute;
-  top: 18px;
+  top: 22px;
   left: 24px;
   right: 24px;
   height: 6px;
@@ -347,6 +350,22 @@ body[data-theme="dark"] {
 .summary-card > :not(.summary-info-btn) {
   position: relative;
   z-index: 1;
+}
+
+.summary-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 12px;
+  flex: 1;
+}
+
+.summary-value-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 14px;
+  margin-top: 16px;
 }
 
 .summary-card.income {
@@ -381,8 +400,8 @@ body[data-theme="dark"] {
 
 .summary-info-btn {
   position: absolute;
-  bottom: 18px;
-  right: 18px;
+  bottom: 20px;
+  right: 20px;
   width: 36px;
   height: 36px;
   border: none;
@@ -414,7 +433,7 @@ body[data-theme="dark"] {
 
 .summary-info-tooltip {
   position: absolute;
-  bottom: 74px;
+  bottom: 80px;
   right: 24px;
   min-width: 240px;
   max-width: 280px;
@@ -470,7 +489,7 @@ body[data-theme="dark"] {
 
   .summary-info-tooltip {
     top: auto;
-    bottom: 66px;
+    bottom: 64px;
     right: 16px;
     left: 16px;
     max-width: none;
@@ -483,14 +502,6 @@ body[data-theme="dark"] {
   }
 }
 
-.summary-value-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 12px;
-}
-
 .summary-value {
   font-size: 1.75rem;
   font-weight: 700;
@@ -498,6 +509,18 @@ body[data-theme="dark"] {
   flex: 1;
   min-width: 0;
   word-break: break-word;
+}
+
+.summary-label {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  line-height: 1.35;
+  min-height: 2.6em;
+  display: flex;
+  align-items: flex-start;
 }
 
 .edit-income-btn {
@@ -515,6 +538,8 @@ body[data-theme="dark"] {
   height: 40px;
   box-shadow: 0 16px 24px rgba(15, 38, 105, 0.14);
   flex-shrink: 0;
+  margin-left: auto;
+  margin-top: 4px;
 }
 
 .edit-income-btn:hover,
@@ -527,14 +552,6 @@ body[data-theme="dark"] {
 
 .edit-income-btn i {
   font-size: 15px;
-}
-
-.summary-label {
-  color: var(--text-secondary);
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 600;
 }
 
 /* Buttons */
@@ -1053,15 +1070,28 @@ body[data-theme="dark"] {
 
   .summary-grid {
     grid-template-columns: 1fr;
+    grid-auto-rows: auto;
   }
 
   .summary-card {
     min-height: auto;
-    padding: 24px 20px 62px;
+    padding: 24px 20px 60px;
   }
 
   .summary-value {
     font-size: 1.6rem;
+  }
+
+  .summary-value-row {
+    margin-top: 12px;
+  }
+
+  .summary-label {
+    min-height: 0;
+  }
+
+  .edit-income-btn {
+    margin-top: 2px;
   }
 
   .edit-income-btn {
