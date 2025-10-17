@@ -307,8 +307,8 @@ body[data-theme="dark"] {
   background: linear-gradient(160deg, var(--summary-bg-start) 0%,
         var(--summary-bg-end) 55%, rgba(255, 255, 255, 0.92) 100%),
     var(--bg-card);
-  border-radius: var(--shape-large);
-  padding: 28px 24px 70px;
+  border-radius: var(--shape-medium);
+  padding: 24px 24px 62px;
   text-align: left;
   box-shadow: var(--shadow);
   border: 1px solid var(--border-color);
@@ -335,13 +335,13 @@ body[data-theme="dark"] {
 .summary-card::after {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 5px;
+  top: 18px;
+  left: 24px;
+  right: 24px;
+  height: 6px;
   background: var(--summary-accent);
-  box-shadow: 0 18px 24px rgba(11, 87, 208, 0.15);
-  border-radius: inherit;
+  border-radius: 999px;
+  box-shadow: none;
 }
 
 .summary-card > :not(.summary-info-btn) {
@@ -383,8 +383,8 @@ body[data-theme="dark"] {
   position: absolute;
   bottom: 18px;
   right: 18px;
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border: none;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.9);
@@ -475,6 +475,12 @@ body[data-theme="dark"] {
     left: 16px;
     max-width: none;
   }
+
+  .summary-card::after {
+    top: 16px;
+    left: 20px;
+    right: 20px;
+  }
 }
 
 .summary-value-container {
@@ -489,6 +495,9 @@ body[data-theme="dark"] {
   font-size: 2.35rem;
   font-weight: 700;
   letter-spacing: -0.01em;
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
 }
 
 .edit-income-btn {
@@ -505,6 +514,7 @@ body[data-theme="dark"] {
   width: 40px;
   height: 40px;
   box-shadow: 0 16px 24px rgba(15, 38, 105, 0.14);
+  flex-shrink: 0;
 }
 
 .edit-income-btn:hover,
