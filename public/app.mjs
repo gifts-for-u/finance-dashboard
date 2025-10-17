@@ -32,7 +32,7 @@ let sessionManager = null;
 // Global Variables
 let currentDate = new Date();
 let currentMonthData = null;
-let expenseChart = null; // This will now hold ApexCharts instance
+let expenseChart = null; // Holds the Chart.js doughnut chart instance
 let categories = [];
 let templates = [];
 
