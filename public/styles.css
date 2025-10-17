@@ -311,7 +311,7 @@ body[data-theme="dark"] {
         var(--summary-bg-end) 55%, rgba(255, 255, 255, 0.92) 100%),
     var(--bg-card);
   border-radius: var(--shape-medium);
-  padding: 18px 28px;
+  padding: 18px 96px 18px 28px;
   text-align: left;
   box-shadow: var(--shadow);
   border: 1px solid var(--border-color);
@@ -320,9 +320,8 @@ body[data-theme="dark"] {
   min-height: 0;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
   gap: 24px;
-  min-height: 130px;
+  height: 140px;
 }
 
 .summary-card::before {
@@ -359,7 +358,7 @@ body[data-theme="dark"] {
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  gap: 6px;
+  gap: 8px;
   flex: 1;
   min-width: 0;
 }
@@ -367,10 +366,10 @@ body[data-theme="dark"] {
 .summary-value-row {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 16px;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 0;
   width: 100%;
-  flex-wrap: wrap;
 }
 
 .summary-card.income {
@@ -522,24 +521,26 @@ body[data-theme="dark"] {
 }
 
 .summary-value {
-  font-size: clamp(1.35rem, 1vw + 1rem, 1.6rem);
+  font-size: 1.65rem;
   font-weight: 700;
   letter-spacing: -0.01em;
-  flex: 1 1 auto;
+  flex: 1;
   min-width: 0;
-  word-break: normal;
+  word-break: break-word;
+  line-height: 1.2;
 }
 
 .summary-label {
   color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   font-weight: 600;
-  line-height: 1.35;
-  min-height: 2.2em;
+  line-height: 1.3;
+  min-height: auto;
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
+  word-break: break-word;
 }
 
 .edit-income-btn {
@@ -547,15 +548,15 @@ body[data-theme="dark"] {
   border: 1px solid rgba(11, 87, 208, 0.18);
   color: var(--summary-accent);
   cursor: pointer;
-  padding: 10px;
-  border-radius: 14px;
+  padding: 8px;
+  border-radius: 12px;
   transition: var(--transition);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  box-shadow: 0 16px 24px rgba(15, 38, 105, 0.14);
+  width: 36px;
+  height: 36px;
+  box-shadow: 0 12px 20px rgba(15, 38, 105, 0.12);
   flex-shrink: 0;
   margin-left: auto;
 }
