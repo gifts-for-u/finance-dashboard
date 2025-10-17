@@ -296,7 +296,7 @@ body[data-theme="dark"] {
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(285px, 1fr));
-  grid-auto-rows: minmax(140px, auto);
+  grid-auto-rows: minmax(130px, auto);
   gap: 24px;
   margin-bottom: 36px;
   justify-items: stretch;
@@ -322,7 +322,7 @@ body[data-theme="dark"] {
   align-items: center;
   justify-content: flex-start;
   gap: 24px;
-  height: 130px;
+  min-height: 130px;
 }
 
 .summary-card::before {
