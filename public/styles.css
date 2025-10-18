@@ -297,7 +297,7 @@ body[data-theme="dark"] {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(285px, 1fr));
   grid-auto-rows: minmax(140px, 20vh);
-  gap: 24px;
+  gap: 1vh;
   margin-bottom: 36px;
   justify-items: stretch;
   align-items: stretch;
@@ -973,32 +973,35 @@ body[data-theme="dark"] {
 
 .action-buttons-left,
 .action-buttons-right {
-  display: flex;
   gap: 16px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.action-buttons-left {
-  flex: 1 1 auto;
 }
 
 .action-buttons-left {
   flex: 1 1 0%;
   min-width: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: stretch;
 }
 
 .action-buttons-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
   justify-content: flex-end;
 }
 
 .action-buttons-left .btn,
 .action-buttons-right .btn {
   justify-content: center;
-  flex: 1 1 220px;
   min-height: 56px;
   padding: 16px 32px;
   font-size: 1rem;
+}
+
+.action-buttons-left .btn {
+  width: 100%;
 }
 
 .action-buttons-right .btn {
@@ -1008,11 +1011,12 @@ body[data-theme="dark"] {
 @media (max-width: 1024px) {
   .action-buttons-left {
     flex: 1 1 100%;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   }
 
   .action-buttons-left .btn,
   .action-buttons-right .btn {
-    flex: 1 1 280px;
+    width: 100%;
   }
 }
 
@@ -1027,9 +1031,13 @@ body[data-theme="dark"] {
     justify-content: center;
   }
 
+  .action-buttons-left {
+    grid-template-columns: 1fr;
+  }
+
   .action-buttons-left .btn,
   .action-buttons-right .btn {
-    flex: 1 1 100%;
+    width: 100%;
   }
 }
 
