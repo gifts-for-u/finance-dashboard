@@ -496,6 +496,11 @@ body[data-theme="dark"] {
 }
 
 @media (max-width: 768px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+    grid-auto-rows: 16vh;
+  }
+
   .summary-card {
     padding: 24px 20px 96px;
     min-height: 0;
@@ -507,10 +512,10 @@ body[data-theme="dark"] {
   }
 
   .summary-info-tooltip {
-    bottom: 118px;
-    right: 16px;
-    left: 16px;
-    max-width: none;
+    bottom: 75px;
+    right: 33px;
+    left: 385px;
+    max-width: 15vw;
     transform: translateY(6px) scale(0.98);
   }
 
