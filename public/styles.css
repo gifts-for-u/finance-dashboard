@@ -296,7 +296,7 @@ body[data-theme="dark"] {
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(285px, 1fr));
-  grid-auto-rows: minmax(150px, auto);
+  grid-auto-rows: minmax(140px, auto);
   gap: 24px;
   margin-bottom: 36px;
   justify-items: stretch;
@@ -311,17 +311,17 @@ body[data-theme="dark"] {
         var(--summary-bg-end) 55%, rgba(255, 255, 255, 0.92) 100%),
     var(--bg-card);
   border-radius: var(--shape-medium);
-  padding: 32px 28px 88px;
+  padding: 28px 24px 64px;
   text-align: left;
   box-shadow: var(--shadow);
   border: 1px solid var(--border-color);
   position: relative;
   overflow: visible;
-  min-height: 180px;
+  min-height: 160px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 16px;
+  align-items: stretch;
+  gap: 12px;
 }
 
 .summary-card::before {
@@ -339,9 +339,9 @@ body[data-theme="dark"] {
 .summary-card::after {
   content: "";
   position: absolute;
-  top: 20px;
-  left: 28px;
-  right: 28px;
+  top: 18px;
+  left: 24px;
+  right: 24px;
   height: 6px;
   background: var(--summary-accent);
   border-radius: 999px;
@@ -361,6 +361,7 @@ body[data-theme="dark"] {
   gap: 8px;
   width: 100%;
   min-width: 0;
+  flex: 1;
 }
 
 .summary-value-row {
@@ -411,8 +412,8 @@ body[data-theme="dark"] {
 .summary-info-btn {
   position: absolute;
   top: auto;
-  right: 24px;
-  bottom: 24px;
+  right: 20px;
+  bottom: 20px;
   width: 40px;
   height: 40px;
   border: none;
@@ -445,8 +446,8 @@ body[data-theme="dark"] {
 .summary-info-tooltip {
   position: absolute;
   top: auto;
-  right: 28px;
-  bottom: 84px;
+  right: 24px;
+  bottom: 76px;
   min-width: 240px;
   max-width: 280px;
   padding: 18px 20px;
@@ -496,19 +497,19 @@ body[data-theme="dark"] {
 
 @media (max-width: 768px) {
   .summary-card {
-    padding: 28px 20px 108px;
+    padding: 24px 20px 88px;
     min-height: 0;
   }
 
   .summary-info-btn {
-    right: 20px;
-    bottom: 20px;
+    right: 16px;
+    bottom: 16px;
   }
 
   .summary-info-tooltip {
-    bottom: 128px;
-    right: 20px;
-    left: 20px;
+    bottom: 108px;
+    right: 16px;
+    left: 16px;
     max-width: none;
     transform: translateY(6px) scale(0.98);
   }
@@ -518,9 +519,9 @@ body[data-theme="dark"] {
   }
 
   .summary-card::after {
-    top: 16px;
-    left: 20px;
-    right: 20px;
+    top: 14px;
+    left: 16px;
+    right: 16px;
   }
 }
 
