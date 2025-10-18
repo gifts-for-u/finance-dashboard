@@ -296,7 +296,7 @@ body[data-theme="dark"] {
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(285px, 1fr));
-  grid-auto-rows: minmax(140px, auto);
+  grid-auto-rows: minmax(140px, 20vh);
   gap: 24px;
   margin-bottom: 36px;
   justify-items: stretch;
@@ -311,7 +311,7 @@ body[data-theme="dark"] {
         var(--summary-bg-end) 55%, rgba(255, 255, 255, 0.92) 100%),
     var(--bg-card);
   border-radius: var(--shape-medium);
-  padding: 28px 24px 64px;
+  padding: 24px 22px 60px;
   text-align: left;
   box-shadow: var(--shadow);
   border: 1px solid var(--border-color);
@@ -321,7 +321,7 @@ body[data-theme="dark"] {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 12px;
+  gap: 10px;
 }
 
 .summary-card::before {
@@ -339,9 +339,9 @@ body[data-theme="dark"] {
 .summary-card::after {
   content: "";
   position: absolute;
-  top: 18px;
-  left: 24px;
-  right: 24px;
+  top: 16px;
+  left: 22px;
+  right: 22px;
   height: 6px;
   background: var(--summary-accent);
   border-radius: 999px;
@@ -412,8 +412,8 @@ body[data-theme="dark"] {
 .summary-info-btn {
   position: absolute;
   top: auto;
-  right: 20px;
-  bottom: 20px;
+  right: 18px;
+  bottom: 18px;
   width: 40px;
   height: 40px;
   border: none;
@@ -446,8 +446,8 @@ body[data-theme="dark"] {
 .summary-info-tooltip {
   position: absolute;
   top: auto;
-  right: 24px;
-  bottom: 76px;
+  right: 22px;
+  bottom: 72px;
   min-width: 240px;
   max-width: 280px;
   padding: 18px 20px;
@@ -497,17 +497,17 @@ body[data-theme="dark"] {
 
 @media (max-width: 768px) {
   .summary-card {
-    padding: 24px 20px 88px;
+    padding: 24px 20px 96px;
     min-height: 0;
   }
 
   .summary-info-btn {
     right: 16px;
-    bottom: 16px;
+    bottom: 18px;
   }
 
   .summary-info-tooltip {
-    bottom: 108px;
+    bottom: 118px;
     right: 16px;
     left: 16px;
     max-width: none;
@@ -1072,12 +1072,12 @@ body[data-theme="dark"] {
   .summary-card {
     min-height: auto;
     height: auto;
-    padding: 24px 20px 108px;
+    padding: 24px 20px 116px;
   }
 
   .summary-info-btn {
     right: 20px;
-    bottom: 20px;
+    bottom: 24px;
   }
 
   .summary-value {
@@ -1089,7 +1089,7 @@ body[data-theme="dark"] {
   }
 
   .summary-info-tooltip {
-    bottom: 128px;
+    bottom: 140px;
     right: 20px;
     left: 20px;
     max-width: none;
