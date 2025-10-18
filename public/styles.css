@@ -967,6 +967,8 @@ body[data-theme="dark"] {
   flex-wrap: wrap;
   margin-bottom: 28px;
   align-items: center;
+  width: 100%;
+  justify-content: space-between;
 }
 
 .action-buttons-left,
@@ -977,8 +979,11 @@ body[data-theme="dark"] {
   align-items: center;
 }
 
+.action-buttons-left {
+  flex: 1 1 auto;
+}
+
 .action-buttons-right {
-  margin-left: auto;
   justify-content: flex-end;
 }
 
