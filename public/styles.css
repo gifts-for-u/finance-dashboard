@@ -966,7 +966,7 @@ body[data-theme="dark"] {
   gap: 16px;
   flex-wrap: wrap;
   margin-bottom: 28px;
-  align-items: center;
+  align-items: stretch;
   width: 100%;
   justify-content: space-between;
 }
@@ -983,6 +983,11 @@ body[data-theme="dark"] {
   flex: 1 1 auto;
 }
 
+.action-buttons-left {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
 .action-buttons-right {
   justify-content: flex-end;
 }
@@ -990,8 +995,42 @@ body[data-theme="dark"] {
 .action-buttons-left .btn,
 .action-buttons-right .btn {
   justify-content: center;
+  flex: 1 1 220px;
+  min-height: 56px;
+  padding: 16px 32px;
+  font-size: 1rem;
+}
+
+.action-buttons-right .btn {
   flex: 0 0 auto;
-  min-height: 48px;
+}
+
+@media (max-width: 1024px) {
+  .action-buttons-left {
+    flex: 1 1 100%;
+  }
+
+  .action-buttons-left .btn,
+  .action-buttons-right .btn {
+    flex: 1 1 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .action-buttons {
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .action-buttons-left,
+  .action-buttons-right {
+    justify-content: center;
+  }
+
+  .action-buttons-left .btn,
+  .action-buttons-right .btn {
+    flex: 1 1 100%;
+  }
 }
 
 /* Recurring Templates */
@@ -1118,11 +1157,6 @@ body[data-theme="dark"] {
     margin: 18px;
     width: calc(100% - 36px);
     padding: 28px 24px 32px;
-  }
-
-  .action-buttons {
-    justify-content: center;
-    gap: 12px;
   }
 }
 
