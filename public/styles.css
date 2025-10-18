@@ -348,7 +348,7 @@ body[data-theme="dark"] {
   box-shadow: none;
 }
 
-.summary-card > :not(.summary-info-btn) {
+.summary-card > :not(.summary-info-btn):not(.summary-info-tooltip) {
   position: relative;
   z-index: 1;
 }
