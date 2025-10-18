@@ -966,7 +966,7 @@ body[data-theme="dark"] {
   gap: 16px;
   flex-wrap: wrap;
   margin-bottom: 28px;
-  align-items: stretch;
+  align-items: center;
 }
 
 .action-buttons-left,
@@ -974,7 +974,7 @@ body[data-theme="dark"] {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
-  align-items: stretch;
+  align-items: center;
 }
 
 .action-buttons-right {
