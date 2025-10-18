@@ -311,7 +311,7 @@ body[data-theme="dark"] {
         var(--summary-bg-end) 55%, rgba(255, 255, 255, 0.92) 100%),
     var(--bg-card);
   border-radius: var(--shape-medium);
-  padding: 32px 28px 28px;
+  padding: 32px 28px 88px;
   text-align: left;
   box-shadow: var(--shadow);
   border: 1px solid var(--border-color);
@@ -410,8 +410,9 @@ body[data-theme="dark"] {
 
 .summary-info-btn {
   position: absolute;
-  top: 24px;
+  top: auto;
   right: 24px;
+  bottom: 24px;
   width: 40px;
   height: 40px;
   border: none;
@@ -443,8 +444,9 @@ body[data-theme="dark"] {
 
 .summary-info-tooltip {
   position: absolute;
-  top: 72px;
+  top: auto;
   right: 28px;
+  bottom: 84px;
   min-width: 240px;
   max-width: 280px;
   padding: 18px 20px;
@@ -455,12 +457,12 @@ body[data-theme="dark"] {
   border: 1px solid rgba(15, 38, 105, 0.08);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-8px) scale(0.98);
+  transform: translateY(8px) scale(0.98);
   transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
   pointer-events: none;
   text-align: left;
-  z-index: 5;
-  transform-origin: top right;
+  z-index: 12;
+  transform-origin: bottom right;
 }
 
 .summary-card.is-tooltip-visible .summary-info-tooltip {
@@ -494,13 +496,17 @@ body[data-theme="dark"] {
 
 @media (max-width: 768px) {
   .summary-card {
-    padding: 28px 20px 60px;
+    padding: 28px 20px 108px;
     min-height: 0;
   }
 
+  .summary-info-btn {
+    right: 20px;
+    bottom: 20px;
+  }
+
   .summary-info-tooltip {
-    top: auto;
-    bottom: 64px;
+    bottom: 128px;
     right: 20px;
     left: 20px;
     max-width: none;
@@ -1065,7 +1071,12 @@ body[data-theme="dark"] {
   .summary-card {
     min-height: auto;
     height: auto;
-    padding: 24px 20px 60px;
+    padding: 24px 20px 108px;
+  }
+
+  .summary-info-btn {
+    right: 20px;
+    bottom: 20px;
   }
 
   .summary-value {
@@ -1074,6 +1085,18 @@ body[data-theme="dark"] {
 
   .summary-value-row {
     margin-top: 12px;
+  }
+
+  .summary-info-tooltip {
+    bottom: 128px;
+    right: 20px;
+    left: 20px;
+    max-width: none;
+    transform: translateY(6px) scale(0.98);
+  }
+
+  .summary-card.is-tooltip-visible .summary-info-tooltip {
+    transform: translateY(0) scale(1);
   }
 
   .summary-label {
