@@ -513,9 +513,9 @@ body[data-theme="dark"] {
 
   .summary-info-tooltip {
     bottom: 75px;
-    right: 33px;
-    left: 385px;
-    max-width: 15vw;
+    right: 20px;
+    left: 20px;
+    max-width: none;
     transform: translateY(6px) scale(0.98);
   }
 
@@ -636,6 +636,27 @@ body[data-theme="dark"] {
   border-collapse: separate;
   border-spacing: 0;
   background: transparent;
+  table-layout: fixed;
+}
+
+.table col.col-date {
+  width: 16%;
+}
+
+.table col.col-source {
+  width: 22%;
+}
+
+.table col.col-amount {
+  width: 18%;
+}
+
+.table col.col-notes {
+  width: 32%;
+}
+
+.table col.col-actions {
+  width: 12%;
 }
 
 .table thead tr {
@@ -648,6 +669,7 @@ body[data-theme="dark"] {
   padding: 16px 18px;
   text-align: left;
   border-bottom: 1px solid rgba(78, 91, 166, 0.14);
+  word-break: break-word;
 }
 
 .table th {
@@ -656,9 +678,9 @@ body[data-theme="dark"] {
   position: sticky;
   top: 0;
   z-index: 10;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .table-sort-button {
