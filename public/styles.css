@@ -985,7 +985,7 @@ body[data-theme="dark"] {
   min-height: 56px;
   padding: 16px 32px;
   font-size: 1rem;
-  flex: 1 1 220px;
+  flex: 0 1 auto;
 }
 
 @media (max-width: 1024px) {
