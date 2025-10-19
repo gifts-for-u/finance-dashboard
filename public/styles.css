@@ -1001,15 +1001,19 @@ body[data-theme="dark"] {
 @media (max-width: 768px) {
   .action-buttons {
     justify-content: center;
-    gap: 12px;
+    gap: 10px;
   }
 
   .action-group {
     flex-direction: column;
+    gap: 10px;
   }
 
   .action-group .btn {
     width: 100%;
+    min-height: 48px;
+    padding: 12px 20px;
+    font-size: 0.9rem;
   }
 }
 
