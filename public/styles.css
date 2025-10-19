@@ -633,10 +633,31 @@ body[data-theme="dark"] {
 
 .table {
   width: 100%;
+  min-width: 720px;
   border-collapse: separate;
   border-spacing: 0;
   background: transparent;
   table-layout: fixed;
+}
+
+.table col.col-date {
+  width: 16%;
+}
+
+.table col.col-source {
+  width: 22%;
+}
+
+.table col.col-amount {
+  width: 18%;
+}
+
+.table col.col-notes {
+  width: 32%;
+}
+
+.table col.col-actions {
+  width: 12%;
 }
 
 .table col.col-date {
