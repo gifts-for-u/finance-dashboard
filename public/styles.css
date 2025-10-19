@@ -680,6 +680,26 @@ body[data-theme="dark"] {
   width: 12%;
 }
 
+.table col.col-date {
+  width: 16%;
+}
+
+.table col.col-source {
+  width: 22%;
+}
+
+.table col.col-amount {
+  width: 18%;
+}
+
+.table col.col-notes {
+  width: 32%;
+}
+
+.table col.col-actions {
+  width: 12%;
+}
+
 .table thead tr {
   background: linear-gradient(135deg, rgba(11, 87, 208, 0.18) 0%,
         rgba(255, 255, 255, 0.9) 70%);
@@ -1137,6 +1157,26 @@ body[data-theme="dark"] {
 @media (max-width: 768px) {
   .container {
     padding: 24px 16px 48px;
+  }
+
+  .table col.col-date {
+    width: 20%;
+  }
+
+  .table col.col-source {
+    width: 22%;
+  }
+
+  .table col.col-amount {
+    width: 28%;
+  }
+
+  .table col.col-notes {
+    width: 22%;
+  }
+
+  .table col.col-actions {
+    width: 8%;
   }
 
   .header {
