@@ -1118,6 +1118,26 @@ body[data-theme="dark"] {
     padding: 24px 16px 48px;
   }
 
+  .table col.col-date {
+    width: 20%;
+  }
+
+  .table col.col-source {
+    width: 22%;
+  }
+
+  .table col.col-amount {
+    width: 28%;
+  }
+
+  .table col.col-notes {
+    width: 22%;
+  }
+
+  .table col.col-actions {
+    width: 8%;
+  }
+
   .header {
     text-align: left;
     padding: 26px 24px;
