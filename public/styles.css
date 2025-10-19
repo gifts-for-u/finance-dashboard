@@ -1027,6 +1027,7 @@ body[data-theme="dark"] {
     flex-direction: column;
     gap: 10px;
     width: 100%;
+    flex: 0 0 auto;
   }
 
   .action-group .btn {
