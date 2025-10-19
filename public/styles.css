@@ -633,7 +633,7 @@ body[data-theme="dark"] {
 
 .table {
   width: 100%;
-  min-width: 720px;
+  min-width: 960px;
   border-collapse: separate;
   border-spacing: 0;
   background: transparent;
@@ -721,6 +721,27 @@ body[data-theme="dark"] {
   min-width: 120px;
 }
 
+.table col.col-date {
+  width: 16%;
+}
+
+.table col.col-source {
+  width: 22%;
+}
+
+.table col.col-amount {
+  width: 18%;
+}
+
+.table col.col-notes {
+  width: 32%;
+}
+
+.table col.col-actions {
+  width: 12%;
+  min-width: 120px;
+}
+
 .table thead tr {
   background: linear-gradient(135deg, rgba(11, 87, 208, 0.18) 0%,
         rgba(255, 255, 255, 0.9) 70%);
@@ -735,11 +756,12 @@ body[data-theme="dark"] {
 }
 
 .table td:last-child {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 10px;
   white-space: nowrap;
+  text-align: left;
+}
+
+.table td:last-child > * + * {
+  margin-left: 10px;
 }
 
 .table th:last-child {
