@@ -742,6 +742,27 @@ body[data-theme="dark"] {
   min-width: 120px;
 }
 
+.table col.col-date {
+  width: 16%;
+}
+
+.table col.col-source {
+  width: 22%;
+}
+
+.table col.col-amount {
+  width: 18%;
+}
+
+.table col.col-notes {
+  width: 25%;
+}
+
+.table col.col-actions {
+  width: 15%;
+  min-width: 120px;
+}
+
 .table thead tr {
   background: linear-gradient(135deg, rgba(11, 87, 208, 0.18) 0%,
         rgba(255, 255, 255, 0.9) 70%);
