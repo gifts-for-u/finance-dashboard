@@ -39,7 +39,7 @@
   --secondary-color: #bec4ff;
   --secondary-container: #222752;
   --accent-color: #7aa2ff;
-  --danger-color: #ffb4ab;
+  --danger-color: #a12323;
   --success-color: #4ade80;
   --warning-color: #ffd69c;
   --info-color: #8aa4ff;
@@ -739,6 +739,27 @@ body[data-theme="dark"] {
 
 .table col.col-actions {
   width: 12%;
+  min-width: 120px;
+}
+
+.table col.col-date {
+  width: 16%;
+}
+
+.table col.col-source {
+  width: 22%;
+}
+
+.table col.col-amount {
+  width: 18%;
+}
+
+.table col.col-notes {
+  width: 25%;
+}
+
+.table col.col-actions {
+  width: 15%;
   min-width: 120px;
 }
 
