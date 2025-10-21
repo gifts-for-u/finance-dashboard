@@ -1141,15 +1141,15 @@ body[data-theme="dark"] {
   }
 
   .table col.col-date {
-    width: 20%;
+    width: 13%;
   }
 
   .table col.col-source {
-    width: 25%;
+    width: 13%;
   }
 
   .table col.col-amount {
-    width: 20%;
+    width: 13%;
   }
 
   .table col.col-notes {
@@ -1157,7 +1157,7 @@ body[data-theme="dark"] {
   }
 
   .table col.col-actions {
-    width: 18%;
+    width: 15%;
     min-width: 120px;
   }
 
