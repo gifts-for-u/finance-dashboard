@@ -132,6 +132,82 @@ const defaultCategories = [
 
 const defaultCategoryColor = defaultCategories[0]?.color ?? "#4CAF50";
 
+const DEFAULT_CATEGORY_BADGE_PALETTE = {
+  background: "rgba(11, 87, 208, 0.12)",
+  text: "var(--primary-color-strong)",
+  border: "rgba(11, 87, 208, 0.2)",
+};
+
+function normalizeHexColor(color) {
+  if (typeof color !== "string") {
+    return null;
+  }
+
+  let value = color.trim();
+  if (!value) {
+    return null;
+  }
+
+  if (value.startsWith("#")) {
+    value = value.slice(1);
+  }
+
+  if (value.length === 3) {
+    value = value
+      .split("")
+      .map((char) => char + char)
+      .join("");
+  }
+
+  if (!/^[0-9a-fA-F]{6}$/.test(value)) {
+    return null;
+  }
+
+  return `#${value.toUpperCase()}`;
+}
+
+function lightenHexColor(color, intensity = 0.85) {
+  const normalized = normalizeHexColor(color);
+  if (!normalized) {
+    return null;
+  }
+
+  const hex = normalized.slice(1);
+  const numeric = parseInt(hex, 16);
+  const r = (numeric >> 16) & 0xff;
+  const g = (numeric >> 8) & 0xff;
+  const b = numeric & 0xff;
+  const clamped = Math.min(Math.max(intensity, 0), 1);
+
+  const lightenChannel = (component) => {
+    const value = component / 255;
+    const ratio = clamped + (1 - clamped) * value;
+    const lightened = value + (1 - value) * ratio;
+    return Math.round(Math.min(lightened, 1) * 255);
+  };
+
+  const toHex = (component) => component.toString(16).padStart(2, "0").toUpperCase();
+
+  return `#${toHex(lightenChannel(r))}${toHex(lightenChannel(g))}${toHex(lightenChannel(b))}`;
+}
+
+function getCategoryBadgePalette(color) {
+  const normalized = normalizeHexColor(color);
+
+  if (!normalized) {
+    return DEFAULT_CATEGORY_BADGE_PALETTE;
+  }
+
+  const background = lightenHexColor(normalized, 0.85);
+  const border = lightenHexColor(normalized, 0.6) ?? normalized;
+
+  return {
+    background: background ?? DEFAULT_CATEGORY_BADGE_PALETTE.background,
+    text: normalized,
+    border: border ?? DEFAULT_CATEGORY_BADGE_PALETTE.border,
+  };
+}
+
 const TABLE_SORT_CONFIG = {
   income: {
     date: { asc: "date-asc", desc: "date-desc", defaultDirection: "desc" },
@@ -1436,6 +1512,14 @@ function updateExpenseTable() {
       const category = categories.find((cat) => cat.id === expense.category);
       const categoryName = getCategoryName(expense.category);
 
+      const badgePalette = getCategoryBadgePalette(category?.color);
+      const badgeStyle =
+        [
+          `--category-badge-bg: ${badgePalette.background}`,
+          `--category-badge-color: ${badgePalette.text}`,
+          `--category-badge-border: ${badgePalette.border}`,
+        ].join("; ") + ";";
+
       // Safely format the date
       let formattedDate = "N/A";
       try {
@@ -1454,9 +1538,7 @@ function updateExpenseTable() {
         <tr class="${doneClass}">
           <td>${formattedDate}</td>
           <td>
-            <span class="category-badge" style="background-color: ${
-              category?.color
-            }20; color: ${category?.color}">
+            <span class="category-badge" style="${badgeStyle}">
               ${categoryName}
             </span>
           </td>
