@@ -135,7 +135,7 @@ const defaultCategoryColor = defaultCategories[0]?.color ?? "#4CAF50";
 const DEFAULT_CATEGORY_BADGE_PALETTE = {
   background: "rgba(11, 87, 208, 0.12)",
   text: "var(--primary-color-strong)",
-  border: "rgba(11, 87, 208, 0.2)",
+  border: "var(--primary-color-strong)",
 };
 
 function normalizeHexColor(color) {
@@ -199,12 +199,10 @@ function getCategoryBadgePalette(color) {
   }
 
   const background = lightenHexColor(normalized, 0.85);
-  const border = lightenHexColor(normalized, 0.6) ?? normalized;
-
   return {
     background: background ?? DEFAULT_CATEGORY_BADGE_PALETTE.background,
     text: normalized,
-    border: border ?? DEFAULT_CATEGORY_BADGE_PALETTE.border,
+    border: normalized,
   };
 }
 
