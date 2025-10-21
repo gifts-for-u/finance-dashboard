@@ -73,13 +73,6 @@
             <div class="summary-body">
               <div class="summary-value-row">
                 <div class="summary-value" id="totalIncome">Rp 0</div>
-                <button
-                  class="edit-income-btn"
-                  onclick="showIncomeModal()"
-                  title="Edit pemasukan"
-                >
-                  <i class="fas fa-edit"></i>
-                </button>
               </div>
               <div class="summary-label">TOTAL PEMASUKAN</div>
             </div>
@@ -188,21 +181,21 @@
 
         <!-- Action Buttons -->
         <div class="action-buttons">
-          <div class="action-buttons-left">
-            <button class="btn" onclick="showIncomeModal()">
+          <div class="action-group action-group-primary">
+            <button class="btn btn-primary" onclick="showIncomeModal()">
               <i class="fas fa-plus"></i> Tambah Pemasukan
             </button>
-            <button class="btn" onclick="showExpenseModal()">
+            <button class="btn btn-primary" onclick="showExpenseModal()">
               <i class="fas fa-minus"></i> Tambah Pengeluaran
             </button>
+          </div>
+          <div class="action-group action-group-secondary">
             <button class="btn btn-secondary" onclick="showCategoryModal()">
               <i class="fas fa-tags"></i> Kelola Kategori
             </button>
             <button class="btn btn-secondary" onclick="showTemplateModal()">
               <i class="fas fa-sync"></i> Template Rutin
             </button>
-          </div>
-          <div class="action-buttons-right">
             <button class="btn btn-secondary" onclick="exportData()">
               <i class="fas fa-upload"></i> Export
             </button>
@@ -257,7 +250,14 @@
             </div>
           </div>
           <div class="table-container">
-            <table class="table">
+            <table class="table table-income">
+              <colgroup>
+                <col class="col-date" />
+                <col class="col-source" />
+                <col class="col-amount" />
+                <col class="col-notes" />
+                <col class="col-actions" />
+              </colgroup>
               <thead>
                 <tr>
                   <th>
@@ -351,7 +351,14 @@
             </div>
           </div>
           <div class="table-container">
-            <table class="table">
+            <table class="table table-expense">
+              <colgroup>
+                <col class="col-date" />
+                <col class="col-source" />
+                <col class="col-amount" />
+                <col class="col-notes" />
+                <col class="col-actions" />
+              </colgroup>
               <thead>
                 <tr>
                   <th>
