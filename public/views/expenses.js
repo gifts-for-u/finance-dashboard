@@ -134,7 +134,10 @@ export function updateSortIndicators(target, selectedOption) {
     }
 
     const label = TABLE_SORT_LABELS[target]?.[key] ?? key;
-    button.querySelector(".sort-label").textContent = label;
+    const labelElement = button.querySelector(".sort-label");
+    if (labelElement) {
+      labelElement.textContent = label;
+    }
 
     button.classList.remove("is-active", "is-desc");
 
