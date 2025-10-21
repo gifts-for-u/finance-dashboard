@@ -628,6 +628,55 @@ function isDoneDescription(text) {
   return String(text).toLowerCase().includes("done");
 }
 
+const VALID_EXPENSE_STATUSES = new Set(["planned", "done"]);
+
+function normalizeStatusValue(status) {
+  if (status === undefined || status === null) {
+    return "";
+  }
+
+  return String(status).toLowerCase().trim();
+}
+
+function deriveExpenseStatus(expense) {
+  if (!expense || typeof expense !== "object") {
+    return "planned";
+  }
+
+  const normalizedStatus = normalizeStatusValue(expense.status);
+  if (normalizedStatus && VALID_EXPENSE_STATUSES.has(normalizedStatus)) {
+    return normalizedStatus;
+  }
+
+  if (typeof expense.status === "string" && !normalizedStatus) {
+    return "planned";
+  }
+
+  if (
+    typeof expense.status === "string" &&
+    !VALID_EXPENSE_STATUSES.has(normalizedStatus)
+  ) {
+    return expense.status;
+  }
+
+  if (
+    typeof expense.description === "string" &&
+    isDoneDescription(expense.description)
+  ) {
+    return "done";
+  }
+
+  return "planned";
+}
+
+function isExpenseDone(expense) {
+  const status = deriveExpenseStatus(expense);
+  if (typeof status === "string") {
+    return status.toLowerCase() === "done";
+  }
+  return false;
+}
+
 function isSavingsCategory(expense) {
   if (!expense) {
     return false;
@@ -751,11 +800,22 @@ function convertFirestoreData(data) {
 
   // Convert expense dates
   if (data.expenses && Array.isArray(data.expenses)) {
-    data.expenses = data.expenses.filter(Boolean).map((expense) => ({
-      ...expense,
-      amount: normalizeAmount(expense.amount),
-      date: convertFirestoreDate(expense.date),
-    }));
+    data.expenses = data.expenses.filter(Boolean).map((expense) => {
+      const normalizedExpense = {
+        ...expense,
+        amount: normalizeAmount(expense.amount),
+        date: convertFirestoreDate(expense.date),
+      };
+
+      const status = deriveExpenseStatus(normalizedExpense);
+      if (typeof status === "string" && status) {
+        normalizedExpense.status = status;
+      } else if (normalizedExpense.status !== undefined) {
+        delete normalizedExpense.status;
+      }
+
+      return normalizedExpense;
+    });
   }
 
   // Convert metadata dates
@@ -1075,11 +1135,22 @@ async function saveMonthData() {
 
   currentMonthData.expenses = currentMonthData.expenses
     .filter(Boolean)
-    .map((expense) => ({
-      ...expense,
-      amount: normalizeAmount(expense.amount),
-      date: convertFirestoreDate(expense.date),
-    }));
+    .map((expense) => {
+      const normalizedExpense = {
+        ...expense,
+        amount: normalizeAmount(expense.amount),
+        date: convertFirestoreDate(expense.date),
+      };
+
+      const status = deriveExpenseStatus(normalizedExpense);
+      if (typeof status === "string" && status) {
+        normalizedExpense.status = status;
+      } else if (normalizedExpense.status !== undefined) {
+        delete normalizedExpense.status;
+      }
+
+      return normalizedExpense;
+    });
 
   await setDoc(docRef, currentMonthData);
 }
@@ -1272,7 +1343,7 @@ function updateSummaryCards() {
     0
   );
   const totalActualExpense = expenses
-    .filter((expense) => isDoneDescription(expense?.description))
+    .filter((expense) => isExpenseDone(expense))
     .reduce((sum, expense) => sum + normalizeAmount(expense.amount), 0);
   const actualBalance = totalIncome - totalActualExpense;
   const plannedRemaining = totalIncome - totalPlannedExpense;
@@ -1527,10 +1598,16 @@ function updateExpenseTable() {
         formattedDate = "Invalid Date";
       }
 
-      // Check if description contains "Done" or "done" for highlighting
       const description = expense.description || "";
-      const isDone = isDoneDescription(description);
+      const isDone = isExpenseDone(expense);
       const doneClass = isDone ? "expense-done" : "";
+      const toggleLabel = isDone
+        ? "Tandai belum selesai"
+        : "Tandai selesai";
+      const toggleButtonClass = isDone
+        ? "btn btn-sm btn-success"
+        : "btn btn-sm btn-outline-success";
+      const toggleIcon = isDone ? "fa-undo" : "fa-check";
 
       return `
         <tr class="${doneClass}">
@@ -1545,6 +1622,14 @@ function updateExpenseTable() {
           )}</td>
           <td>${description || "-"}</td>
           <td>
+            <button
+              class="${toggleButtonClass}"
+              onclick="toggleExpenseStatus('${expense.id}')"
+              title="${toggleLabel}"
+              aria-label="${toggleLabel}"
+            >
+              <i class="fas ${toggleIcon}"></i>
+            </button>
             <button class="btn btn-sm btn-secondary" onclick="editExpense('${
               expense.id
             }')">
@@ -1968,6 +2053,48 @@ function deleteExpense(expenseId) {
   );
 }
 
+async function toggleExpenseStatus(expenseId) {
+  if (!currentMonthData || !Array.isArray(currentMonthData.expenses)) {
+    showToast("Pengeluaran tidak ditemukan", "error");
+    return;
+  }
+
+  const expenseIndex = currentMonthData.expenses.findIndex(
+    (expense) => expense && expense.id === expenseId
+  );
+
+  if (expenseIndex === -1) {
+    showToast("Pengeluaran tidak ditemukan", "error");
+    return;
+  }
+
+  const currentExpense = currentMonthData.expenses[expenseIndex];
+  const currentStatus = deriveExpenseStatus(currentExpense);
+  const nextStatus =
+    typeof currentStatus === "string" && currentStatus.toLowerCase() === "done"
+      ? "planned"
+      : "done";
+
+  currentMonthData.expenses[expenseIndex] = {
+    ...currentExpense,
+    status: nextStatus,
+  };
+
+  try {
+    await saveMonthData();
+    updateUI();
+    showToast(
+      nextStatus === "done"
+        ? "Pengeluaran ditandai selesai"
+        : "Penandaan selesai dibatalkan",
+      "success",
+    );
+  } catch (error) {
+    console.error("Toggle expense status error:", error);
+    showToast("Gagal memperbarui status pengeluaran", "error");
+  }
+}
+
 // Category Modal Functions
 function configureCategoryForm(mode, category = null) {
   const form = document.getElementById("categoryForm");
@@ -2109,6 +2236,7 @@ async function applyTemplates() {
           description: template.description,
           date: getDefaultEntryDate(),
           isRecurring: true,
+          status: "planned",
         }));
 
         currentMonthData.expenses.push(...newExpenses);
@@ -2196,9 +2324,7 @@ async function exportData() {
       (sum, income) => sum + toNumber(income.amount),
       0
     );
-    const doneExpenses = expenses.filter((expense) =>
-      isDoneDescription(expense?.description)
-    );
+    const doneExpenses = expenses.filter((expense) => isExpenseDone(expense));
     const totalDoneExpense = doneExpenses.reduce(
       (sum, expense) => sum + toNumber(expense.amount),
       0
@@ -2327,12 +2453,7 @@ async function exportData() {
           cell.border = summaryBorder;
         });
 
-        if (
-          isExpense &&
-          expenses[index] &&
-          typeof expenses[index].description === "string" &&
-          isDoneDescription(expenses[index].description)
-        ) {
+        if (isExpense && expenses[index] && isExpenseDone(expenses[index])) {
           row.eachCell((cell) => {
             cell.fill = doneFill;
           });
@@ -2461,7 +2582,7 @@ function importData() {
           "Import data akan menimpa data bulan ini. Lanjutkan?",
           async () => {
             try {
-              currentMonthData = data.data;
+              currentMonthData = convertFirestoreData(data.data);
               categories = [
                 ...defaultCategories,
                 ...data.categories.filter((cat) => !cat.isDefault),
@@ -2614,13 +2735,16 @@ onDocumentReady(() => {
             (exp) => exp.id === expenseId
           );
           if (expenseIndex !== -1) {
+            const existingExpense = currentMonthData.expenses[expenseIndex];
+            const preservedStatus = deriveExpenseStatus(existingExpense);
             currentMonthData.expenses[expenseIndex] = {
-              ...currentMonthData.expenses[expenseIndex],
+              ...existingExpense,
               category,
               amount,
               description,
               date,
               isRecurring,
+              status: preservedStatus,
             };
           }
         } else {
@@ -2633,6 +2757,10 @@ onDocumentReady(() => {
             date,
             isRecurring,
           };
+          const derivedStatus = deriveExpenseStatus(newExpense);
+          if (typeof derivedStatus === "string" && derivedStatus) {
+            newExpense.status = derivedStatus;
+          }
           currentMonthData.expenses.push(newExpense);
         }
 
@@ -2842,6 +2970,7 @@ window.deleteIncome = deleteIncome;
 window.showExpenseModal = showExpenseModal;
 window.editExpense = editExpense;
 window.deleteExpense = deleteExpense;
+window.toggleExpenseStatus = toggleExpenseStatus;
 window.showCategoryModal = showCategoryModal;
 window.showAddCategoryForm = showAddCategoryForm;
 window.hideAddCategoryForm = hideAddCategoryForm;
