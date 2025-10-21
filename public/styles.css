@@ -597,6 +597,10 @@ body[data-theme="dark"] {
   box-shadow: 0 14px 24px rgba(186, 26, 26, 0.32);
 }
 
+.btn-danger i {
+  color: #ffffff;
+}
+
 .btn-sm {
   padding: 10px 20px;
   font-size: 0.85rem;
@@ -739,6 +743,27 @@ body[data-theme="dark"] {
 
 .table col.col-actions {
   width: 12%;
+  min-width: 120px;
+}
+
+.table col.col-date {
+  width: 16%;
+}
+
+.table col.col-source {
+  width: 22%;
+}
+
+.table col.col-amount {
+  width: 18%;
+}
+
+.table col.col-notes {
+  width: 25%;
+}
+
+.table col.col-actions {
+  width: 15%;
   min-width: 120px;
 }
 
@@ -1324,15 +1349,15 @@ body[data-theme="dark"] {
   }
 
   .table col.col-date {
-    width: 20%;
+    width: 13%;
   }
 
   .table col.col-source {
-    width: 25%;
+    width: 13%;
   }
 
   .table col.col-amount {
-    width: 20%;
+    width: 13%;
   }
 
   .table col.col-notes {
@@ -1340,7 +1365,7 @@ body[data-theme="dark"] {
   }
 
   .table col.col-actions {
-    width: 18%;
+    width: 15%;
     min-width: 120px;
   }
 
