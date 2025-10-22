@@ -620,11 +620,19 @@ export function showTemplateModal() {
   showModal("templateModal");
 }
 
-export function showBudgetModal() {
+export function showBudgetModal(mode = "manage") {
   const categories = getCategories();
   const data = getCurrentMonthData();
-  const budgets = sanitizeBudgets(data?.budgets ?? {});
+  const budgets =
+    mode === "create"
+      ? categories.reduce((accumulator, category) => {
+          accumulator[category.id] = 0;
+          return accumulator;
+        }, {})
+      : sanitizeBudgets(data?.budgets ?? {});
   const container = document.getElementById("budgetFormList");
+  const title = document.getElementById("budgetModalTitle");
+  const submitButton = document.getElementById("budgetModalSubmitLabel");
 
   if (container) {
     if (!categories.length) {
@@ -637,6 +645,14 @@ export function showBudgetModal() {
     }
   }
 
+  if (title) {
+    title.textContent = mode === "create" ? "Buat Budget Baru" : "Kelola Budget Bulanan";
+  }
+
+  if (submitButton) {
+    submitButton.textContent = mode === "create" ? "Simpan Budget Baru" : "Simpan Budget";
+  }
+
   showModal("budgetModal");
 
   setTimeout(() => {
@@ -644,6 +660,10 @@ export function showBudgetModal() {
     firstInput?.focus();
     firstInput?.select();
   }, 100);
+}
+
+export function showCreateBudgetModal() {
+  showBudgetModal("create");
 }
 
 export function deleteTemplate(templateId) {

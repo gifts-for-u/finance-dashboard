@@ -369,6 +369,21 @@ body[data-theme="dark"] {
   gap: 16px;
 }
 
+.budget-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.budget-card-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.budget-create-btn,
 .budget-manage-btn {
   padding: 10px 18px;
   font-size: 0.9rem;
@@ -376,6 +391,7 @@ body[data-theme="dark"] {
   box-shadow: none;
 }
 
+.budget-create-btn i,
 .budget-manage-btn i {
   font-size: 0.9rem;
 }
@@ -945,7 +961,7 @@ body[data-theme="dark"] {
 }
 
 .table col.col-actions {
-  width: 18%;
+  width: 15%;
 }
 
 .table col.col-date {
@@ -1623,6 +1639,16 @@ body[data-theme="dark"] {
   .budget-card-header {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .budget-card-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .budget-card-actions .btn {
+    width: 100%;
+    justify-content: center;
   }
 
   .budget-manage-btn {
