@@ -26,6 +26,7 @@ import {
   convertFirestoreDate,
   deriveExpenseStatus,
   generateId,
+  sanitizeBudgets,
 } from "../state/derivations.js";
 
 export function convertFirestoreData(data) {
@@ -70,6 +71,8 @@ export function convertFirestoreData(data) {
     }
     normalised.metadata = metadata;
   }
+
+  normalised.budgets = sanitizeBudgets(normalised.budgets);
 
   return normalised;
 }
@@ -240,10 +243,12 @@ export async function saveMonthData() {
         })
     : [];
 
+  const budgets = sanitizeBudgets(currentData.budgets);
+
   const payload = {
     incomes,
     expenses,
-    budgets: currentData.budgets ?? {},
+    budgets,
     metadata,
   };
 

@@ -256,3 +256,130 @@ export function generateId() {
     Date.now().toString(36) + Math.random().toString(36).slice(2)
   ).replace(/[^a-z0-9]/gi, "");
 }
+
+export function normalizeBudgetLimit(limit) {
+  const value = normalizeAmount(limit);
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return value < 0 ? 0 : value;
+}
+
+export function sanitizeBudgets(budgets) {
+  if (!budgets || typeof budgets !== "object") {
+    return {};
+  }
+
+  return Object.entries(budgets).reduce((accumulator, [key, value]) => {
+    if (!key) {
+      return accumulator;
+    }
+
+    const normalizedKey = String(key);
+    accumulator[normalizedKey] = normalizeBudgetLimit(value);
+    return accumulator;
+  }, {});
+}
+
+export function calculateBudgetProgress({
+  categories,
+  expenses,
+  budgets,
+}) {
+  const categoryList = Array.isArray(categories) ? categories : [];
+  const expenseList = Array.isArray(expenses) ? expenses.filter(Boolean) : [];
+  const sanitizedBudgets = sanitizeBudgets(budgets);
+
+  const totals = expenseList.reduce((accumulator, expense) => {
+    const categoryId = expense?.category || "uncategorized";
+    const amount = normalizeAmount(expense?.amount ?? 0);
+
+    if (!accumulator[categoryId]) {
+      accumulator[categoryId] = { planned: 0, actual: 0 };
+    }
+
+    accumulator[categoryId].planned += amount;
+
+    if (isExpenseDone(expense)) {
+      accumulator[categoryId].actual += amount;
+    }
+
+    return accumulator;
+  }, {});
+
+  const results = categoryList.map((category) => {
+    const categoryId = category.id;
+    const limit = sanitizedBudgets[categoryId] ?? 0;
+    const categoryTotals = totals[categoryId] ?? { planned: 0, actual: 0 };
+    const actualSpent = categoryTotals.actual;
+    const plannedSpent = categoryTotals.planned;
+    const remaining = limit > 0 ? limit - actualSpent : 0;
+    const actualPercent = limit > 0 ? (actualSpent / limit) * 100 : 0;
+    const plannedPercent = limit > 0 ? (plannedSpent / limit) * 100 : 0;
+
+    let status = "neutral";
+    if (limit > 0) {
+      if (actualSpent >= limit) {
+        status = "over";
+      } else if (actualSpent >= limit * 0.8) {
+        status = "warning";
+      } else {
+        status = "normal";
+      }
+    }
+
+    return {
+      id: categoryId,
+      name: category.name,
+      color: category.color,
+      limit,
+      plannedSpent,
+      actualSpent,
+      actualPercent,
+      plannedPercent,
+      remaining,
+      status,
+    };
+  });
+
+  const remainingBudgetKeys = Object.keys(sanitizedBudgets).filter(
+    (key) => !categoryList.some((category) => category.id === key),
+  );
+
+  remainingBudgetKeys.forEach((key) => {
+    const limit = sanitizedBudgets[key] ?? 0;
+    const categoryTotals = totals[key] ?? { planned: 0, actual: 0 };
+    const actualSpent = categoryTotals.actual;
+    const plannedSpent = categoryTotals.planned;
+    const actualPercent = limit > 0 ? (actualSpent / limit) * 100 : 0;
+    const plannedPercent = limit > 0 ? (plannedSpent / limit) * 100 : 0;
+    const remaining = limit > 0 ? limit - actualSpent : 0;
+
+    let status = "neutral";
+    if (limit > 0) {
+      if (actualSpent >= limit) {
+        status = "over";
+      } else if (actualSpent >= limit * 0.8) {
+        status = "warning";
+      } else {
+        status = "normal";
+      }
+    }
+
+    results.push({
+      id: key,
+      name: key,
+      color: null,
+      limit,
+      plannedSpent,
+      actualSpent,
+      actualPercent,
+      plannedPercent,
+      remaining,
+      status,
+    });
+  });
+
+  return results;
+}

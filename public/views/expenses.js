@@ -24,6 +24,7 @@ import {
   isSavingsCategory,
   getCategoryBadgePalette,
 } from "../state/derivations.js";
+import { updateBudgetProgress } from "./budgets.js";
 
 function getSelectValue(selectId, fallback) {
   const select = document.getElementById(selectId);
@@ -711,6 +712,7 @@ export function updateTablesAndCharts() {
 
 export function refreshAllViews() {
   updateSummaryCards();
+  updateBudgetProgress();
   updateTablesAndCharts();
   updateCategorySelect();
   updateCategoryList();
