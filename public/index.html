@@ -462,41 +462,43 @@
         </div>
 
         <!-- Budget Progress -->
-        <div class="card budget-card" id="budgetCard">
-          <div class="card-header budget-card-header">
-            <h3 class="card-title">Progres Budget</h3>
-            <div class="budget-card-actions">
-              <button
-                type="button"
-                class="btn btn-secondary budget-manage-btn"
-                onclick="showBudgetModal()"
-              >
-                <i class="fas fa-pen"></i>
-                Kelola Budget
-              </button>
-              <button
-                type="button"
-                class="btn btn-primary budget-create-btn"
-                onclick="showCreateBudgetModal()"
-              >
-                <i class="fas fa-plus"></i>
-                Buat Budget Baru
-              </button>
+        <section class="budget-section" id="budgetSection">
+          <div class="card budget-card" id="budgetCard">
+            <div class="card-header budget-card-header">
+              <h3 class="card-title">Progres Budget</h3>
+              <div class="budget-card-actions">
+                <button
+                  type="button"
+                  class="btn btn-secondary budget-manage-btn"
+                  onclick="showBudgetModal()"
+                >
+                  <i class="fas fa-pen"></i>
+                  Kelola Budget
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-primary budget-create-btn"
+                  onclick="showCreateBudgetModal()"
+                >
+                  <i class="fas fa-plus"></i>
+                  Buat Budget Baru
+                </button>
+              </div>
             </div>
+            <div class="budget-empty-state" id="budgetEmptyState">
+              <div class="budget-empty-icon">
+                <i class="fas fa-wallet"></i>
+              </div>
+              <div>
+                <p class="budget-empty-title">Belum ada budget yang diatur</p>
+                <p class="budget-empty-description">
+                  Tetapkan limit per kategori untuk memantau pengeluaranmu.
+                </p>
+              </div>
+            </div>
+            <div class="budget-progress-list" id="budgetProgressList"></div>
           </div>
-          <div class="budget-empty-state" id="budgetEmptyState">
-            <div class="budget-empty-icon">
-              <i class="fas fa-wallet"></i>
-            </div>
-            <div>
-              <p class="budget-empty-title">Belum ada budget yang diatur</p>
-              <p class="budget-empty-description">
-                Tetapkan limit per kategori untuk memantau pengeluaranmu.
-              </p>
-            </div>
-          </div>
-          <div class="budget-progress-list" id="budgetProgressList"></div>
-        </div>
+        </section>
 
         <!-- Recurring Templates -->
         <div class="card recurring-templates">

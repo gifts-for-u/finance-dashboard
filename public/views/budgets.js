@@ -105,6 +105,11 @@ export function updateBudgetProgress() {
 
   const emptyState = document.getElementById("budgetEmptyState");
   const card = document.getElementById("budgetCard");
+  const host = document.getElementById("budgetSection");
+
+  if (host && card && card.parentElement !== host) {
+    host.appendChild(card);
+  }
 
   const data = getCurrentMonthData();
   const categories = getCategories();

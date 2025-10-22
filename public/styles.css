@@ -360,6 +360,10 @@ body[data-theme="dark"] {
 }
 
 /* Budget Tracker */
+.budget-section {
+  margin-top: 28px;
+}
+
 .budget-card {
   overflow: hidden;
 }
