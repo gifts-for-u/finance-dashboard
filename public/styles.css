@@ -376,6 +376,11 @@ body[data-theme="dark"] {
   margin-bottom: 16px;
 }
 
+.card-header.budget-section-header {
+  align-items: center;
+  margin-bottom: 16px;
+}
+
 .budget-section-title {
   font-size: 1.25rem;
   font-weight: 600;
@@ -1654,6 +1659,10 @@ body[data-theme="dark"] {
 
   .budget-section-header {
     flex-direction: column;
+    align-items: stretch;
+  }
+
+  .card-header.budget-section-header {
     align-items: stretch;
   }
 
