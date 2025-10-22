@@ -13,6 +13,8 @@ import {
   parseDateInput,
   normalizeAmount,
   generateId,
+  sanitizeBudgets,
+  calculateBudgetProgress,
 } from "../state/derivations.js";
 import {
   saveMonthData,
@@ -26,6 +28,34 @@ import {
   updateCategorySelect,
   updateTemplatesList,
 } from "../views/expenses.js";
+
+function buildBudgetFormRow(category, value) {
+  const normalizedValue = Number.isFinite(value) ? value : 0;
+
+  return `
+    <div class="budget-form-item">
+      <label class="budget-form-label" for="budget-${category.id}">
+        <span class="budget-form-color" style="--budget-color: ${
+          category.color || "var(--primary-color)"
+        }"></span>
+        <span class="budget-form-name">${category.name}</span>
+      </label>
+      <div class="budget-form-input">
+        <span class="budget-form-prefix">Rp</span>
+        <input
+          type="number"
+          min="0"
+          step="1000"
+          id="budget-${category.id}"
+          class="form-input budget-input"
+          data-budget-category="${category.id}"
+          value="${normalizedValue > 0 ? normalizedValue : ""}"
+          placeholder="0"
+        />
+      </div>
+    </div>
+  `;
+}
 
 export function showModal(modalId) {
   document.getElementById(modalId)?.classList.add("show");
@@ -502,8 +532,15 @@ export function deleteCategory(categoryId) {
       const updatedCategories = categories.filter((cat) => cat.id !== categoryId);
       setCategories(updatedCategories);
       await saveCategories();
+      const monthData = getCurrentMonthData();
+      if (monthData?.budgets && monthData.budgets[categoryId] !== undefined) {
+        const { [categoryId]: _removed, ...restBudgets } = monthData.budgets;
+        setCurrentMonthData({ ...monthData, budgets: restBudgets });
+        await saveMonthData();
+      }
       updateCategoryList();
       updateCategorySelect();
+      refreshAllViews();
       showToast("Kategori berhasil dihapus", "success");
     } catch (error) {
       console.error("Delete category error:", error);
@@ -568,6 +605,7 @@ export async function handleCategoryFormSubmit(event) {
     await saveCategories();
     updateCategoryList();
     updateCategorySelect();
+    refreshAllViews();
 
     closeModal("categoryModal");
     showToast(categoryId ? "Kategori berhasil diperbarui" : "Kategori berhasil ditambah", "success");
@@ -580,6 +618,32 @@ export async function handleCategoryFormSubmit(event) {
 export function showTemplateModal() {
   updateTemplatesList();
   showModal("templateModal");
+}
+
+export function showBudgetModal() {
+  const categories = getCategories();
+  const data = getCurrentMonthData();
+  const budgets = sanitizeBudgets(data?.budgets ?? {});
+  const container = document.getElementById("budgetFormList");
+
+  if (container) {
+    if (!categories.length) {
+      container.innerHTML =
+        "<p class=\"budget-form-empty\">Tambahkan kategori terlebih dahulu untuk mengatur budget.</p>";
+    } else {
+      container.innerHTML = categories
+        .map((category) => buildBudgetFormRow(category, budgets[category.id]))
+        .join("");
+    }
+  }
+
+  showModal("budgetModal");
+
+  setTimeout(() => {
+    const firstInput = container?.querySelector(".budget-input");
+    firstInput?.focus();
+    firstInput?.select();
+  }, 100);
 }
 
 export function deleteTemplate(templateId) {
@@ -629,6 +693,48 @@ export async function applyTemplates() {
       showToast("Gagal menerapkan template", "error");
     }
   });
+}
+
+export async function handleBudgetFormSubmit(event) {
+  event.preventDefault();
+
+  const categories = getCategories();
+  if (!categories.length) {
+    showToast("Tambahkan kategori terlebih dahulu", "warning");
+    closeModal("budgetModal");
+    return;
+  }
+
+  const data = getCurrentMonthData() ?? { incomes: [], expenses: [], budgets: {} };
+  const updatedBudgets = categories.reduce((accumulator, category) => {
+    const input = document.querySelector(
+      `[data-budget-category="${category.id}"]`,
+    );
+    if (!input) {
+      return accumulator;
+    }
+
+    const numericValue = normalizeAmount(input.value || 0);
+    accumulator[category.id] = numericValue > 0 ? numericValue : 0;
+    return accumulator;
+  }, {});
+
+  const sanitized = sanitizeBudgets(updatedBudgets);
+
+  setCurrentMonthData({
+    ...data,
+    budgets: sanitized,
+  });
+
+  try {
+    await saveMonthData();
+    refreshAllViews();
+    closeModal("budgetModal");
+    showToast("Budget berhasil disimpan", "success");
+  } catch (error) {
+    console.error("Save budget error:", error);
+    showToast("Gagal menyimpan budget", "error");
+  }
 }
 
 export async function exportData() {
@@ -709,6 +815,44 @@ export async function exportData() {
 
     worksheet.getColumn("date").numFmt = "dd/mm/yyyy";
     worksheet.getColumn("amount").numFmt = "#,##0";
+
+    const budgetWorksheet = workbook.addWorksheet("Budget");
+    budgetWorksheet.columns = [
+      { header: "Kategori", key: "category", width: 28 },
+      { header: "Limit", key: "limit", width: 18 },
+      { header: "Pengeluaran Aktual", key: "actual", width: 22 },
+      { header: "Pengeluaran Rencana", key: "planned", width: 22 },
+      { header: "Status", key: "status", width: 20 },
+      { header: "Sisa", key: "remaining", width: 18 },
+    ];
+
+    const budgetProgress = calculateBudgetProgress({
+      categories: getCategories(),
+      expenses: data.expenses || [],
+      budgets: data.budgets || {},
+    }).filter((item) => item.limit > 0 || item.actualSpent > 0 || item.plannedSpent > 0);
+
+    budgetProgress.forEach((item) => {
+      budgetWorksheet.addRow({
+        category: item.name,
+        limit: item.limit,
+        actual: item.actualSpent,
+        planned: item.plannedSpent,
+        status:
+          item.limit <= 0
+            ? "Tidak ada batas"
+            : item.status === "over"
+            ? "Melebihi batas"
+            : item.status === "warning"
+            ? "Hampir penuh"
+            : "Terkendali",
+        remaining: item.limit > 0 ? item.remaining : null,
+      });
+    });
+
+    ["limit", "actual", "planned", "remaining"].forEach((columnKey) => {
+      budgetWorksheet.getColumn(columnKey).numFmt = "#,##0";
+    });
 
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {

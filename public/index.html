@@ -196,6 +196,9 @@
             <button class="btn btn-secondary" onclick="showTemplateModal()">
               <i class="fas fa-sync"></i> Template Rutin
             </button>
+            <button class="btn btn-secondary" onclick="showBudgetModal()">
+              <i class="fas fa-wallet"></i> Kelola Budget
+            </button>
             <button class="btn btn-secondary" onclick="exportData()">
               <i class="fas fa-upload"></i> Export
             </button>
@@ -212,6 +215,33 @@
               <i class="fas fa-database"></i> Migrate October Data
             </button>
           </div>
+        </div>
+
+        <!-- Budget Progress -->
+        <div class="card budget-card" id="budgetCard">
+          <div class="card-header budget-card-header">
+            <h3 class="card-title">Progres Budget</h3>
+            <button
+              type="button"
+              class="btn btn-secondary budget-manage-btn"
+              onclick="showBudgetModal()"
+            >
+              <i class="fas fa-pen"></i>
+              Kelola Budget
+            </button>
+          </div>
+          <div class="budget-empty-state" id="budgetEmptyState">
+            <div class="budget-empty-icon">
+              <i class="fas fa-wallet"></i>
+            </div>
+            <div>
+              <p class="budget-empty-title">Belum ada budget yang diatur</p>
+              <p class="budget-empty-description">
+                Tetapkan limit per kategori untuk memantau pengeluaranmu.
+              </p>
+            </div>
+          </div>
+          <div class="budget-progress-list" id="budgetProgressList"></div>
         </div>
 
         <!-- Charts -->
@@ -641,6 +671,39 @@
         <div id="templateList">
           <!-- Dynamic content -->
         </div>
+      </div>
+    </div>
+
+    <!-- Budget Modal -->
+    <div class="modal" id="budgetModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Kelola Budget Bulanan</h3>
+          <button class="modal-close" onclick="closeModal('budgetModal')">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form id="budgetForm" class="modal-form">
+          <div class="modal-body">
+            <p class="modal-description">
+              Tentukan limit untuk setiap kategori agar lebih mudah mengontrol
+              pengeluaran.
+            </p>
+            <div class="budget-form-list" id="budgetFormList"></div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeModal('budgetModal')"
+            >
+              Batal
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Simpan Budget
+            </button>
+          </div>
+        </form>
       </div>
     </div>
 

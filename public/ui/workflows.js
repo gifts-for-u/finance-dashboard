@@ -50,6 +50,8 @@ import {
   showTemplateModal,
   deleteTemplate,
   applyTemplates,
+  showBudgetModal,
+  handleBudgetFormSubmit,
   exportData,
   importData,
 } from "./modals.js";
@@ -397,6 +399,9 @@ function registerFormHandlers() {
 
   const categoryForm = getElement("categoryForm");
   categoryForm?.addEventListener("submit", handleCategoryFormSubmit);
+
+  const budgetForm = getElement("budgetForm");
+  budgetForm?.addEventListener("submit", handleBudgetFormSubmit);
 }
 
 function attachGlobals() {
@@ -418,6 +423,7 @@ function attachGlobals() {
     showTemplateModal,
     deleteTemplate,
     applyTemplates,
+    showBudgetModal,
     changeMonth,
     toggleTheme,
     signOut,
