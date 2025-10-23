@@ -439,14 +439,24 @@
           <div class="card budget-card" id="budgetCard">
             <div class="card-header budget-section-header">
               <h3 class="card-title budget-section-title">Progres Budget</h3>
-              <button
-                type="button"
-                class="btn btn-secondary budget-manage-btn"
-                onclick="showBudgetModal()"
-              >
-                <i class="fas fa-pen"></i>
-                Kelola Budget
-              </button>
+              <div class="budget-header-actions">
+                <button
+                  type="button"
+                  class="btn btn-primary budget-create-btn"
+                  onclick="showCreateBudgetModal()"
+                >
+                  <i class="fas fa-plus"></i>
+                  Buat Budget Baru
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary budget-manage-btn"
+                  onclick="showBudgetModal()"
+                >
+                  <i class="fas fa-pen"></i>
+                  Kelola Budget
+                </button>
+              </div>
             </div>
             <div class="budget-empty-state" id="budgetEmptyState">
               <div class="budget-empty-icon">
@@ -460,16 +470,6 @@
               </div>
             </div>
             <div class="budget-progress-list" id="budgetProgressList"></div>
-          </div>
-          <div class="budget-section-footer">
-            <button
-              type="button"
-              class="btn btn-primary budget-create-btn"
-              onclick="showCreateBudgetModal()"
-            >
-              <i class="fas fa-plus"></i>
-              Buat Budget Baru
-            </button>
           </div>
         </section>
 
