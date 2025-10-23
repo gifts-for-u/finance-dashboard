@@ -376,23 +376,21 @@ body[data-theme="dark"] {
   margin-bottom: 16px;
 }
 
+.card-header.budget-section-header {
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.budget-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .budget-section-title {
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--text-primary);
-}
-
-.budget-section-footer {
-  margin-top: 16px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.budget-section-footer .btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap;
 }
 
 .budget-create-btn,
@@ -1657,12 +1655,17 @@ body[data-theme="dark"] {
     align-items: stretch;
   }
 
-  .budget-section-footer {
-    justify-content: center;
+  .card-header.budget-section-header {
+    align-items: stretch;
   }
 
-  .budget-section-footer .btn,
-  .budget-manage-btn {
+  .budget-header-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .budget-header-actions .btn {
     width: 100%;
     justify-content: center;
   }
@@ -1690,6 +1693,10 @@ body[data-theme="dark"] {
     padding: 12px 20px;
     font-size: 0.9rem;
     flex: 0 0 auto;
+  }
+
+  .budget-header-actions {
+    gap: 10px;
   }
 
   .budget-item-meta {
