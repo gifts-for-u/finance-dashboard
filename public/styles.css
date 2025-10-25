@@ -1458,6 +1458,16 @@ body[data-theme="dark"] {
   transform: translateY(-1px);
 }
 
+.form-hint {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .form-hint {
+  color: rgba(216, 221, 255, 0.75);
+}
+
 /* Modal */
 .modal {
   display: none;

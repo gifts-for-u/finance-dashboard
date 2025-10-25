@@ -576,6 +576,17 @@
             <input type="date" id="expenseDate" class="form-input" required />
           </div>
           <div class="form-group">
+            <label class="form-label" for="expenseStatus">Status Pengeluaran</label>
+            <select id="expenseStatus" class="form-select">
+              <option value="planned">Belum dibayar</option>
+              <option value="done">Sudah dibayar</option>
+            </select>
+            <p class="form-hint">
+              Tandai apakah pengeluaran ini sudah diselesaikan atau masih menunggu
+              pembayaran.
+            </p>
+          </div>
+          <div class="form-group">
             <label class="form-label">Keterangan</label>
             <textarea
               id="expenseDescription"
