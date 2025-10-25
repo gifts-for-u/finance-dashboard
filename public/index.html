@@ -196,9 +196,6 @@
             <button class="btn btn-secondary" onclick="showTemplateModal()">
               <i class="fas fa-sync"></i> Template Rutin
             </button>
-            <button class="btn btn-secondary" onclick="showBudgetModal()">
-              <i class="fas fa-wallet"></i> Kelola Budget
-            </button>
             <button class="btn btn-secondary" onclick="exportData()">
               <i class="fas fa-upload"></i> Export
             </button>
@@ -215,33 +212,6 @@
               <i class="fas fa-database"></i> Migrate October Data
             </button>
           </div>
-        </div>
-
-        <!-- Budget Progress -->
-        <div class="card budget-card" id="budgetCard">
-          <div class="card-header budget-card-header">
-            <h3 class="card-title">Progres Budget</h3>
-            <button
-              type="button"
-              class="btn btn-secondary budget-manage-btn"
-              onclick="showBudgetModal()"
-            >
-              <i class="fas fa-pen"></i>
-              Kelola Budget
-            </button>
-          </div>
-          <div class="budget-empty-state" id="budgetEmptyState">
-            <div class="budget-empty-icon">
-              <i class="fas fa-wallet"></i>
-            </div>
-            <div>
-              <p class="budget-empty-title">Belum ada budget yang diatur</p>
-              <p class="budget-empty-description">
-                Tetapkan limit per kategori untuk memantau pengeluaranmu.
-              </p>
-            </div>
-          </div>
-          <div class="budget-progress-list" id="budgetProgressList"></div>
         </div>
 
         <!-- Charts -->
@@ -463,18 +433,28 @@
 
         <!-- Budget Progress -->
         <section class="budget-section" id="budgetSection">
-          <div class="budget-section-header">
-            <h3 class="budget-section-title">Progres Budget</h3>
-            <button
-              type="button"
-              class="btn btn-secondary budget-manage-btn"
-              onclick="showBudgetModal()"
-            >
-              <i class="fas fa-pen"></i>
-              Kelola Budget
-            </button>
-          </div>
           <div class="card budget-card" id="budgetCard">
+            <div class="card-header budget-card-header">
+              <h3 class="card-title">Progres Budget</h3>
+              <div class="budget-card-actions">
+                <button
+                  type="button"
+                  class="btn btn-primary budget-create-btn"
+                  onclick="showCreateBudgetModal()"
+                >
+                  <i class="fas fa-plus"></i>
+                  Buat Budget Baru
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary budget-manage-btn"
+                  onclick="showBudgetModal()"
+                >
+                  <i class="fas fa-pen"></i>
+                  Kelola Budget
+                </button>
+              </div>
+            </div>
             <div class="budget-empty-state" id="budgetEmptyState">
               <div class="budget-empty-icon">
                 <i class="fas fa-wallet"></i>
@@ -487,16 +467,6 @@
               </div>
             </div>
             <div class="budget-progress-list" id="budgetProgressList"></div>
-          </div>
-          <div class="budget-section-footer">
-            <button
-              type="button"
-              class="btn btn-primary budget-create-btn"
-              onclick="showCreateBudgetModal()"
-            >
-              <i class="fas fa-plus"></i>
-              Buat Budget Baru
-            </button>
           </div>
         </section>
 
@@ -604,6 +574,17 @@
           <div class="form-group">
             <label class="form-label">Tanggal</label>
             <input type="date" id="expenseDate" class="form-input" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="expenseStatus">Status Pengeluaran</label>
+            <select id="expenseStatus" class="form-select">
+              <option value="planned">Belum dibayar</option>
+              <option value="done">Sudah dibayar</option>
+            </select>
+            <p class="form-hint">
+              Tandai apakah pengeluaran ini sudah diselesaikan atau masih menunggu
+              pembayaran.
+            </p>
           </div>
           <div class="form-group">
             <label class="form-label">Keterangan</label>
