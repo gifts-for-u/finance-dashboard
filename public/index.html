@@ -650,12 +650,30 @@
               />
             </div>
             <div class="form-group">
-              <input
-                type="color"
-                id="categoryColor"
-                class="form-input"
-                value="#4CAF50"
-              />
+              <label class="form-label" for="categoryColor">Pilih warna</label>
+              <div class="color-picker-field">
+                <input
+                  type="color"
+                  id="categoryColor"
+                  class="color-picker-input"
+                  value="#4CAF50"
+                  tabindex="-1"
+                  aria-hidden="true"
+                />
+                <button
+                  type="button"
+                  class="color-picker-preview"
+                  id="categoryColorPreview"
+                  aria-label="Warna kategori #4CAF50, klik untuk mengganti warna"
+                ></button>
+                <button
+                  type="button"
+                  class="color-picker-trigger"
+                  id="categoryColorTrigger"
+                  aria-label="Buka pemilih warna, warna saat ini #4CAF50"
+                ></button>
+              </div>
+              <div class="color-picker-value" id="categoryColorValue">#4CAF50</div>
             </div>
             <button type="submit" class="btn btn-sm" id="categoryFormSubmitButton">
               <span id="categoryFormSubmitLabel">Tambah</span>
