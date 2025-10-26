@@ -7,6 +7,7 @@ import {
   setTemplates,
   getDefaultEntryDate,
   defaultCategories,
+  defaultCategoryColor,
 } from "../state/app-state.js";
 import {
   formatDateForInput,
@@ -425,10 +426,92 @@ export async function handleExpenseFormSubmit(event) {
   }
 }
 
+let categoryColorPickerInitialized = false;
+
+function updateCategoryColorPreview(colorValue) {
+  const preview = document.getElementById("categoryColorPreview");
+  const valueLabel = document.getElementById("categoryColorValue");
+  const triggerButton = document.getElementById("categoryColorTrigger");
+
+  const normalizedColor =
+    typeof colorValue === "string" && colorValue.trim()
+      ? colorValue.trim().toUpperCase()
+      : defaultCategoryColor.toUpperCase();
+
+  if (preview) {
+    preview.style.background = normalizedColor;
+    preview.setAttribute(
+      "aria-label",
+      `Warna kategori ${normalizedColor}, klik untuk mengganti warna`,
+    );
+    preview.setAttribute("title", normalizedColor);
+  }
+
+  if (valueLabel) {
+    valueLabel.textContent = normalizedColor;
+  }
+
+  if (triggerButton) {
+    triggerButton.setAttribute(
+      "aria-label",
+      `Buka pemilih warna, warna saat ini ${normalizedColor}`,
+    );
+    triggerButton.setAttribute("title", normalizedColor);
+  }
+}
+
+function initializeCategoryColorPicker() {
+  if (categoryColorPickerInitialized) {
+    return;
+  }
+
+  const colorInput = document.getElementById("categoryColor");
+  const previewButton = document.getElementById("categoryColorPreview");
+  const triggerButton = document.getElementById("categoryColorTrigger");
+
+  if (!colorInput || !previewButton || !triggerButton) {
+    return;
+  }
+
+  const openPicker = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    try {
+      colorInput.focus({ preventScroll: true });
+    } catch (error) {
+      colorInput.focus();
+    }
+
+    if (typeof colorInput.showPicker === "function") {
+      colorInput.showPicker();
+    } else {
+      colorInput.click();
+    }
+  };
+
+  [previewButton, triggerButton].forEach((element) => {
+    element.addEventListener("click", openPicker);
+  });
+
+  const handleInput = (event) => {
+    updateCategoryColorPreview(event.target.value);
+  };
+
+  colorInput.addEventListener("input", handleInput);
+  colorInput.addEventListener("change", handleInput);
+
+  updateCategoryColorPreview(colorInput.value || defaultCategoryColor);
+
+  categoryColorPickerInitialized = true;
+}
+
 function configureCategoryForm(mode, category = null) {
+  initializeCategoryColorPicker();
+
   const form = document.getElementById("categoryForm");
   const title = document.getElementById("categoryFormTitle");
-  const submitLabel = document.getElementById("categorySubmitText");
+  const submitLabel = document.getElementById("categoryFormSubmitLabel");
   const nameInput = document.getElementById("categoryName");
   const colorInput = document.getElementById("categoryColor");
   const idInput = document.getElementById("categoryId");
@@ -442,7 +525,7 @@ function configureCategoryForm(mode, category = null) {
     form.dataset.mode = "edit";
     idInput.value = category.id;
     nameInput.value = category.name;
-    colorInput.value = category.color || "";
+    colorInput.value = category.color || defaultCategoryColor;
     title.textContent = "Edit kategori";
     submitLabel.textContent = "Simpan";
     if (hint) {
@@ -453,12 +536,15 @@ function configureCategoryForm(mode, category = null) {
     form.reset();
     form.dataset.mode = "add";
     idInput.value = "";
+    colorInput.value = defaultCategoryColor;
     title.textContent = "Tambah kategori baru";
     submitLabel.textContent = "Tambah";
     if (hint) {
       hint.style.display = "none";
     }
   }
+
+  updateCategoryColorPreview(colorInput?.value || defaultCategoryColor);
 }
 
 export function showCategoryModal(categoryId = null) {
