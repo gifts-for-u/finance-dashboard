@@ -7,6 +7,7 @@ import {
   setTemplates,
   getDefaultEntryDate,
   defaultCategories,
+  defaultCategoryColor,
 } from "../state/app-state.js";
 import {
   formatDateForInput,
@@ -428,7 +429,7 @@ export async function handleExpenseFormSubmit(event) {
 function configureCategoryForm(mode, category = null) {
   const form = document.getElementById("categoryForm");
   const title = document.getElementById("categoryFormTitle");
-  const submitLabel = document.getElementById("categorySubmitText");
+  const submitLabel = document.getElementById("categoryFormSubmitLabel");
   const nameInput = document.getElementById("categoryName");
   const colorInput = document.getElementById("categoryColor");
   const idInput = document.getElementById("categoryId");
@@ -442,7 +443,7 @@ function configureCategoryForm(mode, category = null) {
     form.dataset.mode = "edit";
     idInput.value = category.id;
     nameInput.value = category.name;
-    colorInput.value = category.color || "";
+    colorInput.value = category.color || defaultCategoryColor;
     title.textContent = "Edit kategori";
     submitLabel.textContent = "Simpan";
     if (hint) {
@@ -453,6 +454,7 @@ function configureCategoryForm(mode, category = null) {
     form.reset();
     form.dataset.mode = "add";
     idInput.value = "";
+    colorInput.value = defaultCategoryColor;
     title.textContent = "Tambah kategori baru";
     submitLabel.textContent = "Tambah";
     if (hint) {
