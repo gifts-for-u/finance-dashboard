@@ -29,8 +29,7 @@
 
   --chart-text-color: #101828;
   --color-picker-icon-color: #1f3c88;
-  --color-picker-icon-filter: brightness(0) saturate(100%) invert(22%)
-    sepia(54%) saturate(832%) hue-rotate(200deg) brightness(92%) contrast(92%);
+  --color-picker-icon-filter: brightness(1);
   --color-picker-outline: rgba(31, 60, 136, 0.3);
   --color-picker-preview-border: rgba(31, 60, 136, 0.18);
   --color-picker-surface: rgba(234, 239, 255, 0.75);
@@ -61,8 +60,7 @@
 
   --chart-text-color: #f8f9ff;
   --color-picker-icon-color: #d6dcff;
-  --color-picker-icon-filter: brightness(0) saturate(100%) invert(90%)
-    sepia(9%) saturate(530%) hue-rotate(188deg) brightness(112%) contrast(93%);
+  --color-picker-icon-filter: brightness(1.15);
   --color-picker-outline: rgba(162, 186, 255, 0.55);
   --color-picker-preview-border: rgba(162, 186, 255, 0.38);
   --color-picker-surface: rgba(25, 33, 70, 0.88);
@@ -1550,6 +1548,7 @@ body[data-theme="dark"] {
   display: block;
   filter: var(--color-picker-icon-filter);
   transition: filter 0.3s ease;
+  object-fit: contain;
 }
 
 .color-picker-preview:focus-visible {
