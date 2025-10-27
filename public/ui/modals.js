@@ -429,6 +429,12 @@ export async function handleExpenseFormSubmit(event) {
 let categoryColorPickerInitialized = false;
 let categoryColorPickerInstance = null;
 let categoryColorPickerResizeHandler = null;
+let categoryColorPickerResizeCallback = null;
+let categoryColorPickerFieldElement = null;
+let categoryColorPickerPreviewButton = null;
+let categoryColorPickerContainerElement = null;
+let categoryColorPickerOutsideHandler = null;
+let categoryColorPickerEscapeHandler = null;
 
 function normalizeCategoryColor(value) {
   if (typeof value !== "string") {
@@ -462,6 +468,7 @@ function applyCategoryColorToFields(
   const normalized = normalizeCategoryColor(colorValue);
   const colorInput = document.getElementById("categoryColor");
   const valueInput = document.getElementById("categoryColorValueInput");
+  const previewButton = document.getElementById("categoryColorPreview");
 
   if (colorInput && colorInput.value !== normalized) {
     colorInput.value = normalized;
@@ -469,6 +476,14 @@ function applyCategoryColorToFields(
 
   if (valueInput && (forceUpdateInput || document.activeElement !== valueInput)) {
     valueInput.value = normalized;
+  }
+
+  if (previewButton) {
+    previewButton.style.setProperty("--selected-category-color", normalized);
+    previewButton.setAttribute(
+      "aria-label",
+      `Warna kategori ${normalized}`,
+    );
   }
 
   if (updatePicker && categoryColorPickerInstance) {
@@ -481,13 +496,64 @@ function applyCategoryColorToFields(
   }
 }
 
+function setCategoryPickerOpen(shouldOpen) {
+  if (
+    !categoryColorPickerFieldElement ||
+    !categoryColorPickerPreviewButton ||
+    !categoryColorPickerContainerElement
+  ) {
+    return;
+  }
+
+  categoryColorPickerFieldElement.classList.toggle("is-open", shouldOpen);
+  categoryColorPickerPreviewButton.setAttribute(
+    "aria-expanded",
+    shouldOpen ? "true" : "false",
+  );
+  categoryColorPickerContainerElement.setAttribute(
+    "aria-hidden",
+    shouldOpen ? "false" : "true",
+  );
+
+  if (shouldOpen) {
+    requestAnimationFrame(() => {
+      categoryColorPickerResizeCallback?.();
+    });
+  }
+}
+
 function initializeCategoryColorPicker() {
   const pickerHost = document.getElementById("categoryColorPicker");
   const colorInput = document.getElementById("categoryColor");
   const valueInput = document.getElementById("categoryColorValueInput");
+  const previewButton = document.getElementById("categoryColorPreview");
+  const fieldElement = previewButton?.closest(".color-picker-field") || null;
+  const containerElement = fieldElement?.querySelector(".modern-color-picker") || null;
 
   if (!pickerHost || !colorInput || !valueInput) {
     return;
+  }
+
+  categoryColorPickerFieldElement = fieldElement;
+  categoryColorPickerPreviewButton = previewButton;
+  categoryColorPickerContainerElement = containerElement;
+
+  if (categoryColorPickerPreviewButton) {
+    categoryColorPickerPreviewButton.setAttribute(
+      "aria-expanded",
+      categoryColorPickerFieldElement?.classList.contains("is-open")
+        ? "true"
+        : "false",
+    );
+  }
+
+  if (categoryColorPickerContainerElement) {
+    categoryColorPickerContainerElement.setAttribute(
+      "aria-hidden",
+      categoryColorPickerFieldElement?.classList.contains("is-open")
+        ? "false"
+        : "true",
+    );
   }
 
   const sanitizeValueInput = () => {
@@ -531,7 +597,30 @@ function initializeCategoryColorPicker() {
       }
     });
 
+    valueInput.addEventListener("focus", () => {
+      setCategoryPickerOpen(true);
+    });
+
     valueInput.dataset.modernPickerBound = "true";
+  }
+
+  if (previewButton && !previewButton.dataset.toggleBound) {
+    previewButton.addEventListener("click", () => {
+      const shouldOpen = !categoryColorPickerFieldElement?.classList.contains(
+        "is-open",
+      );
+      setCategoryPickerOpen(shouldOpen);
+      if (shouldOpen) {
+        try {
+          valueInput.focus({ preventScroll: true });
+        } catch (error) {
+          valueInput.focus();
+        }
+        valueInput.select();
+      }
+    });
+
+    previewButton.dataset.toggleBound = "true";
   }
 
   const desiredColor = normalizeCategoryColor(
@@ -550,6 +639,7 @@ function initializeCategoryColorPicker() {
       updatePicker: false,
       forceUpdateInput: true,
     });
+    setCategoryPickerOpen(false);
     return;
   }
 
@@ -569,6 +659,43 @@ function initializeCategoryColorPicker() {
       updatePicker: false,
     });
   });
+
+  if (!categoryColorPickerOutsideHandler) {
+    categoryColorPickerOutsideHandler = (event) => {
+      if (!categoryColorPickerFieldElement?.classList.contains("is-open")) {
+        return;
+      }
+
+      if (categoryColorPickerFieldElement.contains(event.target)) {
+        return;
+      }
+
+      setCategoryPickerOpen(false);
+    };
+
+    document.addEventListener("mousedown", categoryColorPickerOutsideHandler);
+    document.addEventListener("touchstart", categoryColorPickerOutsideHandler, {
+      passive: true,
+    });
+  }
+
+  if (!categoryColorPickerEscapeHandler) {
+    categoryColorPickerEscapeHandler = (event) => {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      if (!categoryColorPickerFieldElement?.classList.contains("is-open")) {
+        return;
+      }
+
+      event.preventDefault();
+      setCategoryPickerOpen(false);
+      categoryColorPickerPreviewButton?.focus({ preventScroll: true });
+    };
+
+    document.addEventListener("keydown", categoryColorPickerEscapeHandler);
+  }
 
   const resizePicker = () => {
     if (!categoryColorPickerInstance) {
@@ -590,6 +717,8 @@ function initializeCategoryColorPicker() {
     categoryColorPickerInstance.resize(clampedWidth);
   };
 
+  categoryColorPickerResizeCallback = resizePicker;
+
   if (categoryColorPickerResizeHandler) {
     window.removeEventListener("resize", categoryColorPickerResizeHandler);
   }
@@ -602,6 +731,8 @@ function initializeCategoryColorPicker() {
     updatePicker: false,
     forceUpdateInput: true,
   });
+
+  setCategoryPickerOpen(false);
 
   categoryColorPickerInitialized = true;
 }
@@ -647,6 +778,8 @@ function configureCategoryForm(mode, category = null) {
   applyCategoryColorToFields(colorInput?.value || defaultCategoryColor, {
     forceUpdateInput: true,
   });
+
+  setCategoryPickerOpen(false);
 }
 
 export function showCategoryModal(categoryId = null) {

@@ -661,7 +661,16 @@
                     loading="lazy"
                   />
                 </span>
-                <div class="modern-color-picker">
+                <button
+                  type="button"
+                  class="color-picker-preview"
+                  id="categoryColorPreview"
+                  aria-haspopup="dialog"
+                  aria-expanded="false"
+                >
+                  <span class="visually-hidden">Buka pemilih warna kategori</span>
+                </button>
+                <div class="modern-color-picker" aria-hidden="true">
                   <div
                     id="categoryColorPicker"
                     class="modern-color-picker-surface"
