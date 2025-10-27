@@ -427,68 +427,181 @@ export async function handleExpenseFormSubmit(event) {
 }
 
 let categoryColorPickerInitialized = false;
+let categoryColorPickerInstance = null;
+let categoryColorPickerResizeHandler = null;
 
-function updateCategoryColorPreview(colorValue) {
-  const preview = document.getElementById("categoryColorPreview");
-  const valueLabel = document.getElementById("categoryColorValue");
-  const normalizedColor =
-    typeof colorValue === "string" && colorValue.trim()
-      ? colorValue.trim().toUpperCase()
-      : defaultCategoryColor.toUpperCase();
-
-  if (preview) {
-    preview.style.background = normalizedColor;
-    preview.setAttribute(
-      "aria-label",
-      `Warna kategori ${normalizedColor}, klik untuk mengganti warna`,
-    );
-    preview.setAttribute("title", normalizedColor);
+function normalizeCategoryColor(value) {
+  if (typeof value !== "string") {
+    return defaultCategoryColor.toUpperCase();
   }
 
-  if (valueLabel) {
-    valueLabel.textContent = normalizedColor;
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return defaultCategoryColor.toUpperCase();
+  }
+
+  const prefixed = trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
+  const longMatch = /^#([0-9a-f]{6})$/i.exec(prefixed);
+  if (longMatch) {
+    return `#${longMatch[1].toUpperCase()}`;
+  }
+
+  const shortMatch = /^#([0-9a-f]{3})$/i.exec(prefixed);
+  if (shortMatch) {
+    const [r, g, b] = shortMatch[1].toUpperCase().split("");
+    return `#${r}${r}${g}${g}${b}${b}`;
+  }
+
+  return defaultCategoryColor.toUpperCase();
+}
+
+function applyCategoryColorToFields(
+  colorValue,
+  { updatePicker = true, forceUpdateInput = false } = {},
+) {
+  const normalized = normalizeCategoryColor(colorValue);
+  const colorInput = document.getElementById("categoryColor");
+  const valueInput = document.getElementById("categoryColorValueInput");
+
+  if (colorInput && colorInput.value !== normalized) {
+    colorInput.value = normalized;
+  }
+
+  if (valueInput && (forceUpdateInput || document.activeElement !== valueInput)) {
+    valueInput.value = normalized;
+  }
+
+  if (updatePicker && categoryColorPickerInstance) {
+    const currentColor =
+      categoryColorPickerInstance.color?.hexString?.toUpperCase() || "";
+
+    if (currentColor !== normalized) {
+      categoryColorPickerInstance.color.set(normalized);
+    }
   }
 }
 
 function initializeCategoryColorPicker() {
-  if (categoryColorPickerInitialized) {
-    return;
-  }
-
+  const pickerHost = document.getElementById("categoryColorPicker");
   const colorInput = document.getElementById("categoryColor");
-  const previewButton = document.getElementById("categoryColorPreview");
+  const valueInput = document.getElementById("categoryColorValueInput");
 
-  if (!colorInput || !previewButton) {
+  if (!pickerHost || !colorInput || !valueInput) {
     return;
   }
 
-  const openPicker = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
+  const sanitizeValueInput = () => {
+    const rawValue = valueInput.value.replace(/[^0-9a-fA-F#]/g, "");
 
-    try {
-      colorInput.focus({ preventScroll: true });
-    } catch (error) {
-      colorInput.focus();
+    if (!rawValue) {
+      valueInput.value = "";
+      return;
     }
 
-    if (typeof colorInput.showPicker === "function") {
-      colorInput.showPicker();
+    const startsWithHash = rawValue.startsWith("#");
+    const hexPart = (startsWithHash ? rawValue.slice(1) : rawValue)
+      .replace(/#/g, "")
+      .toUpperCase();
+    const normalized = `#${hexPart}`.slice(0, 7);
+    valueInput.value = normalized;
+  };
+
+  const commitManualEntry = () => {
+    const normalized = normalizeCategoryColor(valueInput.value);
+    const current = normalizeCategoryColor(colorInput.value);
+
+    if (normalized !== current) {
+      applyCategoryColorToFields(normalized);
     } else {
-      colorInput.click();
+      applyCategoryColorToFields(current, {
+        updatePicker: false,
+        forceUpdateInput: true,
+      });
     }
   };
 
-  previewButton.addEventListener("click", openPicker);
+  if (!valueInput.dataset.modernPickerBound) {
+    valueInput.addEventListener("input", sanitizeValueInput);
+    valueInput.addEventListener("blur", commitManualEntry);
+    valueInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        commitManualEntry();
+        valueInput.blur();
+      }
+    });
 
-  const handleInput = (event) => {
-    updateCategoryColorPreview(event.target.value);
+    valueInput.dataset.modernPickerBound = "true";
+  }
+
+  const desiredColor = normalizeCategoryColor(
+    colorInput.value || defaultCategoryColor,
+  );
+
+  if (categoryColorPickerInitialized && categoryColorPickerInstance) {
+    applyCategoryColorToFields(desiredColor, {
+      forceUpdateInput: true,
+    });
+    return;
+  }
+
+  if (typeof window.iro === "undefined") {
+    applyCategoryColorToFields(desiredColor, {
+      updatePicker: false,
+      forceUpdateInput: true,
+    });
+    return;
+  }
+
+  categoryColorPickerInstance = new window.iro.ColorPicker(pickerHost, {
+    color: desiredColor,
+    layoutDirection: "vertical",
+    layout: [
+      { component: window.iro.ui.Box },
+      { component: window.iro.ui.Slider, options: { sliderType: "hue" } },
+    ],
+    borderWidth: 0,
+    padding: 8,
+  });
+
+  categoryColorPickerInstance.on("color:change", (color) => {
+    applyCategoryColorToFields(color?.hexString, {
+      updatePicker: false,
+    });
+  });
+
+  const resizePicker = () => {
+    if (!categoryColorPickerInstance) {
+      return;
+    }
+
+    const hostRect = pickerHost.getBoundingClientRect();
+    if (!hostRect.width) {
+      return;
+    }
+
+    const computedStyle = window.getComputedStyle(pickerHost);
+    const horizontalPadding =
+      parseFloat(computedStyle.paddingLeft || "0") +
+      parseFloat(computedStyle.paddingRight || "0");
+    const availableWidth = Math.max(0, hostRect.width - horizontalPadding);
+    const clampedWidth =
+      availableWidth <= 0 ? 220 : Math.min(320, availableWidth);
+    categoryColorPickerInstance.resize(clampedWidth);
   };
 
-  colorInput.addEventListener("input", handleInput);
-  colorInput.addEventListener("change", handleInput);
+  if (categoryColorPickerResizeHandler) {
+    window.removeEventListener("resize", categoryColorPickerResizeHandler);
+  }
 
-  updateCategoryColorPreview(colorInput.value || defaultCategoryColor);
+  categoryColorPickerResizeHandler = resizePicker;
+  window.addEventListener("resize", categoryColorPickerResizeHandler);
+  requestAnimationFrame(resizePicker);
+
+  applyCategoryColorToFields(desiredColor, {
+    updatePicker: false,
+    forceUpdateInput: true,
+  });
 
   categoryColorPickerInitialized = true;
 }
@@ -531,7 +644,9 @@ function configureCategoryForm(mode, category = null) {
     }
   }
 
-  updateCategoryColorPreview(colorInput?.value || defaultCategoryColor);
+  applyCategoryColorToFields(colorInput?.value || defaultCategoryColor, {
+    forceUpdateInput: true,
+  });
 }
 
 export function showCategoryModal(categoryId = null) {
