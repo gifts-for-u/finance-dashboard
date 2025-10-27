@@ -1526,7 +1526,7 @@ body[data-theme="dark"] {
   box-shadow: 0 26px 48px rgba(11, 87, 208, 0.28);
 }
 
-.color-picker-trigger {
+.color-picker-icon {
   flex: 0 0 72px;
   width: 72px;
   height: 72px;
@@ -1538,15 +1538,12 @@ body[data-theme="dark"] {
   align-items: center;
   justify-content: center;
   box-shadow: var(--shadow);
-  cursor: pointer;
+  pointer-events: none;
   color: var(--color-picker-icon-color);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease,
-    border-color 0.2s ease;
   padding: 0;
-  appearance: none;
 }
 
-.color-picker-trigger::before {
+.color-picker-icon::before {
   content: "";
   width: 30px;
   height: 30px;
@@ -1555,15 +1552,7 @@ body[data-theme="dark"] {
   -webkit-mask: url("https://www.svgrepo.com/svg/332955/color-picker") center/contain no-repeat;
 }
 
-.color-picker-trigger:hover {
-  transform: translateY(-1px) scale(1.02);
-  box-shadow: 0 26px 48px rgba(11, 87, 208, 0.26);
-  border-color: rgba(11, 87, 208, 0.28);
-  color: var(--primary-color-strong);
-}
-
-.color-picker-preview:focus-visible,
-.color-picker-trigger:focus-visible {
+.color-picker-preview:focus-visible {
   outline: 3px solid var(--color-picker-outline);
   outline-offset: 4px;
 }
@@ -1588,17 +1577,11 @@ body[data-theme="dark"] {
   box-shadow: 0 28px 52px rgba(2, 4, 12, 0.7);
 }
 
-[data-theme="dark"] .color-picker-trigger {
+[data-theme="dark"] .color-picker-icon {
   background: linear-gradient(150deg, rgba(134, 158, 255, 0.18) 0%, rgba(11, 17, 44, 0) 70%),
     var(--bg-secondary);
   border-color: rgba(134, 158, 255, 0.28);
   box-shadow: 0 24px 48px rgba(2, 4, 12, 0.65);
-}
-
-[data-theme="dark"] .color-picker-trigger:hover {
-  box-shadow: 0 28px 54px rgba(2, 4, 12, 0.75);
-  border-color: rgba(134, 158, 255, 0.4);
-  color: #ffffff;
 }
 
 [data-theme="dark"] .color-picker-value {
@@ -1616,13 +1599,13 @@ body[data-theme="dark"] {
     min-height: 64px;
   }
 
-  .color-picker-trigger {
+  .color-picker-icon {
     width: 60px;
     height: 60px;
     border-radius: 20px;
   }
 
-  .color-picker-trigger::before {
+  .color-picker-icon::before {
     width: 26px;
     height: 26px;
   }

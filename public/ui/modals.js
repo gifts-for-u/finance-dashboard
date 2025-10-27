@@ -431,8 +431,6 @@ let categoryColorPickerInitialized = false;
 function updateCategoryColorPreview(colorValue) {
   const preview = document.getElementById("categoryColorPreview");
   const valueLabel = document.getElementById("categoryColorValue");
-  const triggerButton = document.getElementById("categoryColorTrigger");
-
   const normalizedColor =
     typeof colorValue === "string" && colorValue.trim()
       ? colorValue.trim().toUpperCase()
@@ -450,14 +448,6 @@ function updateCategoryColorPreview(colorValue) {
   if (valueLabel) {
     valueLabel.textContent = normalizedColor;
   }
-
-  if (triggerButton) {
-    triggerButton.setAttribute(
-      "aria-label",
-      `Buka pemilih warna, warna saat ini ${normalizedColor}`,
-    );
-    triggerButton.setAttribute("title", normalizedColor);
-  }
 }
 
 function initializeCategoryColorPicker() {
@@ -467,9 +457,8 @@ function initializeCategoryColorPicker() {
 
   const colorInput = document.getElementById("categoryColor");
   const previewButton = document.getElementById("categoryColorPreview");
-  const triggerButton = document.getElementById("categoryColorTrigger");
 
-  if (!colorInput || !previewButton || !triggerButton) {
+  if (!colorInput || !previewButton) {
     return;
   }
 
@@ -490,9 +479,7 @@ function initializeCategoryColorPicker() {
     }
   };
 
-  [previewButton, triggerButton].forEach((element) => {
-    element.addEventListener("click", openPicker);
-  });
+  previewButton.addEventListener("click", openPicker);
 
   const handleInput = (event) => {
     updateCategoryColorPreview(event.target.value);
