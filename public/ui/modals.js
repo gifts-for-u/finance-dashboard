@@ -435,6 +435,8 @@ let categoryColorPickerPreviewButton = null;
 let categoryColorPickerContainerElement = null;
 let categoryColorPickerOutsideHandler = null;
 let categoryColorPickerEscapeHandler = null;
+let categoryColorPickerHexInput = null;
+let categoryColorPickerApplyButton = null;
 
 function normalizeCategoryColor(value) {
   if (typeof value !== "string") {
@@ -478,12 +480,33 @@ function applyCategoryColorToFields(colorValue, { updatePicker = true } = {}) {
     );
   }
 
+  if (categoryColorPickerHexInput && categoryColorPickerHexInput.value !== normalized) {
+    categoryColorPickerHexInput.value = normalized;
+  }
+
   if (updatePicker && categoryColorPickerInstance) {
     const currentColor =
       categoryColorPickerInstance.color?.hexString?.toUpperCase() || "";
 
     if (currentColor !== normalized) {
       categoryColorPickerInstance.color.set(normalized);
+    }
+  }
+}
+
+function commitCategoryColorFromHex({ closePicker = false, focusPreview = false } = {}) {
+  if (!categoryColorPickerHexInput) {
+    return;
+  }
+
+  const normalized = normalizeCategoryColor(categoryColorPickerHexInput.value || "");
+  categoryColorPickerHexInput.value = normalized;
+  applyCategoryColorToFields(normalized);
+
+  if (closePicker) {
+    setCategoryPickerOpen(false);
+    if (focusPreview && categoryColorPickerPreviewButton) {
+      categoryColorPickerPreviewButton.focus();
     }
   }
 }
@@ -510,7 +533,11 @@ function setCategoryPickerOpen(shouldOpen) {
   if (shouldOpen) {
     requestAnimationFrame(() => {
       categoryColorPickerResizeCallback?.();
+      categoryColorPickerHexInput?.focus();
+      categoryColorPickerHexInput?.select();
     });
+  } else if (categoryColorPickerHexInput) {
+    categoryColorPickerHexInput.blur();
   }
 }
 
@@ -520,6 +547,8 @@ function initializeCategoryColorPicker() {
   const previewButton = document.getElementById("categoryColorPreview");
   const fieldElement = previewButton?.closest(".color-picker-field") || null;
   const containerElement = fieldElement?.querySelector(".modern-color-picker") || null;
+  const hexInput = fieldElement?.querySelector("#categoryColorHex") || null;
+  const applyButton = fieldElement?.querySelector("#categoryColorApplyButton") || null;
 
   if (!pickerHost || !colorInput) {
     return;
@@ -528,6 +557,8 @@ function initializeCategoryColorPicker() {
   categoryColorPickerFieldElement = fieldElement;
   categoryColorPickerPreviewButton = previewButton;
   categoryColorPickerContainerElement = containerElement;
+  categoryColorPickerHexInput = hexInput;
+  categoryColorPickerApplyButton = applyButton;
 
   if (categoryColorPickerPreviewButton) {
     categoryColorPickerPreviewButton.setAttribute(
@@ -545,6 +576,33 @@ function initializeCategoryColorPicker() {
         ? "false"
         : "true",
     );
+  }
+
+  if (categoryColorPickerHexInput && !categoryColorPickerHexInput.dataset.bound) {
+    categoryColorPickerHexInput.addEventListener("blur", () => {
+      commitCategoryColorFromHex();
+    });
+
+    categoryColorPickerHexInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        commitCategoryColorFromHex({ closePicker: true, focusPreview: true });
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        setCategoryPickerOpen(false);
+        categoryColorPickerPreviewButton?.focus();
+      }
+    });
+
+    categoryColorPickerHexInput.dataset.bound = "true";
+  }
+
+  if (categoryColorPickerApplyButton && !categoryColorPickerApplyButton.dataset.bound) {
+    categoryColorPickerApplyButton.addEventListener("click", () => {
+      commitCategoryColorFromHex({ closePicker: true, focusPreview: true });
+    });
+
+    categoryColorPickerApplyButton.dataset.bound = "true";
   }
 
   if (previewButton && !previewButton.dataset.toggleBound) {
@@ -662,6 +720,10 @@ function initializeCategoryColorPicker() {
   applyCategoryColorToFields(desiredColor, {
     updatePicker: false,
   });
+
+  if (categoryColorPickerHexInput) {
+    categoryColorPickerHexInput.value = desiredColor;
+  }
 
   setCategoryPickerOpen(false);
 

@@ -669,6 +669,29 @@
                     role="application"
                     aria-label="Pemilih warna kategori"
                   ></div>
+                  <div class="color-picker-controls">
+                    <label class="visually-hidden" for="categoryColorHex"
+                      >Kode warna kategori</label
+                    >
+                    <input
+                      type="text"
+                      id="categoryColorHex"
+                      class="color-picker-hex-input"
+                      inputmode="text"
+                      autocomplete="off"
+                      spellcheck="false"
+                      maxlength="7"
+                      placeholder="#000000"
+                      value="#4CAF50"
+                    />
+                    <button
+                      type="button"
+                      class="color-picker-apply-btn"
+                      id="categoryColorApplyButton"
+                    >
+                      OK
+                    </button>
+                  </div>
                 </div>
                 <input type="hidden" id="categoryColor" value="#4CAF50" />
               </div>
