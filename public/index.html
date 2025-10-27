@@ -650,23 +650,15 @@
               />
             </div>
             <div class="form-group">
-              <label class="form-label" for="categoryColorValueInput"
-                >Pilih warna</label
-              >
+              <label class="form-label" for="categoryColorPreview">Pilih warna</label>
               <div class="color-picker-field">
-                <span class="color-picker-icon" aria-hidden="true">
-                  <img
-                    src="https://cdn-icons-png.flaticon.com/512/6591/6591250.png"
-                    alt=""
-                    loading="lazy"
-                  />
-                </span>
                 <button
                   type="button"
                   class="color-picker-preview"
                   id="categoryColorPreview"
                   aria-haspopup="dialog"
                   aria-expanded="false"
+                  aria-describedby="categoryColorAssistive"
                 >
                   <span class="visually-hidden">Buka pemilih warna kategori</span>
                 </button>
@@ -677,41 +669,11 @@
                     role="application"
                     aria-label="Pemilih warna kategori"
                   ></div>
-                  <div
-                    class="modern-color-picker-controls"
-                    role="group"
-                    aria-label="Detail warna"
-                  >
-                    <div class="modern-color-picker-mode" aria-hidden="true">
-                      Hex
-                      <span
-                        class="modern-color-picker-mode-indicator"
-                        aria-hidden="true"
-                      ></span>
-                    </div>
-                    <label class="modern-color-picker-value" for="categoryColorValueInput">
-                      <span class="visually-hidden">Kode warna hex</span>
-                      <input
-                        type="text"
-                        id="categoryColorValueInput"
-                        class="modern-color-picker-input"
-                        value="#4CAF50"
-                        maxlength="7"
-                        autocomplete="off"
-                        spellcheck="false"
-                        inputmode="text"
-                        aria-describedby="categoryColorAssistive"
-                      />
-                    </label>
-                    <div class="modern-color-picker-opacity" aria-hidden="true">
-                      100%
-                    </div>
-                  </div>
                 </div>
                 <input type="hidden" id="categoryColor" value="#4CAF50" />
               </div>
               <p class="visually-hidden" id="categoryColorAssistive">
-                Masukkan kode warna hex misalnya #0B57D0.
+                Tekan tombol pratinjau warna untuk membuka pemilih warna kategori.
               </p>
             </div>
             <button type="submit" class="btn btn-sm" id="categoryFormSubmitButton">

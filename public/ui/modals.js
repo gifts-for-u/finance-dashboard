@@ -461,21 +461,13 @@ function normalizeCategoryColor(value) {
   return defaultCategoryColor.toUpperCase();
 }
 
-function applyCategoryColorToFields(
-  colorValue,
-  { updatePicker = true, forceUpdateInput = false } = {},
-) {
+function applyCategoryColorToFields(colorValue, { updatePicker = true } = {}) {
   const normalized = normalizeCategoryColor(colorValue);
   const colorInput = document.getElementById("categoryColor");
-  const valueInput = document.getElementById("categoryColorValueInput");
   const previewButton = document.getElementById("categoryColorPreview");
 
   if (colorInput && colorInput.value !== normalized) {
     colorInput.value = normalized;
-  }
-
-  if (valueInput && (forceUpdateInput || document.activeElement !== valueInput)) {
-    valueInput.value = normalized;
   }
 
   if (previewButton) {
@@ -525,12 +517,11 @@ function setCategoryPickerOpen(shouldOpen) {
 function initializeCategoryColorPicker() {
   const pickerHost = document.getElementById("categoryColorPicker");
   const colorInput = document.getElementById("categoryColor");
-  const valueInput = document.getElementById("categoryColorValueInput");
   const previewButton = document.getElementById("categoryColorPreview");
   const fieldElement = previewButton?.closest(".color-picker-field") || null;
   const containerElement = fieldElement?.querySelector(".modern-color-picker") || null;
 
-  if (!pickerHost || !colorInput || !valueInput) {
+  if (!pickerHost || !colorInput) {
     return;
   }
 
@@ -556,68 +547,12 @@ function initializeCategoryColorPicker() {
     );
   }
 
-  const sanitizeValueInput = () => {
-    const rawValue = valueInput.value.replace(/[^0-9a-fA-F#]/g, "");
-
-    if (!rawValue) {
-      valueInput.value = "";
-      return;
-    }
-
-    const startsWithHash = rawValue.startsWith("#");
-    const hexPart = (startsWithHash ? rawValue.slice(1) : rawValue)
-      .replace(/#/g, "")
-      .toUpperCase();
-    const normalized = `#${hexPart}`.slice(0, 7);
-    valueInput.value = normalized;
-  };
-
-  const commitManualEntry = () => {
-    const normalized = normalizeCategoryColor(valueInput.value);
-    const current = normalizeCategoryColor(colorInput.value);
-
-    if (normalized !== current) {
-      applyCategoryColorToFields(normalized);
-    } else {
-      applyCategoryColorToFields(current, {
-        updatePicker: false,
-        forceUpdateInput: true,
-      });
-    }
-  };
-
-  if (!valueInput.dataset.modernPickerBound) {
-    valueInput.addEventListener("input", sanitizeValueInput);
-    valueInput.addEventListener("blur", commitManualEntry);
-    valueInput.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        commitManualEntry();
-        valueInput.blur();
-      }
-    });
-
-    valueInput.addEventListener("focus", () => {
-      setCategoryPickerOpen(true);
-    });
-
-    valueInput.dataset.modernPickerBound = "true";
-  }
-
   if (previewButton && !previewButton.dataset.toggleBound) {
     previewButton.addEventListener("click", () => {
       const shouldOpen = !categoryColorPickerFieldElement?.classList.contains(
         "is-open",
       );
       setCategoryPickerOpen(shouldOpen);
-      if (shouldOpen) {
-        try {
-          valueInput.focus({ preventScroll: true });
-        } catch (error) {
-          valueInput.focus();
-        }
-        valueInput.select();
-      }
     });
 
     previewButton.dataset.toggleBound = "true";
@@ -628,16 +563,13 @@ function initializeCategoryColorPicker() {
   );
 
   if (categoryColorPickerInitialized && categoryColorPickerInstance) {
-    applyCategoryColorToFields(desiredColor, {
-      forceUpdateInput: true,
-    });
+    applyCategoryColorToFields(desiredColor);
     return;
   }
 
   if (typeof window.iro === "undefined") {
     applyCategoryColorToFields(desiredColor, {
       updatePicker: false,
-      forceUpdateInput: true,
     });
     setCategoryPickerOpen(false);
     return;
@@ -729,7 +661,6 @@ function initializeCategoryColorPicker() {
 
   applyCategoryColorToFields(desiredColor, {
     updatePicker: false,
-    forceUpdateInput: true,
   });
 
   setCategoryPickerOpen(false);
@@ -775,9 +706,7 @@ function configureCategoryForm(mode, category = null) {
     }
   }
 
-  applyCategoryColorToFields(colorInput?.value || defaultCategoryColor, {
-    forceUpdateInput: true,
-  });
+  applyCategoryColorToFields(colorInput?.value || defaultCategoryColor);
 
   setCategoryPickerOpen(false);
 }
