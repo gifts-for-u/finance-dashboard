@@ -29,6 +29,8 @@
 
   --chart-text-color: #101828;
   --color-picker-icon-color: #1f3c88;
+  --color-picker-icon-filter: brightness(0) saturate(100%) invert(22%)
+    sepia(54%) saturate(832%) hue-rotate(200deg) brightness(92%) contrast(92%);
   --color-picker-outline: rgba(31, 60, 136, 0.3);
   --color-picker-preview-border: rgba(31, 60, 136, 0.18);
   --color-picker-surface: rgba(234, 239, 255, 0.75);
@@ -59,6 +61,8 @@
 
   --chart-text-color: #f8f9ff;
   --color-picker-icon-color: #d6dcff;
+  --color-picker-icon-filter: brightness(0) saturate(100%) invert(90%)
+    sepia(9%) saturate(530%) hue-rotate(188deg) brightness(112%) contrast(93%);
   --color-picker-outline: rgba(162, 186, 255, 0.55);
   --color-picker-preview-border: rgba(162, 186, 255, 0.38);
   --color-picker-surface: rgba(25, 33, 70, 0.88);
@@ -1540,13 +1544,12 @@ body[data-theme="dark"] {
   margin-left: auto;
 }
 
-.color-picker-icon::before {
-  content: "";
-  width: 24px;
-  height: 24px;
-  background-color: currentColor;
-  mask: url("https://www.svgrepo.com/svg/332955/color-picker") center/contain no-repeat;
-  -webkit-mask: url("https://www.svgrepo.com/svg/332955/color-picker") center/contain no-repeat;
+.color-picker-icon img {
+  width: 26px;
+  height: 26px;
+  display: block;
+  filter: var(--color-picker-icon-filter);
+  transition: filter 0.3s ease;
 }
 
 .color-picker-preview:focus-visible {
@@ -1605,7 +1608,7 @@ body[data-theme="dark"] {
     height: 36px;
   }
 
-  .color-picker-icon::before {
+  .color-picker-icon img {
     width: 22px;
     height: 22px;
   }
