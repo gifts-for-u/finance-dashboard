@@ -7,6 +7,7 @@ import {
   setTemplates,
   getDefaultEntryDate,
   defaultCategories,
+  defaultCategoryColor,
 } from "../state/app-state.js";
 import {
   formatDateForInput,
@@ -425,10 +426,316 @@ export async function handleExpenseFormSubmit(event) {
   }
 }
 
+let categoryColorPickerInitialized = false;
+let categoryColorPickerInstance = null;
+let categoryColorPickerResizeHandler = null;
+let categoryColorPickerResizeCallback = null;
+let categoryColorPickerFieldElement = null;
+let categoryColorPickerPreviewButton = null;
+let categoryColorPickerContainerElement = null;
+let categoryColorPickerOutsideHandler = null;
+let categoryColorPickerEscapeHandler = null;
+let categoryColorPickerHexInput = null;
+let categoryColorPickerApplyButton = null;
+
+function normalizeCategoryColor(value) {
+  if (typeof value !== "string") {
+    return defaultCategoryColor.toUpperCase();
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return defaultCategoryColor.toUpperCase();
+  }
+
+  const prefixed = trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
+  const longMatch = /^#([0-9a-f]{6})$/i.exec(prefixed);
+  if (longMatch) {
+    return `#${longMatch[1].toUpperCase()}`;
+  }
+
+  const shortMatch = /^#([0-9a-f]{3})$/i.exec(prefixed);
+  if (shortMatch) {
+    const [r, g, b] = shortMatch[1].toUpperCase().split("");
+    return `#${r}${r}${g}${g}${b}${b}`;
+  }
+
+  return defaultCategoryColor.toUpperCase();
+}
+
+function applyCategoryColorToFields(colorValue, { updatePicker = true } = {}) {
+  const normalized = normalizeCategoryColor(colorValue);
+  const colorInput = document.getElementById("categoryColor");
+  const previewButton = document.getElementById("categoryColorPreview");
+
+  if (colorInput && colorInput.value !== normalized) {
+    colorInput.value = normalized;
+  }
+
+  if (previewButton) {
+    previewButton.style.setProperty("--selected-category-color", normalized);
+    previewButton.setAttribute(
+      "aria-label",
+      `Warna kategori ${normalized}`,
+    );
+  }
+
+  if (categoryColorPickerHexInput && categoryColorPickerHexInput.value !== normalized) {
+    categoryColorPickerHexInput.value = normalized;
+  }
+
+  if (updatePicker && categoryColorPickerInstance) {
+    const currentColor =
+      categoryColorPickerInstance.color?.hexString?.toUpperCase() || "";
+
+    if (currentColor !== normalized) {
+      categoryColorPickerInstance.color.set(normalized);
+    }
+  }
+}
+
+function commitCategoryColorFromHex({ closePicker = false, focusPreview = false } = {}) {
+  if (!categoryColorPickerHexInput) {
+    return;
+  }
+
+  const normalized = normalizeCategoryColor(categoryColorPickerHexInput.value || "");
+  categoryColorPickerHexInput.value = normalized;
+  applyCategoryColorToFields(normalized);
+
+  if (closePicker) {
+    setCategoryPickerOpen(false);
+    if (focusPreview && categoryColorPickerPreviewButton) {
+      categoryColorPickerPreviewButton.focus();
+    }
+  }
+}
+
+function setCategoryPickerOpen(shouldOpen) {
+  if (
+    !categoryColorPickerFieldElement ||
+    !categoryColorPickerPreviewButton ||
+    !categoryColorPickerContainerElement
+  ) {
+    return;
+  }
+
+  categoryColorPickerFieldElement.classList.toggle("is-open", shouldOpen);
+  categoryColorPickerPreviewButton.setAttribute(
+    "aria-expanded",
+    shouldOpen ? "true" : "false",
+  );
+  categoryColorPickerContainerElement.setAttribute(
+    "aria-hidden",
+    shouldOpen ? "false" : "true",
+  );
+
+  if (shouldOpen) {
+    requestAnimationFrame(() => {
+      categoryColorPickerResizeCallback?.();
+      categoryColorPickerHexInput?.focus();
+      categoryColorPickerHexInput?.select();
+    });
+  } else if (categoryColorPickerHexInput) {
+    categoryColorPickerHexInput.blur();
+  }
+}
+
+function initializeCategoryColorPicker() {
+  const pickerHost = document.getElementById("categoryColorPicker");
+  const colorInput = document.getElementById("categoryColor");
+  const previewButton = document.getElementById("categoryColorPreview");
+  const fieldElement = previewButton?.closest(".color-picker-field") || null;
+  const containerElement = fieldElement?.querySelector(".modern-color-picker") || null;
+  const hexInput = fieldElement?.querySelector("#categoryColorHex") || null;
+  const applyButton = fieldElement?.querySelector("#categoryColorApplyButton") || null;
+
+  if (!pickerHost || !colorInput) {
+    return;
+  }
+
+  categoryColorPickerFieldElement = fieldElement;
+  categoryColorPickerPreviewButton = previewButton;
+  categoryColorPickerContainerElement = containerElement;
+  categoryColorPickerHexInput = hexInput;
+  categoryColorPickerApplyButton = applyButton;
+
+  if (categoryColorPickerPreviewButton) {
+    categoryColorPickerPreviewButton.setAttribute(
+      "aria-expanded",
+      categoryColorPickerFieldElement?.classList.contains("is-open")
+        ? "true"
+        : "false",
+    );
+  }
+
+  if (categoryColorPickerContainerElement) {
+    categoryColorPickerContainerElement.setAttribute(
+      "aria-hidden",
+      categoryColorPickerFieldElement?.classList.contains("is-open")
+        ? "false"
+        : "true",
+    );
+  }
+
+  if (categoryColorPickerHexInput && !categoryColorPickerHexInput.dataset.bound) {
+    categoryColorPickerHexInput.addEventListener("blur", () => {
+      commitCategoryColorFromHex();
+    });
+
+    categoryColorPickerHexInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        commitCategoryColorFromHex({ closePicker: true, focusPreview: true });
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        setCategoryPickerOpen(false);
+        categoryColorPickerPreviewButton?.focus();
+      }
+    });
+
+    categoryColorPickerHexInput.dataset.bound = "true";
+  }
+
+  if (categoryColorPickerApplyButton && !categoryColorPickerApplyButton.dataset.bound) {
+    categoryColorPickerApplyButton.addEventListener("click", () => {
+      commitCategoryColorFromHex({ closePicker: true, focusPreview: true });
+    });
+
+    categoryColorPickerApplyButton.dataset.bound = "true";
+  }
+
+  if (previewButton && !previewButton.dataset.toggleBound) {
+    previewButton.addEventListener("click", () => {
+      const shouldOpen = !categoryColorPickerFieldElement?.classList.contains(
+        "is-open",
+      );
+      setCategoryPickerOpen(shouldOpen);
+    });
+
+    previewButton.dataset.toggleBound = "true";
+  }
+
+  const desiredColor = normalizeCategoryColor(
+    colorInput.value || defaultCategoryColor,
+  );
+
+  if (categoryColorPickerInitialized && categoryColorPickerInstance) {
+    applyCategoryColorToFields(desiredColor);
+    return;
+  }
+
+  if (typeof window.iro === "undefined") {
+    applyCategoryColorToFields(desiredColor, {
+      updatePicker: false,
+    });
+    setCategoryPickerOpen(false);
+    return;
+  }
+
+  categoryColorPickerInstance = new window.iro.ColorPicker(pickerHost, {
+    color: desiredColor,
+    layoutDirection: "vertical",
+    layout: [
+      { component: window.iro.ui.Box },
+      { component: window.iro.ui.Slider, options: { sliderType: "hue" } },
+    ],
+    borderWidth: 0,
+    padding: 8,
+  });
+
+  categoryColorPickerInstance.on("color:change", (color) => {
+    applyCategoryColorToFields(color?.hexString, {
+      updatePicker: false,
+    });
+  });
+
+  if (!categoryColorPickerOutsideHandler) {
+    categoryColorPickerOutsideHandler = (event) => {
+      if (!categoryColorPickerFieldElement?.classList.contains("is-open")) {
+        return;
+      }
+
+      if (categoryColorPickerFieldElement.contains(event.target)) {
+        return;
+      }
+
+      setCategoryPickerOpen(false);
+    };
+
+    document.addEventListener("mousedown", categoryColorPickerOutsideHandler);
+    document.addEventListener("touchstart", categoryColorPickerOutsideHandler, {
+      passive: true,
+    });
+  }
+
+  if (!categoryColorPickerEscapeHandler) {
+    categoryColorPickerEscapeHandler = (event) => {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      if (!categoryColorPickerFieldElement?.classList.contains("is-open")) {
+        return;
+      }
+
+      event.preventDefault();
+      setCategoryPickerOpen(false);
+      categoryColorPickerPreviewButton?.focus({ preventScroll: true });
+    };
+
+    document.addEventListener("keydown", categoryColorPickerEscapeHandler);
+  }
+
+  const resizePicker = () => {
+    if (!categoryColorPickerInstance) {
+      return;
+    }
+
+    const hostRect = pickerHost.getBoundingClientRect();
+    if (!hostRect.width) {
+      return;
+    }
+
+    const computedStyle = window.getComputedStyle(pickerHost);
+    const horizontalPadding =
+      parseFloat(computedStyle.paddingLeft || "0") +
+      parseFloat(computedStyle.paddingRight || "0");
+    const availableWidth = Math.max(0, hostRect.width - horizontalPadding);
+    const clampedWidth =
+      availableWidth <= 0 ? 220 : Math.min(320, availableWidth);
+    categoryColorPickerInstance.resize(clampedWidth);
+  };
+
+  categoryColorPickerResizeCallback = resizePicker;
+
+  if (categoryColorPickerResizeHandler) {
+    window.removeEventListener("resize", categoryColorPickerResizeHandler);
+  }
+
+  categoryColorPickerResizeHandler = resizePicker;
+  window.addEventListener("resize", categoryColorPickerResizeHandler);
+  requestAnimationFrame(resizePicker);
+
+  applyCategoryColorToFields(desiredColor, {
+    updatePicker: false,
+  });
+
+  if (categoryColorPickerHexInput) {
+    categoryColorPickerHexInput.value = desiredColor;
+  }
+
+  setCategoryPickerOpen(false);
+
+  categoryColorPickerInitialized = true;
+}
+
 function configureCategoryForm(mode, category = null) {
+  initializeCategoryColorPicker();
+
   const form = document.getElementById("categoryForm");
   const title = document.getElementById("categoryFormTitle");
-  const submitLabel = document.getElementById("categorySubmitText");
+  const submitLabel = document.getElementById("categoryFormSubmitLabel");
   const nameInput = document.getElementById("categoryName");
   const colorInput = document.getElementById("categoryColor");
   const idInput = document.getElementById("categoryId");
@@ -442,7 +749,7 @@ function configureCategoryForm(mode, category = null) {
     form.dataset.mode = "edit";
     idInput.value = category.id;
     nameInput.value = category.name;
-    colorInput.value = category.color || "";
+    colorInput.value = category.color || defaultCategoryColor;
     title.textContent = "Edit kategori";
     submitLabel.textContent = "Simpan";
     if (hint) {
@@ -453,12 +760,17 @@ function configureCategoryForm(mode, category = null) {
     form.reset();
     form.dataset.mode = "add";
     idInput.value = "";
+    colorInput.value = defaultCategoryColor;
     title.textContent = "Tambah kategori baru";
     submitLabel.textContent = "Tambah";
     if (hint) {
       hint.style.display = "none";
     }
   }
+
+  applyCategoryColorToFields(colorInput?.value || defaultCategoryColor);
+
+  setCategoryPickerOpen(false);
 }
 
 export function showCategoryModal(categoryId = null) {
