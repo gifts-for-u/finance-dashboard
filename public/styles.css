@@ -59,8 +59,8 @@
   --shadow-strong: 0 24px 50px rgba(5, 11, 38, 0.7);
 
   --chart-text-color: #f8f9ff;
-  --color-picker-icon-color: #d6dcff;
-  --color-picker-icon-filter: brightness(1.15);
+  --color-picker-icon-color: #ffffff;
+  --color-picker-icon-filter: brightness(0) saturate(100%) invert(1);
   --color-picker-outline: rgba(162, 186, 255, 0.55);
   --color-picker-preview-border: rgba(162, 186, 255, 0.38);
   --color-picker-surface: rgba(25, 33, 70, 0.88);
@@ -1551,6 +1551,10 @@ body[data-theme="dark"] {
   object-fit: contain;
 }
 
+[data-theme="dark"] .color-picker-icon img {
+  filter: brightness(0) saturate(100%) invert(1);
+}
+
 .color-picker-preview:focus-visible {
   outline: 3px solid var(--color-picker-outline);
   outline-offset: 3px;
@@ -1686,6 +1690,10 @@ body[data-theme="dark"] {
   border-radius: 12px;
   transition: var(--transition);
   box-shadow: 0 16px 24px rgba(15, 38, 105, 0.16);
+}
+
+#categoryModal .modal-close {
+  color: #1f3c88;
 }
 
 .modal-close:hover,
