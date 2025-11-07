@@ -1174,7 +1174,9 @@ export async function exportData() {
           item.limit <= 0
             ? "Tidak ada batas"
             : item.status === "over"
-            ? "Melebihi batas"
+            ? "Melebihi batas budget"
+            : item.status === "met"
+            ? "Budget Terpenuhi"
             : item.status === "warning"
             ? "Hampir penuh"
             : "Terkendali",

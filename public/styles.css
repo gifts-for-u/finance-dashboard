@@ -514,6 +514,10 @@ body[data-theme="dark"] {
   background: var(--warning-color);
 }
 
+.budget-progress-bar-fill.status-met {
+  background: var(--success-color);
+}
+
 .budget-progress-bar-fill.status-over {
   background: var(--danger-color);
 }
@@ -571,6 +575,10 @@ body[data-theme="dark"] {
 
 .budget-item-status.status-warning {
   color: var(--warning-color);
+}
+
+.budget-item-status.status-met {
+  color: var(--success-color);
 }
 
 .budget-item-status.status-over {

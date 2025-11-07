@@ -24,7 +24,9 @@ function getStatusLabel(item) {
 
   switch (item.status) {
     case "over":
-      return "Melebihi batas";
+      return "Melebihi batas budget";
+    case "met":
+      return "Budget Terpenuhi";
     case "warning":
       return "Hampir penuh";
     case "normal":
