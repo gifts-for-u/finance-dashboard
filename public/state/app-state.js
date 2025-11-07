@@ -1,5 +1,24 @@
+function normalizeDateToSalaryCycle(value) {
+  const resolved = value instanceof Date ? new Date(value) : new Date(value ?? Date.now());
+
+  if (Number.isNaN(resolved.getTime())) {
+    return normalizeDateToSalaryCycle(new Date());
+  }
+
+  const normalized = new Date(resolved);
+  normalized.setHours(0, 0, 0, 0);
+
+  if (normalized.getDate() >= 25) {
+    normalized.setMonth(normalized.getMonth() + 1, 1);
+  } else {
+    normalized.setDate(1);
+  }
+
+  return normalized;
+}
+
 const state = {
-  currentDate: new Date(),
+  currentDate: normalizeDateToSalaryCycle(new Date()),
   currentMonthData: null,
   expenseChart: null,
   categories: [],
@@ -135,7 +154,7 @@ export function getCurrentDate() {
 }
 
 export function setCurrentDate(value) {
-  state.currentDate = value instanceof Date ? value : new Date(value ?? Date.now());
+  state.currentDate = normalizeDateToSalaryCycle(value);
 }
 
 export function getCurrentMonthKey() {

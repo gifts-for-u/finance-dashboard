@@ -287,6 +287,7 @@ export function calculateBudgetProgress({
   expenses,
   budgets,
 }) {
+  const LIMIT_STATUS_TOLERANCE = 0.01;
   const categoryList = Array.isArray(categories) ? categories : [];
   const expenseList = Array.isArray(expenses) ? expenses.filter(Boolean) : [];
   const sanitizedBudgets = sanitizeBudgets(budgets);
@@ -320,8 +321,11 @@ export function calculateBudgetProgress({
 
     let status = "neutral";
     if (limit > 0) {
-      if (actualSpent >= limit) {
+      const difference = actualSpent - limit;
+      if (difference > LIMIT_STATUS_TOLERANCE) {
         status = "over";
+      } else if (Math.abs(difference) <= LIMIT_STATUS_TOLERANCE) {
+        status = "met";
       } else if (actualSpent >= limit * 0.8) {
         status = "warning";
       } else {
@@ -358,8 +362,11 @@ export function calculateBudgetProgress({
 
     let status = "neutral";
     if (limit > 0) {
-      if (actualSpent >= limit) {
+      const difference = actualSpent - limit;
+      if (difference > LIMIT_STATUS_TOLERANCE) {
         status = "over";
+      } else if (Math.abs(difference) <= LIMIT_STATUS_TOLERANCE) {
+        status = "met";
       } else if (actualSpent >= limit * 0.8) {
         status = "warning";
       } else {
