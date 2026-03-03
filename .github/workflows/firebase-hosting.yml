@@ -40,10 +40,13 @@ jobs:
         run: npm install -g firebase-tools
 
       - name: Build project
-        working-directory: ./remaster
         run: |
+          cd remaster
           npm ci --legacy-peer-deps
           npm run build
+          cd ..
+          rm -rf public/remaster
+          cp -R remaster/dist public/remaster
 
       - name: Deploy to Firebase Hosting
         id: deploy

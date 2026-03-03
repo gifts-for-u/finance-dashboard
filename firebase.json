@@ -1,11 +1,15 @@
 {
   "hosting": {
-    "public": "remaster/dist",
+    "public": "public",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
+        "source": "/remaster/**",
+        "destination": "/remaster/index.html"
+      },
+      {
         "source": "**",
-        "destination": "/index.html"
+        "destination": "/login.html"
       }
     ],
     "headers": [
