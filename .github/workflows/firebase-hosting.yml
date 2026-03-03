@@ -42,7 +42,7 @@ jobs:
       - name: Build project
         working-directory: ./remaster
         run: |
-          npm ci
+          npm ci --legacy-peer-deps
           npm run build
 
       - name: Deploy to Firebase Hosting
