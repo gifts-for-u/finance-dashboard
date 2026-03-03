@@ -180,7 +180,8 @@ export const FinanceProvider = ({ children }) => {
           id: inc.id || generateId(),
           date: extractDate(inc.date),
           title: inc.source || inc.description || inc.title || 'Pemasukan',
-          icon: injectIcon('income', inc.source || inc.description)
+          icon: injectIcon('income', inc.source || inc.description),
+          status: inc.status || 'Paid'
         }));
         
         const loadedExpenses = (data.expenses || []).filter(Boolean).map(exp => {
