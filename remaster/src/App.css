@@ -1,0 +1,23 @@
+/* Clear default Vite styles */
+#root {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.recharts-responsive-container {
+  overflow: visible !important;
+}
+
+.recharts-legend-item {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.recharts-legend-item-text {
+  color: #64748b !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
