@@ -1,19 +1,11 @@
 {
   "hosting": {
-    "public": "public",
+    "public": "remaster/dist",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
-        "source": "/dashboard",
-        "destination": "/index.html"
-      },
-      {
-        "source": "/",
-        "destination": "/login.html"
-      },
-      {
         "source": "**",
-        "destination": "/login.html"
+        "destination": "/index.html"
       }
     ],
     "headers": [
