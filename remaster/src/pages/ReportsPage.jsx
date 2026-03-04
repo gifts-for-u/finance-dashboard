@@ -58,7 +58,7 @@ const ReportsPage = () => {
           const expList = data.expenses || [];
           expList.forEach(exp => {
              const s = (exp.status || '').toLowerCase();
-             if (s === 'paid' || s === 'done' || s === 'unpaid') {
+             if (s === 'done') {
                expTotal += Number(exp.amount || 0);
              }
           });
@@ -106,7 +106,7 @@ const ReportsPage = () => {
   reportData.forEach(month => {
     month.rawExpenses.forEach(exp => {
        const s = (exp.status || '').toLowerCase();
-       if (s === 'paid' || s === 'done' || s === 'unpaid') {
+       if (s === 'done') {
          const catId = exp.category || 'lainnya';
          distMap[catId] = (distMap[catId] || 0) + Number(exp.amount || 0);
        }

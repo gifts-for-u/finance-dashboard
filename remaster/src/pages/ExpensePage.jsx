@@ -40,9 +40,8 @@ import { CustomSelect, CustomDatePicker, DeferredColorPicker } from '../componen
 
 
 const STATUS_OPTIONS = [
-  { value: 'Paid', label: 'Lunas' },
-  { value: 'Pending', label: 'Menunggu' },
-  { value: 'Unpaid', label: 'Belum Lunas' }
+  { value: 'done', label: 'Lunas' },
+  { value: 'planned', label: 'Belum Lunas' }
 ];
 
 const ExpensePage = () => {
@@ -82,11 +81,11 @@ const ExpensePage = () => {
   const [editingExpense, setEditingExpense] = useState(null);
 
   const actualExpense = expenses
-    .filter(ex => ex.status === 'Paid' || ex.status === 'Unpaid' || ex.status === 'Done')
+    .filter(ex => ex.status === 'done')
     .reduce((acc, curr) => acc + curr.amount, 0);
 
-  // Pending strictly means Upcoming (Planned)
-  const pendingExpenses = expenses.filter(ex => ex.status === 'Pending');
+  // planned strictly means Upcoming (Belum Lunas) doesn't enter actual expense
+  const pendingExpenses = expenses.filter(ex => ex.status === 'planned');
   const pendingTotal = pendingExpenses.reduce((acc, curr) => acc + curr.amount, 0);
   const pendingCount = pendingExpenses.length;
 
@@ -124,7 +123,7 @@ const ExpensePage = () => {
           
           if (k.id === currentKey) {
             const actualFromContext = expenses
-              .filter(ex => ex.status === 'Paid' || ex.status === 'Unpaid' || ex.status === 'Done')
+              .filter(ex => ex.status === 'done')
               .reduce((acc, curr) => acc + curr.amount, 0);
             return { name: k.name, expense: actualFromContext };
           }
@@ -137,7 +136,7 @@ const ExpensePage = () => {
             expenseTotal = expArr
               .filter(i => {
                 const s = (i.status || '').toLowerCase();
-                return s === 'paid' || s === 'done' || s === 'unpaid';
+                return s === 'done';
               })
               .reduce((sum, curr) => sum + Number(curr.amount || 0), 0);
           }
@@ -207,7 +206,7 @@ const ExpensePage = () => {
       amount: '',
       category: expenseCategories[0]?.name || 'Lainnya',
       date: formattedDateInit,
-      status: 'Pending',
+      status: 'planned',
       hex: expenseCategories[0]?.color || '#94A3B8'
     });
   };
@@ -317,8 +316,8 @@ const ExpensePage = () => {
                             <span className="w-1 h-1 rounded-full bg-slate-300" />
                             <span className="text-xs text-slate-400 font-medium">{expense.date}</span>
                           </div>
-                          <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${expense.status === 'Paid' ? 'bg-green-500/10 text-green-500' : expense.status === 'Pending' ? 'bg-slate-500/10 text-slate-500' : 'bg-destructive/10 text-destructive'}`}>
-                            {expense.status}
+                          <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${expense.status === 'done' ? 'bg-green-500/10 text-green-500' : 'bg-slate-500/10 text-slate-500'}`}>
+                            {expense.status === 'done' ? 'LUNAS' : 'BELUM LUNAS'}
                           </span>
                         </div>
                       </div>

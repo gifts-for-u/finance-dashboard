@@ -102,7 +102,7 @@ const DashboardPage = () => {
 
   // Calculate Actual Expenses (Paid/Done + Unpaid only, exclude Pending)
   const actualExpense = expenses
-    .filter(ex => ex.status === 'Paid' || ex.status === 'Unpaid' || ex.status === 'Done')
+    .filter(ex => ex.status === 'done')
     .reduce((acc, curr) => acc + curr.amount, 0);
 
   // Calculate Actual Income (Paid/Done only)
@@ -160,7 +160,7 @@ const DashboardPage = () => {
   // Derive budget progress from actual data
   const budgetProgress = budgets.map(budget => {
     const actualSpent = expenses
-      .filter(ex => ex.categoryId === budget.category && (ex.status === 'Paid' || ex.status === 'Unpaid' || ex.status === 'Done'))
+      .filter(ex => ex.categoryId === budget.category && ex.status === 'done')
       .reduce((acc, curr) => acc + curr.amount, 0);
     
     const plannedSpent = expenses
@@ -344,7 +344,7 @@ const DashboardPage = () => {
                   <div className="flex items-center gap-4">
                     <div className="flex flex-col items-end">
                       <span className="font-bold text-destructive">{formatRupiah(ex.amount)}</span>
-                      <span className={`text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider mt-1 ${ex.status === 'Paid' ? 'bg-green-500/10 text-green-500' : ex.status === 'Pending' ? 'bg-slate-500/10 text-slate-500' : 'bg-destructive/10 text-destructive'}`}>{ex.status}</span>
+                      <span className={`text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider mt-1 ${ex.status === 'done' ? 'bg-green-500/10 text-green-500' : 'bg-slate-500/10 text-slate-500'}`}>{ex.status === 'done' ? 'LUNAS' : 'BELUM LUNAS'}</span>
                     </div>
                     <button 
                       onClick={(e) => { e.stopPropagation(); deleteExpense(ex.id); }}
@@ -469,7 +469,7 @@ const DashboardPage = () => {
         onClose={() => setIsExpenseModalOpen(false)} 
         title="Tambah Pengeluaran"
       >
-        <form onSubmit={(e) => { e.preventDefault(); addExpense({ ...newExpense, amount: Number(newExpense.amount), status: 'Pending', color: 'bg-destructive/10' }); setIsExpenseModalOpen(false); setNewExpense({ title: '', category: 'Lainnya', amount: '', date: 'Today', hex: '#94A3B8' }); }} className="space-y-6">
+        <form onSubmit={(e) => { e.preventDefault(); addExpense({ ...newExpense, amount: Number(newExpense.amount), status: 'planned', color: 'bg-destructive/10' }); setIsExpenseModalOpen(false); setNewExpense({ title: '', category: 'Lainnya', amount: '', date: 'Today', hex: '#94A3B8' }); }} className="space-y-6">
           <div className="space-y-2">
             <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Nama Barang/Jasa</label>
             <input 

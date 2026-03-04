@@ -84,7 +84,7 @@ const BudgetPage = () => {
             const totalTarget = budgets.reduce((acc, curr) => acc + curr.limit, 0);
             const totalActual = budgets.reduce((acc, budget) => {
                const actualSpent = expenses
-                .filter(ex => ex.categoryId === budget.category && (ex.status === 'Paid' || ex.status === 'Unpaid' || ex.status === 'Done'))
+                .filter(ex => ex.categoryId === budget.category && ex.status === 'done')
                 .reduce((a, c) => a + c.amount, 0);
                return acc + actualSpent;
             }, 0);
@@ -105,7 +105,7 @@ const BudgetPage = () => {
             actualTotal = expArr
               .filter(i => {
                 const s = (i.status || '').toLowerCase();
-                const isPaid = s === 'paid' || s === 'done' || s === 'unpaid';
+                const isPaid = s === 'done';
                 const limit = Number(budgetObj[i.category] || 0);
                 return isPaid && limit > 0;
               })
@@ -142,7 +142,7 @@ const BudgetPage = () => {
 
   const derivedCategories = budgets.map(budget => {
     const actualSpent = expenses
-      .filter(ex => ex.categoryId === budget.category && (ex.status === 'Paid' || ex.status === 'Unpaid' || ex.status === 'Done'))
+      .filter(ex => ex.categoryId === budget.category && ex.status === 'done')
       .reduce((acc, curr) => acc + curr.amount, 0);
     
     const percent = budget.limit ? Math.round((actualSpent / budget.limit) * 100) : 0;
