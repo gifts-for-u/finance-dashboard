@@ -195,9 +195,27 @@ const DashboardPage = () => {
     <Layout title="Finance Dashboard Overview">
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-        <StatCard icon={Wallet} label="Total Perkiraan Pemasukan" value={formatRupiah(totalIncome)} color="blue" />
-        <StatCard icon={Receipt} label="Total Perkiraan Pengeluaran" value={formatRupiah(totalExpense)} color="purple" />
-        <StatCard icon={CreditCard} label="Total Pengeluaran Aktual" value={formatRupiah(actualExpense)} color="red" />
+        <StatCard 
+          icon={Wallet} 
+          label="Total Perkiraan Pemasukan" 
+          value={formatRupiah(totalIncome)} 
+          color="blue" 
+          infoText="Jumlah seluruh pemasukan yang sudah kamu catat untuk bulan ini." 
+        />
+        <StatCard 
+          icon={Receipt} 
+          label="Total Perkiraan Pengeluaran" 
+          value={formatRupiah(totalExpense)} 
+          color="purple" 
+          infoText="Total semua pengeluaran yang direncanakan atau sudah diinput tanpa melihat status selesai." 
+        />
+        <StatCard 
+          icon={CreditCard} 
+          label="Total Pengeluaran Aktual" 
+          value={formatRupiah(actualExpense)} 
+          color="red" 
+          infoText="Total pengeluaran yang sudah ditandai selesai (status &quot;LUNAS&quot;) pada bulan ini." 
+        />
         <StatCard icon={CircleDollarSign} label="Saldo Aktual" value={formatRupiah(actualIncome - actualExpense)} color="slate" />
         <StatCard icon={PiggyBank} label="Perkiraan Sisa Uang Bulan Ini" value={formatRupiah(totalIncome - totalExpense)} color="green" />
         <StatCard icon={BarChart3} label="Rasio Tabungan" value={savingsRateDisplay} color={savingsRateColor} />
