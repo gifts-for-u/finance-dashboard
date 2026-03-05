@@ -294,7 +294,7 @@ const DashboardPage = () => {
           </div>
 
           <div className="space-y-3">
-            {getSortedItems(incomes.filter(inc => inc.title.toLowerCase().includes(searchIncome.toLowerCase())), sortIncome).map((inc, idx) => (
+            {getSortedItems(incomes.filter(inc => inc.title.toLowerCase().includes(searchIncome.toLowerCase())), sortIncome).slice(0, 5).map((inc, idx) => (
               <div key={inc.id} className="bg-card dark:bg-[#1e1e1e] p-3 sm:p-4 rounded-2xl flex justify-between items-center group cursor-pointer hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-[#3f3f3f] hover:border-primary/30 hover:bg-primary/5 dark:hover:bg-primary/10 dark:hover:border-primary/50">
                 <div className="flex items-center gap-3 sm:gap-4">
                   <div className={`p-2.5 sm:p-3 rounded-xl shadow-sm flex items-center justify-center transition-all group-hover:scale-110 ${inc.iconColor || 'bg-primary/10 dark:bg-[#3b82f6]/10 text-primary dark:text-[#3b82f6]'}`}>
@@ -359,7 +359,7 @@ const DashboardPage = () => {
           </div>
 
           <div className="space-y-3">
-            {getSortedItems(expenses.filter(ex => ex.title.toLowerCase().includes(searchExpense.toLowerCase())), sortExpense).map((ex, idx) => (
+            {getSortedItems(expenses.filter(ex => ex.title.toLowerCase().includes(searchExpense.toLowerCase())), sortExpense).slice(0, 5).map((ex, idx) => (
                 <div key={ex.id} className="bg-card dark:bg-[#1e1e1e] p-3 sm:p-4 rounded-2xl flex justify-between items-center group cursor-pointer hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-[#3f3f3f] hover:border-destructive/30 hover:bg-destructive/5 dark:hover:bg-[#6e0a0a]/15 dark:hover:border-destructive/50">
                   <div className="flex items-center gap-3 sm:gap-4">
                     <button 
