@@ -216,9 +216,27 @@ const DashboardPage = () => {
           color="red" 
           infoText="Total pengeluaran yang sudah ditandai selesai (status &quot;LUNAS&quot;) pada bulan ini." 
         />
-        <StatCard icon={CircleDollarSign} label="Saldo Aktual" value={formatRupiah(actualIncome - actualExpense)} color="slate" />
-        <StatCard icon={PiggyBank} label="Perkiraan Sisa Uang Bulan Ini" value={formatRupiah(totalIncome - totalExpense)} color="green" />
-        <StatCard icon={BarChart3} label="Rasio Tabungan" value={savingsRateDisplay} color={savingsRateColor} />
+        <StatCard 
+          icon={CircleDollarSign} 
+          label="Saldo Aktual" 
+          value={formatRupiah(actualIncome - actualExpense)} 
+          color="slate" 
+          infoText="Selisih antara total pemasukan dan pengeluaran aktual—menunjukkan uang yang benar-benar tersisa saat ini."
+        />
+        <StatCard 
+          icon={PiggyBank} 
+          label="Perkiraan Sisa Uang Bulan Ini" 
+          value={formatRupiah(totalIncome - totalExpense)} 
+          color="green" 
+          infoText="Perkiraan sisa uang jika semua pengeluaran yang direncanakan terealisasi (pemasukan dikurangi seluruh pengeluaran)."
+        />
+        <StatCard 
+          icon={BarChart3} 
+          label="Rasio Tabungan" 
+          value={savingsRateDisplay} 
+          color={savingsRateColor} 
+          infoText="Persentase pemasukan yang dialokasikan ke kategori Tabungan dibandingkan total pemasukan bulan ini."
+        />
       </div>
 
       <div className="space-y-8 mb-8">
