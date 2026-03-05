@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, 
   ArrowUpRight, 
@@ -33,6 +34,8 @@ const Layout = ({ children, title }) => {
     { name: 'Anggaran', path: '/budget', icon: PieChart },
     { name: 'Laporan', path: '/reports', icon: FileText },
   ];
+
+  const [hoveredTab, setHoveredTab] = useState(null);
 
   const formattedDate = new Intl.DateTimeFormat('id-ID', { 
     month: 'long', 
@@ -102,24 +105,44 @@ const Layout = ({ children, title }) => {
         </div>
       </div>
 
-      <nav className="mb-10 w-full hidden md:block">
-        <div className="bg-primary p-2 px-2.5 gap-3 rounded-[32px] flex items-center shadow-lg shadow-primary/20 w-full">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) => `
-                flex-1 flex items-center justify-center gap-3 py-3.5 rounded-[26px] transition-all duration-300 whitespace-nowrap
-                ${isActive 
-                  ? 'bg-primary-foreground text-primary shadow-md scale-[1.02]' 
-                  : 'text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10'
-                }
-              `}
-            >
-              <item.icon size={18} />
-              <span className="font-semibold text-sm tracking-wide">{item.name}</span>
-            </NavLink>
-          ))}
+      <nav className="mb-10 w-full hidden md:block" onMouseLeave={() => setHoveredTab(null)}>
+        <div className="bg-primary p-2 px-2.5 gap-3 rounded-[32px] flex items-center shadow-lg shadow-primary/20 w-full relative">
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            const isHovered = hoveredTab === item.path;
+            
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onMouseEnter={() => setHoveredTab(item.path)}
+                className="flex-1 flex items-center justify-center gap-3 py-3.5 rounded-[26px] whitespace-nowrap relative z-10 transition-colors duration-300"
+              >
+                {/* Active Indicator Slide */}
+                {isActive && (
+                  <motion.div
+                    layoutId="activeNavTab"
+                    className="absolute inset-0 bg-primary-foreground shadow-md rounded-[26px] -z-10"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+                
+                {/* Hover Indicator Slide */}
+                {isHovered && !isActive && (
+                  <motion.div
+                    layoutId="hoverNavTab"
+                    className="absolute inset-0 bg-primary-foreground/10 rounded-[26px] -z-10"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+
+                <item.icon size={18} className={`relative z-20 ${isActive ? 'text-primary' : 'text-primary-foreground/80'}`} />
+                <span className={`font-semibold text-sm tracking-wide relative z-20 ${isActive ? 'text-primary' : 'text-primary-foreground/80'}`}>
+                  {item.name}
+                </span>
+              </NavLink>
+            );
+          })}
         </div>
       </nav>
 

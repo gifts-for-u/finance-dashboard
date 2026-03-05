@@ -74,7 +74,7 @@ export const StatCard = ({ icon: Icon, label, value, subtext, color = 'blue', tr
           </button>
           
           {showInfo && (
-            <div className="absolute top-full right-0 mt-4 w-64 md:w-72 bg-white dark:bg-[#2a2a2a] rounded-3xl p-6 shadow-[0_10px_40px_rgba(0,0,0,0.15)] dark:shadow-[#000000_0px_10px_40px] border border-slate-100 dark:border-[#3f3f3f] animate-in fade-in zoom-in slide-in-from-top-5 duration-300 z-50">
+            <div className="absolute top-full right-0 mt-4 w-64 md:w-72 bg-white dark:bg-[#2a2a2a] rounded-3xl p-6 shadow-[0_10px_40px_rgba(0,0,0,0.15)] dark:shadow-[#000000_0px_10px_40px] border border-slate-100 dark:border-[#3f3f3f] animate-pop z-50 origin-top-right">
               <h4 className={`text-sm font-black tracking-widest uppercase mb-3 ${colorClasses[color].split(' ')[2]}`}>{label}</h4>
               <div className="w-full h-[1px] bg-slate-100 dark:bg-[#3f3f3f] mb-4"></div>
               <p className="text-sm font-medium text-slate-600 dark:text-slate-300 leading-relaxed text-left">{infoText}</p>
