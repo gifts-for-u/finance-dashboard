@@ -227,7 +227,7 @@ const DashboardPage = () => {
           icon={PiggyBank} 
           label="Perkiraan Sisa Uang Bulan Ini" 
           value={formatRupiah(totalIncome - totalExpense)} 
-          color="green" 
+          color="teal" 
           infoText="Perkiraan sisa uang jika semua pengeluaran yang direncanakan terealisasi (pemasukan dikurangi seluruh pengeluaran)."
         />
         <StatCard 

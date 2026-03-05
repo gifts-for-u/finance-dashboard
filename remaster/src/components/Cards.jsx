@@ -26,6 +26,7 @@ export const StatCard = ({ icon: Icon, label, value, subtext, color = 'blue', tr
     purple: 'bg-purple-500/10 text-purple-600 dark:text-purple-500',
     orange: 'bg-orange-500/10 text-orange-600 dark:text-orange-500',
     slate: 'bg-slate-500/10 text-slate-600 dark:text-slate-400',
+    teal: 'bg-teal-500/10 text-teal-600 dark:text-teal-500',
   };
 
   const solidColorClasses = {
@@ -35,6 +36,7 @@ export const StatCard = ({ icon: Icon, label, value, subtext, color = 'blue', tr
     purple: 'bg-purple-600 dark:bg-purple-500 text-white',
     orange: 'bg-orange-600 dark:bg-orange-500 text-white',
     slate: 'bg-slate-600 dark:bg-slate-500 text-white',
+    teal: 'bg-teal-600 dark:bg-teal-500 text-white',
   };
 
   return (
