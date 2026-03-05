@@ -46,7 +46,7 @@ const Layout = ({ children, title }) => {
     <div className="min-h-screen bg-background text-foreground p-4 md:p-6 lg:p-10 relative">
       {/* Header Mobile */}
       <div className="flex justify-between items-center md:hidden mb-6 sticky top-0 bg-background/95 backdrop-blur-3xl p-4 -mx-4 z-40 border-b border-slate-100 dark:border-[#3f3f3f]">
-        <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">{title}</h1>
+        <h1 className="text-xl font-bold text-slate-800 dark:text-white">{title}</h1>
         <button 
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all cursor-pointer"
@@ -57,7 +57,7 @@ const Layout = ({ children, title }) => {
 
       {/* Header Desktop */}
       <div className="hidden md:flex flex-row justify-between items-center mb-8 gap-4">
-        <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">{title}</h1>
+        <h1 className="text-3xl font-bold text-slate-800 dark:text-white">{title}</h1>
         
         <div className="flex items-center gap-4">
           {/* User Profile */}
