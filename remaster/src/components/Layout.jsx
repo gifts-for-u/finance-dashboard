@@ -123,7 +123,7 @@ const Layout = ({ children, title }) => {
                   <motion.div
                     layoutId="activeNavTab"
                     className="absolute inset-0 bg-primary-foreground shadow-md rounded-[26px] -z-10"
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 25, mass: 1.2 }}
                   />
                 )}
                 
@@ -132,7 +132,7 @@ const Layout = ({ children, title }) => {
                   <motion.div
                     layoutId="hoverNavTab"
                     className="absolute inset-0 bg-primary-foreground/10 rounded-[26px] -z-10"
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 25, mass: 1.2 }}
                   />
                 )}
 
