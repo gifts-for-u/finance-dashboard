@@ -18,7 +18,14 @@ import {
   ChevronDown,
   ArrowDown,
   ArrowUp,
-  DollarSign
+  DollarSign,
+  MoreVertical,
+  Briefcase,
+  Layers,
+  BarChart,
+  Gift,
+  Plus,
+  Save
 } from 'lucide-react';
 import { 
   XAxis, 
@@ -247,7 +254,7 @@ const IncomePage = () => {
   };
 
   const filteredAndSortedIncomes = getSortedItems(
-    incomes.filter(inc => inc.title.toLowerCase().includes(searchIncome.toLowerCase())),
+    incomes.filter(inc => (inc.title || '').toLowerCase().includes(searchIncome.toLowerCase())),
     sortIncome
   );
 
