@@ -16,7 +16,6 @@ import {
   Filter,
   ArrowUpDown,
   ChevronDown,
-  Clock,
   ArrowDown,
   ArrowUp,
   DollarSign
