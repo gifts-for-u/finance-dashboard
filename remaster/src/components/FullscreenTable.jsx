@@ -20,9 +20,18 @@ const FullscreenTable = ({ isOpen, onClose, data, title, onEditItem, onAddItem, 
       >
         {/* Header */}
         <div className="p-5 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card border-b border-slate-100 dark:border-[#3f3f3f]">
-          <div>
-            <h2 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight">{title}</h2>
-            <p className="text-slate-400 font-medium mt-1">Kelola semua daftar transaksi Anda di satu tempat</p>
+          <div className="flex justify-between items-start gap-4">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white tracking-tight">{title}</h2>
+              <p className="text-slate-400 font-medium mt-1 text-sm sm:text-base">Kelola semua daftar transaksi Anda di satu tempat</p>
+            </div>
+            
+            <button 
+              onClick={onClose}
+              className="md:hidden p-3 h-fit bg-card dark:bg-[#1e1e1e] text-card-foreground dark:text-white border border-slate-100 dark:border-[#3f3f3f] text-slate-400 rounded-xl hover:bg-slate-50 dark:hover:bg-[#2f2f2f] transition-all shadow-sm cursor-pointer flex-shrink-0"
+            >
+              <X size={20} />
+            </button>
           </div>
           
           <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
@@ -39,7 +48,7 @@ const FullscreenTable = ({ isOpen, onClose, data, title, onEditItem, onAddItem, 
               </div>
               <button 
                 onClick={onClose}
-                className="p-3.5 md:p-4 bg-card dark:bg-[#1e1e1e] text-card-foreground dark:text-white border border-slate-100 dark:border-[#3f3f3f] text-slate-400 rounded-xl md:rounded-2xl hover:bg-slate-50 dark:hover:bg-[#2f2f2f] transition-all shadow-sm cursor-pointer flex-shrink-0 md:order-last order-first"
+                className="hidden md:flex p-3.5 md:p-4 bg-card dark:bg-[#1e1e1e] text-card-foreground dark:text-white border border-slate-100 dark:border-[#3f3f3f] text-slate-400 rounded-xl md:rounded-2xl hover:bg-slate-50 dark:hover:bg-[#2f2f2f] transition-all shadow-sm cursor-pointer flex-shrink-0"
               >
                 <X size={20} />
               </button>
