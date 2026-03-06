@@ -18,7 +18,7 @@ import {
   ChevronDown,
   ArrowDown,
   ArrowUp,
-  DollarSign,
+  Banknote,
   MoreVertical,
   Briefcase,
   Layers,
@@ -44,8 +44,8 @@ import { CustomDatePicker } from '../components/CustomInputs';
 
 const SortTimeDesc = ({size}) => <div className="flex items-center gap-0.5"><Clock size={size}/><ArrowDown size={size-4} strokeWidth={3}/></div>;
 const SortTimeAsc = ({size}) => <div className="flex items-center gap-0.5"><Clock size={size}/><ArrowUp size={size-4} strokeWidth={3}/></div>;
-const SortAmountDesc = ({size}) => <div className="flex items-center gap-0.5"><DollarSign size={size}/><ArrowDown size={size-4} strokeWidth={3}/></div>;
-const SortAmountAsc = ({size}) => <div className="flex items-center gap-0.5"><DollarSign size={size}/><ArrowUp size={size-4} strokeWidth={3}/></div>;
+const SortAmountDesc = ({size}) => <div className="flex items-center gap-0.5"><Banknote size={size}/><ArrowDown size={size-4} strokeWidth={3}/></div>;
+const SortAmountAsc = ({size}) => <div className="flex items-center gap-0.5"><Banknote size={size}/><ArrowUp size={size-4} strokeWidth={3}/></div>;
 
 const IconSortDropdown = ({ value, onChange, options }) => {
   const [isOpen, setIsOpen] = useState(false);
