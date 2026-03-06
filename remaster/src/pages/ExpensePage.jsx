@@ -138,7 +138,7 @@ const ExpensePage = () => {
     amount: '',
     category: expenseCategories[0]?.name || 'Lainnya',
     date: formattedDateInit,
-    status: 'Pending',
+    status: 'planned',
     hex: expenseCategories[0]?.color || '#94A3B8'
   };
 
