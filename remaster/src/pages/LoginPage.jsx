@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { PieChart, Plus, Minus, Tag, RefreshCw, Download, Smartphone } from 'lucide-react';
@@ -8,6 +8,13 @@ const LoginPage = () => {
   const { loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  useEffect(() => {
+    document.title = "Login - Finance Tracker";
+    return () => {
+      document.title = "Finance Tracker";
+    };
+  }, []);
 
   const handleLogin = async () => {
     setIsLoggingIn(true);
