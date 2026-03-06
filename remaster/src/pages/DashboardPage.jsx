@@ -19,12 +19,22 @@ import {
   MoreVertical,
   Settings,
   ChevronRight,
-  ChevronDown
+  ChevronDown,
+  ArrowUpDown,
+  Clock,
+  ArrowDown,
+  ArrowUp,
+  Banknote
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { useFinance } from '../context/FinanceContext';
 
-const CustomSortDropdown = ({ value, onChange, options }) => {
+const SortTimeDesc = ({size}) => <div className="flex items-center gap-0.5"><Clock size={size}/><ArrowDown size={size-4} strokeWidth={3}/></div>;
+const SortTimeAsc = ({size}) => <div className="flex items-center gap-0.5"><Clock size={size}/><ArrowUp size={size-4} strokeWidth={3}/></div>;
+const SortAmountDesc = ({size}) => <div className="flex items-center gap-0.5"><Banknote size={size}/><ArrowDown size={size-4} strokeWidth={3}/></div>;
+const SortAmountAsc = ({size}) => <div className="flex items-center gap-0.5"><Banknote size={size}/><ArrowUp size={size-4} strokeWidth={3}/></div>;
+
+const IconSortDropdown = ({ value, onChange, options }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -40,34 +50,43 @@ const CustomSortDropdown = ({ value, onChange, options }) => {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <div 
-        className="px-4 py-2.5 bg-card dark:bg-[#2f2f2f] text-card-foreground text-slate-600 dark:text-white rounded-xl border border-slate-100 dark:border-[#3f3f3f] shadow-sm hover:bg-slate-50 dark:hover:bg-[#3f3f3f] transition-all text-sm font-bold focus:outline-none cursor-pointer flex justify-between items-center gap-3 min-w-[130px]"
+      <button 
+        type="button"
+        className={`w-12 h-12 flex flex-shrink-0 items-center justify-center bg-card dark:bg-[#1e1e1e] border border-slate-100 dark:border-[#3f3f3f] rounded-2xl transition-all cursor-pointer active:scale-95 focus:outline-none ${value ? 'text-primary dark:text-[#3b82f6] shadow-md border-primary/30 dark:border-primary/50' : 'hover:bg-slate-50 dark:hover:bg-[#2a2a2a] text-slate-400 dark:text-slate-300'}`}
         onClick={() => setIsOpen(!isOpen)}
-        tabIndex={0}
       >
-        <span>{options.find(opt => opt.value === value)?.label || value}</span>
-        <ChevronDown size={14} className={`text-slate-400 dark:text-slate-300 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
-      </div>
+        {(() => {
+          const selected = options.find(opt => opt.value === value);
+          if (selected && selected.icon) {
+            const Icon = selected.icon;
+            return <Icon size={18} />;
+          }
+          return <Filter size={18} />;
+        })()}
+      </button>
       
       {isOpen && (
-        <div className="absolute z-[60] top-[calc(100%+8px)] right-0 w-[140px] bg-card dark:bg-[#2f2f2f] text-card-foreground rounded-lg shadow-xl shadow-slate-200/50 dark:shadow-md dark:shadow-[#1b1b1b] border border-slate-100 dark:border-[#3f3f3f] py-1 animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+        <div className="absolute z-[60] top-[calc(100%+8px)] right-0 w-[160px] bg-card dark:bg-[#2f2f2f] text-card-foreground rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-md dark:shadow-[#1b1b1b] border border-slate-100 dark:border-[#3f3f3f] py-2 animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
           <div className="max-h-[240px] overflow-y-auto overflow-x-hidden custom-scrollbar">
-            {options.map((opt, idx) => (
-              <div
-                key={idx}
-                className={`w-full text-left px-4 py-2 cursor-pointer transition-colors flex items-center gap-3 text-sm
-                  ${value === opt.value 
-                    ? 'bg-blue-600 text-white' 
-                    : 'text-slate-600 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-blue-600 dark:hover:text-white'
-                  }`}
-                onClick={() => {
-                  onChange(opt.value);
-                  setIsOpen(false);
-                }}
-              >
-                {opt.label}
-              </div>
-            ))}
+            {options.map((opt, idx) => {
+              const IconOpt = opt.icon || Filter;
+              return (
+                <div
+                  key={idx}
+                  className={`w-full text-left px-4 py-2.5 cursor-pointer transition-colors flex items-center gap-3 text-sm font-semibold
+                    ${value === opt.value 
+                      ? 'bg-primary/10 text-primary dark:text-[#3b82f6]' 
+                      : 'hover:bg-slate-50 dark:hover:bg-[#3f3f3f] text-slate-600 dark:text-slate-300'}`}
+                  onClick={() => {
+                    onChange(opt.value);
+                    setIsOpen(false);
+                  }}
+                >
+                  <IconOpt size={16} />
+                  {opt.label}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -80,8 +99,8 @@ const DashboardPage = () => {
   const { incomes, totalIncome, expenses, totalExpense, addIncome, deleteIncome, addExpense, deleteExpense, toggleExpenseStatus, budgets } = useFinance();
   const [searchIncome, setSearchIncome] = useState('');
   const [searchExpense, setSearchExpense] = useState('');
-  const [sortIncome, setSortIncome] = useState('date-desc'); // date-desc, date-asc, amount-desc, amount-asc
-  const [sortExpense, setSortExpense] = useState('date-desc');
+  const [sortIncome, setSortIncome] = useState('');
+  const [sortExpense, setSortExpense] = useState('');
   
   // Modal States
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
@@ -281,14 +300,14 @@ const DashboardPage = () => {
                 className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#1e1e1e] border border-slate-100 dark:border-[#3f3f3f] rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all dark:text-white"
               />
             </div>
-            <CustomSortDropdown 
+            <IconSortDropdown 
               value={sortIncome}
               onChange={setSortIncome}
               options={[
-                { value: "date-desc", label: "Terbaru" },
-                { value: "date-asc", label: "Terlama" },
-                { value: "amount-desc", label: "Terbesar" },
-                { value: "amount-asc", label: "Terkecil" }
+                { value: "date-desc", label: "Terbaru", icon: SortTimeDesc },
+                { value: "date-asc", label: "Terlama", icon: SortTimeAsc },
+                { value: "amount-desc", label: "Terbesar", icon: SortAmountDesc },
+                { value: "amount-asc", label: "Terkecil", icon: SortAmountAsc }
               ]}
             />
           </div>
@@ -346,14 +365,14 @@ const DashboardPage = () => {
                 className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#1e1e1e] border border-slate-100 dark:border-[#3f3f3f] rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-destructive/20 transition-all dark:text-white"
               />
             </div>
-            <CustomSortDropdown 
+            <IconSortDropdown 
               value={sortExpense}
               onChange={setSortExpense}
               options={[
-                { value: "date-desc", label: "Terbaru" },
-                { value: "date-asc", label: "Terlama" },
-                { value: "amount-desc", label: "Terbesar" },
-                { value: "amount-asc", label: "Terkecil" }
+                { value: "date-desc", label: "Terbaru", icon: SortTimeDesc },
+                { value: "date-asc", label: "Terlama", icon: SortTimeAsc },
+                { value: "amount-desc", label: "Terbesar", icon: SortAmountDesc },
+                { value: "amount-asc", label: "Terkecil", icon: SortAmountAsc }
               ]}
             />
           </div>
