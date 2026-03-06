@@ -129,7 +129,6 @@ const DashboardPage = () => {
     .filter(inc => inc.status === 'Paid' || inc.status === 'Done')
     .reduce((acc, curr) => acc + curr.amount, 0);
 
-  // Derive chart data from expenses
   const expenseData = expenses.reduce((acc, curr) => {
     const existing = acc.find(item => item.name === curr.category);
     if (existing) {
@@ -143,6 +142,20 @@ const DashboardPage = () => {
     }
     return acc;
   }, []);
+
+  const categoryData = expenses.reduce((acc, curr) => {
+    const catName = curr.categoryName || curr.category;
+    const existing = acc.find(item => item.name === catName);
+    if (existing) {
+      existing.rawValue += curr.amount;
+    } else {
+      acc.push({ name: catName, rawValue: curr.amount, color: curr.hex });
+    }
+    return acc;
+  }, []).map(cat => ({
+    ...cat,
+    value: Math.round((cat.rawValue / (totalExpense || 1)) * 100)
+  }));
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
@@ -420,6 +433,50 @@ const DashboardPage = () => {
           </ChartCard>
         </div>
       </div>
+
+      {/* Categories Breakdown */}
+      <ChartCard 
+        title="Kategorisasi Pengeluaran"
+      >
+        <div className="flex flex-col lg:flex-row items-center justify-center gap-16 py-8">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-12 w-full max-w-5xl">
+            {categoryData.length > 0 ? categoryData.map((cat, idx) => (
+              <div key={idx} className="flex flex-col items-center gap-5 group">
+                <div className="h-32 w-32 relative transition-transform group-hover:scale-110 duration-300">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[{ value: cat.value }, { value: 100 - cat.value }]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={45}
+                        outerRadius={60}
+                        startAngle={90}
+                        endAngle={-270}
+                        paddingAngle={0}
+                        dataKey="value"
+                        stroke="none"
+                      >
+                        <Cell fill={cat.color || '#94A3B8'} />
+                        <Cell fill="#F1F5F9" className="dark:fill-[#2f2f2f]" />
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-xl font-black text-slate-800 dark:text-white">{cat.value}%</span>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{cat.name}</p>
+                  <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{formatRupiah(cat.rawValue)}</p>
+                </div>
+              </div>
+            )) : (
+              <div className="col-span-2 md:col-span-5 text-center text-slate-400 py-10 font-medium">Bulan ini belum ada data pengeluaran</div>
+            )}
+          </div>
+        </div>
+      </ChartCard>
 
       {/* Budget Progress Section */}
       <ChartCard>
