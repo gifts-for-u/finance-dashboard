@@ -45,8 +45,9 @@ jobs:
           npm ci --legacy-peer-deps
           npm run build
           cd ..
-          rm -rf public/remaster
-          cp -R remaster/dist public/remaster
+          rm -rf public
+          mkdir public
+          cp -R remaster/dist/* public/
 
       - name: Deploy to Firebase Hosting
         id: deploy
