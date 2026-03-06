@@ -435,9 +435,10 @@ const DashboardPage = () => {
       </div>
 
       {/* Categories Breakdown */}
-      <ChartCard 
-        title="Kategorisasi Pengeluaran"
-      >
+      <div className="mb-8">
+        <ChartCard 
+          title="Kategorisasi Pengeluaran"
+        >
         <div className="flex flex-col lg:flex-row items-center justify-center gap-16 py-8">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-12 w-full max-w-5xl">
             {categoryData.length > 0 ? categoryData.map((cat, idx) => (
@@ -476,7 +477,8 @@ const DashboardPage = () => {
             )}
           </div>
         </div>
-      </ChartCard>
+        </ChartCard>
+      </div>
 
       {/* Budget Progress Section */}
       <ChartCard>
