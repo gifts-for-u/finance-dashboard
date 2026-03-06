@@ -20,7 +20,9 @@ import {
   PenLine,
   CheckCircle2,
   ReceiptText,
-  Calendar
+  Calendar,
+  ArrowUpDown,
+  ChevronDown
 } from 'lucide-react';
 import {
   AreaChart,
@@ -44,6 +46,59 @@ const STATUS_OPTIONS = [
   { value: 'planned', label: 'Belum Lunas' }
 ];
 
+const IconSortDropdown = ({ value, onChange, options }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button 
+        type="button"
+        className="w-12 h-12 flex items-center justify-center bg-card dark:bg-[#1e1e1e] border border-slate-100 dark:border-[#3f3f3f] rounded-2xl hover:bg-slate-50 dark:hover:bg-[#2a2a2a] transition-all cursor-pointer active:scale-95 text-slate-400 dark:text-slate-300 focus:outline-none"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <ArrowUpDown size={18} />
+      </button>
+      
+      {isOpen && (
+        <div className="absolute z-[60] top-[calc(100%+8px)] right-0 w-[160px] bg-card dark:bg-[#2f2f2f] text-card-foreground rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-md dark:shadow-[#1b1b1b] border border-slate-100 dark:border-[#3f3f3f] py-2 animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+          <div className="max-h-[240px] overflow-y-auto overflow-x-hidden custom-scrollbar">
+            {options.map((opt, idx) => {
+              const IconOpt = opt.icon || ArrowUpDown;
+              return (
+                <div
+                  key={idx}
+                  className={`w-full text-left px-4 py-2.5 cursor-pointer transition-colors flex items-center gap-3 text-sm font-semibold
+                    ${value === opt.value 
+                      ? 'bg-primary/10 text-primary dark:text-[#3b82f6]' 
+                      : 'hover:bg-slate-50 dark:hover:bg-[#3f3f3f] text-slate-600 dark:text-slate-300'}`}
+                  onClick={() => {
+                    onChange(opt.value);
+                    setIsOpen(false);
+                  }}
+                >
+                  <IconOpt size={16} />
+                  {opt.label}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ExpensePage = () => {
   const { expenses, totalExpense, addExpense, updateExpense, deleteExpense, expenseCategories, addExpenseCategory, updateExpenseCategory, deleteExpenseCategory, currentDate } = useFinance();
   const { user } = useAuth();
@@ -56,6 +111,8 @@ const ExpensePage = () => {
   const [editingCategory, setEditingCategory] = useState(null);
   const [catFormData, setCatFormData] = useState({ name: '', color: '#1E56D1', icon: 'Tag' });
   const [showCatDeleteConfirm, setShowCatDeleteConfirm] = useState(false);
+  const [searchExpense, setSearchExpense] = useState('');
+  const [sortExpense, setSortExpense] = useState('date-desc');
   
   const d = new Date();
   const formattedDateInit = `${d.getDate().toString().padStart(2, '0')} ${["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"][d.getMonth()]} ${d.getFullYear()}`;
@@ -148,7 +205,42 @@ const ExpensePage = () => {
       }
     };
     fetchTrendData();
-  }, [user, currentDate, expenses]);
+  }, [user?.uid, currentDate, expenses]);
+
+  const parseDateToMs = (dateStr) => {
+    try {
+      if (!dateStr) return 0;
+      const parts = dateStr.split(' ');
+      if (parts.length === 3) {
+        let [dd, mmm, yyyy] = parts;
+        let pMonthString = "Jan_Feb_Mar_Apr_Mei_Jun_Jul_Agu_Sep_Okt_Nov_Des";
+        let mIndex = pMonthString.split("_").indexOf(mmm);
+        if (mIndex !== -1) {
+          return new Date(parseInt(yyyy), mIndex, parseInt(dd)).getTime();
+        }
+      }
+      return new Date(dateStr).getTime() || 0;
+    } catch {
+      return 0;
+    }
+  };
+
+  const getSortedItems = (items, sortMode) => {
+    return [...items].sort((a, b) => {
+      switch (sortMode) {
+        case 'date-desc': return parseDateToMs(b.date) - parseDateToMs(a.date);
+        case 'date-asc': return parseDateToMs(a.date) - parseDateToMs(b.date);
+        case 'amount-desc': return (b.amount || 0) - (a.amount || 0);
+        case 'amount-asc': return (a.amount || 0) - (b.amount || 0);
+        default: return 0;
+      }
+    });
+  };
+
+  const filteredAndSortedExpenses = getSortedItems(
+    expenses.filter(ex => ex.title.toLowerCase().includes(searchExpense.toLowerCase())),
+    sortExpense
+  );
 
   // Categories breakdown
   const categoryData = expenses.reduce((acc, curr) => {
@@ -287,13 +379,25 @@ const ExpensePage = () => {
                     <input 
                       type="text" 
                       placeholder="Cari pengeluaran..." 
+                      value={searchExpense}
+                      onChange={(e) => setSearchExpense(e.target.value)}
                       className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#1e1e1e] border border-slate-100 dark:border-[#3f3f3f] rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-destructive/20 transition-all dark:text-white"
                     />
                   </div>
+                  <IconSortDropdown 
+                    value={sortExpense}
+                    onChange={setSortExpense}
+                    options={[
+                      { value: "date-desc", label: "Terbaru" },
+                      { value: "date-asc", label: "Terlama" },
+                      { value: "amount-desc", label: "Terbesar" },
+                      { value: "amount-asc", label: "Terkecil" }
+                    ]}
+                  />
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-1 custom-scrollbar space-y-4">
-                  {expenses.map((expense, idx) => (
+                  {filteredAndSortedExpenses.map((expense, idx) => (
                     <div 
                       key={idx} 
                       className="flex items-center gap-5 group cursor-pointer hover:bg-slate-500/5 dark:hover:bg-slate-800/50 border border-transparent hover:border-destructive/50 dark:hover:border-destructive hover:shadow-md dark:hover:shadow-destructive/20 p-3 rounded-2xl transition-all"
