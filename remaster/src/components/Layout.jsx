@@ -11,6 +11,7 @@ import {
   Calendar,
   Moon,
   LogOut,
+  ChevronLeft,
   ChevronRight,
   Sun,
   Menu,
