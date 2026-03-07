@@ -5,7 +5,7 @@ import { PieChart, Plus, Minus, Tag, RefreshCw, Download, Smartphone } from 'luc
 import toast from 'react-hot-toast';
 
 const LoginPage = () => {
-  const { loginWithGoogle } = useAuth();
+  const { loginWithGoogle, user } = useAuth();
   const navigate = useNavigate();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
@@ -15,6 +15,12 @@ const LoginPage = () => {
       document.title = "Finance Tracker";
     };
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const handleLogin = async () => {
     setIsLoggingIn(true);
