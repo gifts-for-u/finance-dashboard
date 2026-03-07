@@ -49,9 +49,9 @@ const Layout = ({ children, title }) => {
         <h1 className="text-xl font-bold text-slate-800 dark:text-white">{title}</h1>
         <button 
           onClick={() => setIsMobileMenuOpen(true)}
-          className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95"
+          className="p-3 rounded-xl bg-slate-800 dark:bg-slate-800 text-white dark:text-white transition-all cursor-pointer hover:bg-slate-700 dark:hover:bg-slate-700 active:scale-95"
         >
-          <Menu size={20} />
+          <Menu size={18} />
         </button>
       </div>
 
@@ -59,16 +59,16 @@ const Layout = ({ children, title }) => {
       <div className="md:hidden flex items-center justify-between bg-card text-card-foreground p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#3f3f3f] mb-6">
         <button 
           onClick={() => changeMonth(-1)} 
-          className="p-3 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-xl transition-colors cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95"
+          className="p-3 bg-slate-800 dark:bg-slate-800 text-white dark:text-white rounded-xl transition-colors cursor-pointer hover:bg-slate-700 dark:hover:bg-slate-700 active:scale-95"
         >
-          <ChevronLeft size={16} />
+          <ChevronLeft size={18} />
         </button>
-        <span className="text-sm font-bold text-primary whitespace-nowrap capitalize">{formattedDate}</span>
+        <span className="text-sm font-bold text-slate-800 dark:text-white whitespace-nowrap capitalize">{formattedDate}</span>
         <button 
           onClick={() => changeMonth(1)} 
-          className="p-3 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-xl transition-colors cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95"
+          className="p-3 bg-slate-800 dark:bg-slate-800 text-white dark:text-white rounded-xl transition-colors cursor-pointer hover:bg-slate-700 dark:hover:bg-slate-700 active:scale-95"
         >
-          <ChevronRight size={16} />
+          <ChevronRight size={18} />
         </button>
       </div>
 
