@@ -28,7 +28,15 @@ const Layout = ({ children, title }) => {
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navItems = [
+  const desktopNavItems = [
+    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+    { name: 'Pemasukan', path: '/income', icon: ArrowUpRight },
+    { name: 'Pengeluaran', path: '/expenses', icon: ArrowDownRight },
+    { name: 'Anggaran', path: '/budget', icon: PieChart },
+    { name: 'Laporan', path: '/reports', icon: FileText },
+  ];
+
+  const mobileNavItems = [
     { name: 'Anggaran', path: '/budget', icon: PieChart },
     { name: 'Pengeluaran', path: '/expenses', icon: ArrowDownRight },
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
@@ -124,7 +132,7 @@ const Layout = ({ children, title }) => {
 
       <nav className="mb-10 w-full hidden md:block" onMouseLeave={() => setHoveredTab(null)}>
         <div className="bg-primary p-2 px-2.5 gap-3 rounded-[32px] flex items-center shadow-lg shadow-primary/20 w-full relative">
-          {navItems.map((item) => {
+          {desktopNavItems.map((item) => {
             const isActive = location.pathname === item.path;
             const isHovered = hoveredTab === item.path;
             
@@ -221,7 +229,7 @@ const Layout = ({ children, title }) => {
 
       {/* Bottom Navigation Navbar (Mobile Only) */}
       <nav className="md:hidden fixed bottom-0 left-0 w-full bg-card/90 backdrop-blur-xl border-t border-slate-100 dark:border-[#3f3f3f] rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_-5px_30px_-15px_rgba(0,0,0,0.5)] z-50 px-6 py-4 pb-safe flex justify-between items-center">
-        {navItems.map((item) => {
+        {mobileNavItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
             <NavLink
