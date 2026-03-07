@@ -29,11 +29,11 @@ const Layout = ({ children, title }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+    { name: 'Laporan', path: '/reports', icon: FileText },
     { name: 'Pemasukan', path: '/income', icon: ArrowUpRight },
+    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Pengeluaran', path: '/expenses', icon: ArrowDownRight },
     { name: 'Anggaran', path: '/budget', icon: PieChart },
-    { name: 'Laporan', path: '/reports', icon: FileText },
   ];
 
   const [hoveredTab, setHoveredTab] = useState(null);
