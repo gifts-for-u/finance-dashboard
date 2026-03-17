@@ -40,7 +40,7 @@ export const StatCard = ({ icon: Icon, label, value, subtext, color = 'blue', tr
   };
 
   return (
-    <div className="bg-card text-card-foreground p-5 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:border-[#3f3f3f] flex flex-col gap-4 relative overflow-visible group hover:shadow-md transition-all duration-300">
+    <div className={`bg-card text-card-foreground p-5 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:border-[#3f3f3f] flex flex-col gap-4 relative overflow-visible group hover:shadow-md transition-all duration-300 ${showInfo ? 'z-[60]' : 'z-10'}`}>
       <div className="flex justify-between items-start z-10 w-full relative">
         <div className={`p-4 rounded-2xl ${colorClasses[color]} transition-transform group-hover:scale-110 duration-300`}>
           <Icon size={24} />
