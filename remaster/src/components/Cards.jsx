@@ -45,17 +45,17 @@ export const StatCard = ({ icon: Icon, label, value, subtext, color = 'blue', tr
         <div className={`p-4 rounded-2xl ${colorClasses[color]} transition-transform group-hover:scale-110 duration-300`}>
           <Icon size={24} />
         </div>
-        <div className="flex items-center gap-2">
+      </div>
+      <div>
+        <div className="flex flex-wrap items-center gap-3">
+          <h3 className="text-2xl md:text-3xl font-bold font-mono text-slate-800 dark:text-white tracking-tight">{value}</h3>
           {trend && (
-            <div className={`px-3 py-1 rounded-full text-xs font-bold ${trend > 0 ? 'bg-green-500/10 text-green-600 dark:text-green-500' : 'bg-destructive/10 text-destructive'}`}>
+            <div className={`px-2.5 py-1 rounded-lg text-xs font-bold ${trend > 0 ? 'bg-green-500/10 text-green-600 dark:text-green-500' : 'bg-destructive/10 text-destructive'}`}>
               {trend > 0 ? '+' : ''}{trend}%
             </div>
           )}
         </div>
-      </div>
-      <div>
-        <h3 className="text-2xl font-bold font-mono text-slate-800 tracking-tight">{value}</h3>
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{label}</p>
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1.5">{label}</p>
       </div>
       {subtext && <p className="text-xs font-medium text-slate-400 z-10">{subtext}</p>}
       
