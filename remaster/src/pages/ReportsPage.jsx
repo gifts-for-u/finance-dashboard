@@ -147,9 +147,9 @@ const ReportsPage = () => {
   return (
     <Layout title="Laporan Keuangan">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-        <StatCard icon={PieChartIcon} label="Total Simpanan All-Time" value={formatRupiah(totalLifeTimeSavings)} color="blue" />
-        <StatCard icon={TrendingUp} label={`Arus Kas Bersih (${latestMonth.name.toUpperCase()})`} value={formatRupiah(latestMonth.balance)} color={latestMonth.balance >= 0 ? "green" : "red"} subtext={latestMonth.balance >= 0 ? "Surplus" : "Defisit"} />
-        <StatCard icon={TrendingDown} label="Tingkat Tabungan All-Time" value={`${savingRate}%`} color="purple" />
+        <StatCard icon={PieChartIcon} label="Total Simpanan All-Time" value={formatRupiah(totalLifeTimeSavings)} color="blue" infoText="Akumulasi seluruh pemasukan aktual dikurangi pengeluaran aktual dari awal mula Anda mencatat hingga saat ini." />
+        <StatCard icon={TrendingUp} label={`Arus Kas Bersih (${latestMonth.name.toUpperCase()})`} value={formatRupiah(latestMonth.balance)} color={latestMonth.balance >= 0 ? "green" : "red"} subtext={latestMonth.balance >= 0 ? "Surplus" : "Defisit"} infoText="Uang bersih (pemasukan - pengeluaran aktual) secara khusus pada bulan analisis sebelumnya." />
+        <StatCard icon={TrendingDown} label="Tingkat Tabungan All-Time" value={`${savingRate}%`} color="purple" infoText="Persentase dari total seluruh pendapatan yang berhasil dipertahankan sebagai simpanan (tidak dibelanjakan)." />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">

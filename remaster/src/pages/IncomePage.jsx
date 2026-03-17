@@ -280,9 +280,9 @@ const IncomePage = () => {
     <Layout title="Income Overview">
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-        <StatCard icon={Wallet} label="Total Perkiraan Pemasukan" value={formatRupiah(totalIncome)} color="blue" trend={12.5} />
-        <StatCard icon={Clock} label="Pending Invoices" value={formatRupiah(pendingTotal)} color="orange" subtext={`${pendingCount} Pending`} />
-        <StatCard icon={TrendingUp} label="Total Pemasukan Aktual" value={formatRupiah(actualIncome)} color="green" />
+        <StatCard icon={Wallet} label="Total Perkiraan Pemasukan" value={formatRupiah(totalIncome)} color="blue" trend={12.5} infoText="Jumlah seluruh pemasukan yang sudah dicatat, terlepas dari apakah uangnya sudah diterima atau belum." />
+        <StatCard icon={Clock} label="Pending Invoices" value={formatRupiah(pendingTotal)} color="orange" subtext={`${pendingCount} Pending`} infoText="Jumlah piutang atau ekspektasi pemasukan yang statusnya masih menunggu pembayaran (belum lunas)." />
+        <StatCard icon={TrendingUp} label="Total Pemasukan Aktual" value={formatRupiah(actualIncome)} color="green" infoText="Total pendapatan yang uangnya benar-benar sudah diterima dan ditandai &quot;LUNAS&quot; bulan ini." />
       </div>
 
       <div className="space-y-8">
