@@ -180,17 +180,17 @@ export const FinanceProvider = ({ children }) => {
           id: inc.id || generateId(),
           date: extractDate(inc.date),
           title: inc.source || inc.description || inc.title || 'Pemasukan',
-          icon: injectIcon('income', inc.source || inc.description)
+          icon: injectIcon('income', inc.source || inc.description),
+          status: inc.status || 'Paid'
         }));
         
         const loadedExpenses = (data.expenses || []).filter(Boolean).map(exp => {
           const categoryName = expenseCategories.find(c => c.id === exp.category)?.name || exp.category;
           
-          let mappedStatus = 'Paid';
+          let mappedStatus = 'done';
           if (exp.status) {
             const ls = exp.status.toLowerCase();
-            if (ls === 'planned' || ls === 'pending') mappedStatus = 'Pending';
-            else if (ls === 'unpaid') mappedStatus = 'Unpaid';
+            if (ls === 'planned' || ls === 'pending' || ls === 'unpaid') mappedStatus = 'planned';
           }
 
           return {
@@ -343,7 +343,7 @@ export const FinanceProvider = ({ children }) => {
       description: expense.title || expense.description || 'Pengeluaran',
       isRecurring: false,
       id: generateId(),
-      status: (expense.status || 'paid').toLowerCase()
+      status: (expense.status || 'done').toLowerCase()
     };
 
     const newArr = [...expenses.map(e => {
@@ -414,7 +414,7 @@ export const FinanceProvider = ({ children }) => {
   const toggleExpenseStatus = async (id) => {
     const expense = expenses.find(ex => ex.id === id);
     if (!expense) return;
-    const newStatus = (expense.status === 'Paid') ? 'Pending' : 'Paid'; // Cycle or toggle logic
+    const newStatus = (expense.status === 'done') ? 'planned' : 'done'; // Cycle logic
     
     // Quick inline update
     await updateExpense(id, { status: newStatus });

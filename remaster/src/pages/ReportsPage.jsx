@@ -12,7 +12,8 @@ import {
   TrendingUp, 
   TrendingDown,
   PieChart as PieChartIcon,
-  ChevronRight
+  ChevronRight,
+  BarChart3
 } from 'lucide-react';
 import { 
   LineChart, 
@@ -58,7 +59,7 @@ const ReportsPage = () => {
           const expList = data.expenses || [];
           expList.forEach(exp => {
              const s = (exp.status || '').toLowerCase();
-             if (s === 'paid' || s === 'done' || s === 'unpaid') {
+             if (s === 'done') {
                expTotal += Number(exp.amount || 0);
              }
           });
@@ -106,7 +107,7 @@ const ReportsPage = () => {
   reportData.forEach(month => {
     month.rawExpenses.forEach(exp => {
        const s = (exp.status || '').toLowerCase();
-       if (s === 'paid' || s === 'done' || s === 'unpaid') {
+       if (s === 'done') {
          const catId = exp.category || 'lainnya';
          distMap[catId] = (distMap[catId] || 0) + Number(exp.amount || 0);
        }
@@ -144,12 +145,47 @@ const ReportsPage = () => {
     return null;
   };
 
+  // Derive Savings Rate for current month
+  const totalSavingsExpense = expenses
+    .filter(ex => {
+      const catId = (ex.categoryId || '').toLowerCase();
+      const catName = (ex.categoryName || ex.category || '').toLowerCase();
+      return catId === 'savings' || catName.includes('tabungan') || catId.includes('tabungan');
+    })
+    .reduce((acc, curr) => acc + curr.amount, 0);
+
+  // current month total income
+  let currentMonthIncomeTotal = 0;
+  incomes.forEach(inc => {
+      if ((inc.status || '').toLowerCase() !== 'pending') {
+          currentMonthIncomeTotal += Number(inc.amount || 0);
+      }
+  });
+  
+  const rawSavingsRate = currentMonthIncomeTotal > 0 ? (totalSavingsExpense / currentMonthIncomeTotal) * 100 : null;
+  const savingsRateDisplay = rawSavingsRate !== null ? `${rawSavingsRate.toFixed(0)}%` : '—';
+  
+  let savingsRateColor = 'slate';
+  if (rawSavingsRate !== null) {
+    if (rawSavingsRate >= 20) savingsRateColor = 'green';
+    else if (rawSavingsRate >= 10) savingsRateColor = 'orange';
+    else if (rawSavingsRate >= 0) savingsRateColor = 'blue';
+    else savingsRateColor = 'red';
+  }
+
   return (
     <Layout title="Laporan Keuangan">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-        <StatCard icon={PieChartIcon} label="Total Simpanan All-Time" value={formatRupiah(totalLifeTimeSavings)} color="blue" />
-        <StatCard icon={TrendingUp} label={`Arus Kas Bersih (${latestMonth.name.toUpperCase()})`} value={formatRupiah(latestMonth.balance)} color={latestMonth.balance >= 0 ? "green" : "red"} subtext={latestMonth.balance >= 0 ? "Surplus" : "Defisit"} />
-        <StatCard icon={TrendingDown} label="Tingkat Tabungan All-Time" value={`${savingRate}%`} color="purple" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-8 mb-8 relative">
+        <StatCard icon={PieChartIcon} label="Total Simpanan All-Time" value={formatRupiah(totalLifeTimeSavings)} color="blue" infoText="Akumulasi seluruh pemasukan aktual dikurangi pengeluaran aktual dari awal mula Anda mencatat hingga saat ini." />
+        <StatCard icon={TrendingUp} label={`Arus Kas Bersih (${latestMonth.name.toUpperCase()})`} value={formatRupiah(latestMonth.balance)} color={latestMonth.balance >= 0 ? "green" : "red"} subtext={latestMonth.balance >= 0 ? "Surplus" : "Defisit"} infoText="Uang bersih (pemasukan - pengeluaran aktual) secara khusus pada bulan analisis sebelumnya." />
+        <StatCard icon={TrendingDown} label="Tingkat Tabungan All-Time" value={`${savingRate}%`} color="purple" infoText="Persentase dari total seluruh pendapatan yang berhasil dipertahankan sebagai simpanan (tidak dibelanjakan)." />
+        <StatCard 
+          icon={BarChart3} 
+          label="Rasio Tabungan Bulan Ini" 
+          value={savingsRateDisplay} 
+          color={savingsRateColor} 
+          infoText="Persentase pemasukan aktual yang dialokasikan ke kategori Tabungan dibandingkan total pemasukan aktual bulan ini."
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">

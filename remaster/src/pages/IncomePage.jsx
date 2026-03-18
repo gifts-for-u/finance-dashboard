@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -12,15 +12,20 @@ import {
   TrendingUp, 
   Clock, 
   Search, 
-  Filter, 
+  Trash2,
+  Filter,
+  ArrowUpDown,
+  ChevronDown,
+  ArrowDown,
+  ArrowUp,
+  Banknote,
   MoreVertical,
   Briefcase,
   Layers,
   BarChart,
   Gift,
   Plus,
-  Save,
-  Trash2
+  Save
 } from 'lucide-react';
 import { 
   XAxis, 
@@ -35,7 +40,77 @@ import {
   Cell
 } from 'recharts';
 import { useFinance } from '../context/FinanceContext';
-import { CustomDatePicker } from '../components/CustomInputs';
+import { CustomDatePicker, CustomSelect } from '../components/CustomInputs';
+
+const STATUS_OPTIONS = [
+  { value: 'Paid', label: 'Sudah Dibayar' },
+  { value: 'Pending', label: 'Belum Dibayar' }
+];
+
+const SortTimeDesc = ({size}) => <div className="flex items-center gap-0.5"><Clock size={size}/><ArrowDown size={size-4} strokeWidth={3}/></div>;
+const SortTimeAsc = ({size}) => <div className="flex items-center gap-0.5"><Clock size={size}/><ArrowUp size={size-4} strokeWidth={3}/></div>;
+const SortAmountDesc = ({size}) => <div className="flex items-center gap-0.5"><Banknote size={size}/><ArrowDown size={size-4} strokeWidth={3}/></div>;
+const SortAmountAsc = ({size}) => <div className="flex items-center gap-0.5"><Banknote size={size}/><ArrowUp size={size-4} strokeWidth={3}/></div>;
+
+const IconSortDropdown = ({ value, onChange, options }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button 
+        type="button"
+        className={`w-12 h-12 flex items-center justify-center bg-card dark:bg-[#1e1e1e] border border-slate-100 dark:border-[#3f3f3f] rounded-2xl transition-all cursor-pointer active:scale-95 focus:outline-none ${value ? 'text-primary dark:text-[#3b82f6] shadow-md border-primary/30 dark:border-primary/50' : 'hover:bg-slate-50 dark:hover:bg-[#2a2a2a] text-slate-400 dark:text-slate-300'}`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {(() => {
+          const selected = options.find(opt => opt.value === value);
+          if (selected && selected.icon) {
+            const Icon = selected.icon;
+            return <Icon size={18} />;
+          }
+          return <Filter size={18} />;
+        })()}
+      </button>
+      
+      {isOpen && (
+        <div className="absolute z-[60] top-[calc(100%+8px)] right-0 w-[160px] bg-card dark:bg-[#2f2f2f] text-card-foreground rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-md dark:shadow-[#1b1b1b] border border-slate-100 dark:border-[#3f3f3f] py-2 animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+          <div className="max-h-[240px] overflow-y-auto overflow-x-hidden custom-scrollbar">
+            {options.map((opt, idx) => {
+              const IconOpt = opt.icon || Filter;
+              return (
+                <div
+                  key={idx}
+                  className={`w-full text-left px-4 py-2.5 cursor-pointer transition-colors flex items-center gap-3 text-sm font-semibold
+                    ${value === opt.value 
+                      ? 'bg-primary/10 text-primary dark:text-[#3b82f6]' 
+                      : 'hover:bg-slate-50 dark:hover:bg-[#3f3f3f] text-slate-600 dark:text-slate-300'}`}
+                  onClick={() => {
+                    onChange(opt.value);
+                    setIsOpen(false);
+                  }}
+                >
+                  <IconOpt size={16} />
+                  {opt.label}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const IncomePage = () => {
   const { incomes, totalIncome, addIncome, updateIncome, deleteIncome, currentDate } = useFinance();
@@ -44,6 +119,9 @@ const IncomePage = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isTableOpen, setIsTableOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [searchIncome, setSearchIncome] = useState('');
+  const [sortIncome, setSortIncome] = useState('');
+  
   const d = new Date();
   const formattedDateInit = `${d.getDate().toString().padStart(2, '0')} ${["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"][d.getMonth()]} ${d.getFullYear()}`;
   
@@ -150,6 +228,41 @@ const IncomePage = () => {
     fetchTrendData();
   }, [user, currentDate, incomes]);
 
+  const parseDateToMs = (dateStr) => {
+    try {
+      if (!dateStr) return 0;
+      const parts = dateStr.split(' ');
+      if (parts.length === 3) {
+        let [dd, mmm, yyyy] = parts;
+        let pMonthString = "Jan_Feb_Mar_Apr_Mei_Jun_Jul_Agu_Sep_Okt_Nov_Des";
+        let mIndex = pMonthString.split("_").indexOf(mmm);
+        if (mIndex !== -1) {
+          return new Date(parseInt(yyyy), mIndex, parseInt(dd)).getTime();
+        }
+      }
+      return new Date(dateStr).getTime() || 0;
+    } catch {
+      return 0;
+    }
+  };
+
+  const getSortedItems = (items, sortMode) => {
+    return [...items].sort((a, b) => {
+      switch (sortMode) {
+        case 'date-desc': return parseDateToMs(b.date) - parseDateToMs(a.date);
+        case 'date-asc': return parseDateToMs(a.date) - parseDateToMs(b.date);
+        case 'amount-desc': return (b.amount || 0) - (a.amount || 0);
+        case 'amount-asc': return (a.amount || 0) - (b.amount || 0);
+        default: return 0;
+      }
+    });
+  };
+
+  const filteredAndSortedIncomes = getSortedItems(
+    incomes.filter(inc => (inc.title || '').toLowerCase().includes(searchIncome.toLowerCase())),
+    sortIncome
+  );
+
   const sourceTotals = incomes.reduce((acc, curr) => {
     const key = curr.type || 'Other';
     acc[key] = (acc[key] || 0) + curr.amount;
@@ -171,10 +284,10 @@ const IncomePage = () => {
   return (
     <Layout title="Income Overview">
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-        <StatCard icon={Wallet} label="Total Perkiraan Pemasukan" value={formatRupiah(totalIncome)} color="blue" trend={12.5} />
-        <StatCard icon={Clock} label="Pending Invoices" value={formatRupiah(pendingTotal)} color="orange" subtext={`${pendingCount} Pending`} />
-        <StatCard icon={TrendingUp} label="Total Pemasukan Aktual" value={formatRupiah(actualIncome)} color="green" />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-8 mb-8 relative">
+        <StatCard icon={Wallet} label="Total Perkiraan Pemasukan" value={formatRupiah(totalIncome)} color="blue" trend={12.5} infoText="Jumlah seluruh pemasukan yang sudah dicatat, terlepas dari apakah uangnya sudah diterima atau belum." />
+        <StatCard icon={Clock} label="Pending Invoices" value={formatRupiah(pendingTotal)} color="orange" subtext={`${pendingCount} Pending`} infoText="Jumlah piutang atau ekspektasi pemasukan yang statusnya masih menunggu pembayaran (belum lunas)." />
+        <StatCard icon={TrendingUp} label="Total Pemasukan Aktual" value={formatRupiah(actualIncome)} color="green" infoText="Total pendapatan yang uangnya benar-benar sudah diterima dan ditandai &quot;LUNAS&quot; bulan ini." />
       </div>
 
       <div className="space-y-8">
@@ -243,13 +356,25 @@ const IncomePage = () => {
                     <input 
                       type="text" 
                       placeholder="Cari pemasukan..." 
+                      value={searchIncome}
+                      onChange={(e) => setSearchIncome(e.target.value)}
                       className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#1e1e1e] border border-slate-100 dark:border-[#3f3f3f] rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all dark:text-white"
                     />
                   </div>
+                  <IconSortDropdown 
+                    value={sortIncome}
+                    onChange={setSortIncome}
+                    options={[
+                      { value: "date-desc", label: "Terbaru", icon: SortTimeDesc },
+                      { value: "date-asc", label: "Terlama", icon: SortTimeAsc },
+                      { value: "amount-desc", label: "Terbesar", icon: SortAmountDesc },
+                      { value: "amount-asc", label: "Terkecil", icon: SortAmountAsc }
+                    ]}
+                  />
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-1 custom-scrollbar space-y-4">
-                  {incomes.map((income, idx) => (
+                  {filteredAndSortedIncomes.map((income, idx) => (
                     <div 
                       key={idx} 
                       className="flex items-center gap-5 group cursor-pointer hover:bg-slate-500/5 dark:hover:bg-slate-800/50 border border-transparent hover:border-primary/50 dark:hover:border-primary hover:shadow-md dark:hover:shadow-primary/20 p-3 rounded-2xl transition-all"
@@ -351,7 +476,7 @@ const IncomePage = () => {
             amount: Number(formData.amount),
             date: formData.date,
             type: formData.source, // Use source as the type/category subtext
-            status: 'Paid',
+            status: formData.status,
             icon: Wallet,
             color: 'bg-primary/10',
             iconColor: 'bg-primary/10 dark:bg-[#3b82f6]/10 text-primary dark:text-[#3b82f6]'
@@ -383,7 +508,6 @@ const IncomePage = () => {
                 required
               />
             </div>
-
             <div className="space-y-2">
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Sumber</label>
               <input 
@@ -397,12 +521,22 @@ const IncomePage = () => {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Tanggal</label>
-            <CustomDatePicker 
-              value={formData.date}
-              onChange={(date) => setFormData({...formData, date})}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Tanggal</label>
+              <CustomDatePicker 
+                value={formData.date}
+                onChange={(date) => setFormData({...formData, date})}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Status</label>
+              <CustomSelect 
+                value={formData.status}
+                onChange={(val) => setFormData({...formData, status: val})}
+                options={STATUS_OPTIONS}
+              />
+            </div>
           </div>
 
           <button 
@@ -428,6 +562,7 @@ const IncomePage = () => {
             amount: Number(editFormData.amount),
             date: editFormData.date,
             type: editFormData.source,
+            status: editFormData.status,
             fullDate: editFormData.date // Keeping full date for future edits
           });
           setIsEditModalOpen(false);
@@ -456,7 +591,6 @@ const IncomePage = () => {
                 required
               />
             </div>
-
             <div className="space-y-2">
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Sumber</label>
               <input 
@@ -470,12 +604,22 @@ const IncomePage = () => {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Tanggal</label>
-            <CustomDatePicker 
-              value={editFormData.date}
-              onChange={(date) => setEditFormData({...editFormData, date})}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Tanggal</label>
+              <CustomDatePicker 
+                value={editFormData.date}
+                onChange={(date) => setEditFormData({...editFormData, date})}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Status</label>
+              <CustomSelect 
+                value={editFormData.status}
+                onChange={(val) => setEditFormData({...editFormData, status: val})}
+                options={STATUS_OPTIONS}
+              />
+            </div>
           </div>
 
           <div className="flex justify-between items-center pt-2">

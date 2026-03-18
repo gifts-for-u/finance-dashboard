@@ -1,13 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { PieChart, Plus, Minus, Tag, RefreshCw, Download, Smartphone } from 'lucide-react';
+import { PieChart } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const LoginPage = () => {
-  const { loginWithGoogle } = useAuth();
+  const { loginWithGoogle, user } = useAuth();
   const navigate = useNavigate();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  useEffect(() => {
+    document.title = "Login - Finance Tracker";
+    return () => {
+      document.title = "Finance Tracker";
+    };
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const handleLogin = async () => {
     setIsLoggingIn(true);
@@ -55,26 +68,6 @@ const LoginPage = () => {
           {isLoggingIn ? 'Memproses login...' : 'Masuk dengan Google'}
         </button>
 
-        <div className="mt-12">
-          <h3 className="text-center font-bold text-slate-700 dark:text-slate-300 mb-6 tracking-wide">FITUR APLIKASI</h3>
-          <div className="space-y-3">
-            {[
-              { icon: <Plus size={16} />, text: 'Catat pemasukan dan pengeluaran' },
-              { icon: <PieChart size={16} />, text: 'Visualisasi data keuangan' },
-              { icon: <Tag size={16} />, text: 'Kategorisasi pengeluaran' },
-              { icon: <RefreshCw size={16} />, text: 'Template pengeluaran rutin' },
-              { icon: <Download size={16} />, text: 'Export/import data' },
-              { icon: <Smartphone size={16} />, text: 'Responsif untuk semua perangkat' },
-            ].map((feature, idx) => (
-              <div key={idx} className="flex items-center gap-4 p-3 rounded-xl bg-slate-50 dark:bg-[#1e1e1e] border border-slate-100 dark:border-[#2f3547] text-slate-600 dark:text-slate-300 text-sm font-medium">
-                <div className="text-primary dark:text-[#3b82f6]">
-                  {feature.icon}
-                </div>
-                <span>{feature.text}</span>
-              </div>
-            ))}
-          </div>
-        </div>
 
       </div>
     </div>

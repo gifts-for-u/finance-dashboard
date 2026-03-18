@@ -84,7 +84,7 @@ const BudgetPage = () => {
             const totalTarget = budgets.reduce((acc, curr) => acc + curr.limit, 0);
             const totalActual = budgets.reduce((acc, budget) => {
                const actualSpent = expenses
-                .filter(ex => ex.categoryId === budget.category && (ex.status === 'Paid' || ex.status === 'Unpaid' || ex.status === 'Done'))
+                .filter(ex => ex.categoryId === budget.category && ex.status === 'done')
                 .reduce((a, c) => a + c.amount, 0);
                return acc + actualSpent;
             }, 0);
@@ -105,7 +105,7 @@ const BudgetPage = () => {
             actualTotal = expArr
               .filter(i => {
                 const s = (i.status || '').toLowerCase();
-                const isPaid = s === 'paid' || s === 'done' || s === 'unpaid';
+                const isPaid = s === 'done';
                 const limit = Number(budgetObj[i.category] || 0);
                 return isPaid && limit > 0;
               })
@@ -142,7 +142,7 @@ const BudgetPage = () => {
 
   const derivedCategories = budgets.map(budget => {
     const actualSpent = expenses
-      .filter(ex => ex.categoryId === budget.category && (ex.status === 'Paid' || ex.status === 'Unpaid' || ex.status === 'Done'))
+      .filter(ex => ex.categoryId === budget.category && ex.status === 'done')
       .reduce((acc, curr) => acc + curr.amount, 0);
     
     const percent = budget.limit ? Math.round((actualSpent / budget.limit) * 100) : 0;
@@ -185,10 +185,10 @@ const BudgetPage = () => {
   return (
     <Layout title="Ikhtisar Anggaran">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-        <StatCard icon={PieChartIcon} label="Total Anggaran" value={formatRupiah(totalBudgetLimit)} color="blue" subtext="Aktif: Okt 2023" />
-        <StatCard icon={Target} label="Terpakai Bulan Ini" value={formatRupiah(totalActualSpent)} color="red" subtext={`${overallPercent}% Terpakai`} />
-        <StatCard icon={ShieldCheck} label="Sisa Anggaran" value={formatRupiah(Math.max(0, totalBudgetLimit - totalActualSpent))} color="green" subtext={`Status: ${overallPercent > 100 ? 'Overlimit' : 'Aman'}`} />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-8 mb-8 relative">
+        <StatCard icon={PieChartIcon} label="Total Anggaran" value={formatRupiah(totalBudgetLimit)} color="blue" subtext="Aktif: Okt 2023" infoText="Total alokasi dana yang Anda anggarkan untuk membatasi pengeluaran pada bulan ini." />
+        <StatCard icon={Target} label="Terpakai Bulan Ini" value={formatRupiah(totalActualSpent)} color="red" subtext={`${overallPercent}% Terpakai`} infoText="Jumlah pengeluaran yang sudah terjadi dari seluruh kategori yang dianggarkan (berstatus &quot;LUNAS&quot;)." />
+        <StatCard icon={ShieldCheck} label="Sisa Anggaran" value={formatRupiah(Math.max(0, totalBudgetLimit - totalActualSpent))} color="green" subtext={`Status: ${overallPercent > 100 ? 'Overlimit' : 'Aman'}`} infoText="Sisa saldo atau sisa batas dari anggaran yang masih bisa digunakan pada bulan ini." />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">

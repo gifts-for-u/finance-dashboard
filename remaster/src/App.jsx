@@ -1,3 +1,4 @@
+import React, { useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { FinanceProvider } from './context/FinanceContext';
@@ -8,8 +9,66 @@ import IncomePage from './pages/IncomePage';
 import ExpensePage from './pages/ExpensePage';
 import BudgetPage from './pages/BudgetPage';
 import ReportsPage from './pages/ReportsPage';
-import { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import './App.css';
+
+const SessionManager = () => {
+  const { user, logout } = useAuth();
+  
+  const handleLogout = useCallback(() => {
+    if (user) {
+      logout();
+      toast.error('Sesi Anda telah berakhir karena tidak ada aktivitas selama 30 menit.', {
+        id: 'session-timeout',
+        duration: 5000,
+        icon: '⏳'
+      });
+    }
+  }, [user, logout]);
+
+  useEffect(() => {
+    if (!user) return; // Only track when logged in
+
+    let timeoutId;
+    
+    const resetTimeout = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      // 30 minutes = 30 * 60 * 1000 = 1800000 ms
+      timeoutId = setTimeout(handleLogout, 1800000);
+    };
+
+    // Initialize the timer
+    resetTimeout();
+
+    // Events to track user activity
+    const events = ['mousemove', 'keydown', 'scroll', 'click', 'touchstart'];
+    
+    // Throttle the reset slightly to avoid hammering clearTimeout
+    let lastResetTime = 0;
+    const activityHandler = () => {
+      const now = Date.now();
+      if (now - lastResetTime > 1000) { // reset at most once per second
+        resetTimeout();
+        lastResetTime = now;
+      }
+    };
+
+    // Attach listeners
+    events.forEach(event => {
+      window.addEventListener(event, activityHandler, { passive: true });
+    });
+
+    // Cleanup
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      events.forEach(event => {
+        window.removeEventListener(event, activityHandler);
+      });
+    };
+  }, [user, handleLogout]);
+
+  return null;
+};
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -34,6 +93,7 @@ function App() {
     <AuthProvider>
       <FinanceProvider>
         <Router>
+          <SessionManager />
           <ScrollToTop />
           <Toaster 
             position="bottom-right"
