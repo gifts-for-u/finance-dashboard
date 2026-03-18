@@ -40,7 +40,12 @@ import {
   Cell
 } from 'recharts';
 import { useFinance } from '../context/FinanceContext';
-import { CustomDatePicker } from '../components/CustomInputs';
+import { CustomDatePicker, CustomSelect } from '../components/CustomInputs';
+
+const STATUS_OPTIONS = [
+  { value: 'Paid', label: 'Sudah Dibayar' },
+  { value: 'Pending', label: 'Belum Dibayar' }
+];
 
 const SortTimeDesc = ({size}) => <div className="flex items-center gap-0.5"><Clock size={size}/><ArrowDown size={size-4} strokeWidth={3}/></div>;
 const SortTimeAsc = ({size}) => <div className="flex items-center gap-0.5"><Clock size={size}/><ArrowUp size={size-4} strokeWidth={3}/></div>;
@@ -279,7 +284,7 @@ const IncomePage = () => {
   return (
     <Layout title="Income Overview">
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-8 mb-8 relative">
         <StatCard icon={Wallet} label="Total Perkiraan Pemasukan" value={formatRupiah(totalIncome)} color="blue" trend={12.5} infoText="Jumlah seluruh pemasukan yang sudah dicatat, terlepas dari apakah uangnya sudah diterima atau belum." />
         <StatCard icon={Clock} label="Pending Invoices" value={formatRupiah(pendingTotal)} color="orange" subtext={`${pendingCount} Pending`} infoText="Jumlah piutang atau ekspektasi pemasukan yang statusnya masih menunggu pembayaran (belum lunas)." />
         <StatCard icon={TrendingUp} label="Total Pemasukan Aktual" value={formatRupiah(actualIncome)} color="green" infoText="Total pendapatan yang uangnya benar-benar sudah diterima dan ditandai &quot;LUNAS&quot; bulan ini." />
@@ -471,7 +476,7 @@ const IncomePage = () => {
             amount: Number(formData.amount),
             date: formData.date,
             type: formData.source, // Use source as the type/category subtext
-            status: 'Paid',
+            status: formData.status,
             icon: Wallet,
             color: 'bg-primary/10',
             iconColor: 'bg-primary/10 dark:bg-[#3b82f6]/10 text-primary dark:text-[#3b82f6]'
@@ -503,7 +508,6 @@ const IncomePage = () => {
                 required
               />
             </div>
-
             <div className="space-y-2">
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Sumber</label>
               <input 
@@ -517,12 +521,22 @@ const IncomePage = () => {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Tanggal</label>
-            <CustomDatePicker 
-              value={formData.date}
-              onChange={(date) => setFormData({...formData, date})}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Tanggal</label>
+              <CustomDatePicker 
+                value={formData.date}
+                onChange={(date) => setFormData({...formData, date})}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Status</label>
+              <CustomSelect 
+                value={formData.status}
+                onChange={(val) => setFormData({...formData, status: val})}
+                options={STATUS_OPTIONS}
+              />
+            </div>
           </div>
 
           <button 
@@ -548,6 +562,7 @@ const IncomePage = () => {
             amount: Number(editFormData.amount),
             date: editFormData.date,
             type: editFormData.source,
+            status: editFormData.status,
             fullDate: editFormData.date // Keeping full date for future edits
           });
           setIsEditModalOpen(false);
@@ -576,7 +591,6 @@ const IncomePage = () => {
                 required
               />
             </div>
-
             <div className="space-y-2">
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Sumber</label>
               <input 
@@ -590,12 +604,22 @@ const IncomePage = () => {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Tanggal</label>
-            <CustomDatePicker 
-              value={editFormData.date}
-              onChange={(date) => setEditFormData({...editFormData, date})}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Tanggal</label>
+              <CustomDatePicker 
+                value={editFormData.date}
+                onChange={(date) => setEditFormData({...editFormData, date})}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Status</label>
+              <CustomSelect 
+                value={editFormData.status}
+                onChange={(val) => setEditFormData({...editFormData, status: val})}
+                options={STATUS_OPTIONS}
+              />
+            </div>
           </div>
 
           <div className="flex justify-between items-center pt-2">

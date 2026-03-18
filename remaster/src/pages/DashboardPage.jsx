@@ -10,12 +10,12 @@ import {
   CircleDollarSign, 
   CreditCard, 
   PiggyBank, 
-  BarChart3,
   Search,
   Filter,
   Plus,
   Trash2,
   CheckCircle2,
+  TrendingUp,
   MoreVertical,
   Settings,
   ChevronRight,
@@ -169,26 +169,6 @@ const DashboardPage = () => {
     return null;
   };
 
-  // Derive Savings Rate
-  const totalSavingsExpense = expenses
-    .filter(ex => {
-      const catId = (ex.categoryId || '').toLowerCase();
-      const catName = (ex.categoryName || ex.category || '').toLowerCase();
-      return catId === 'savings' || catName.includes('tabungan') || catId.includes('tabungan');
-    })
-    .reduce((acc, curr) => acc + curr.amount, 0);
-  
-  const rawSavingsRate = totalIncome > 0 ? (totalSavingsExpense / totalIncome) * 100 : null;
-  const savingsRateDisplay = rawSavingsRate !== null ? `${rawSavingsRate.toFixed(0)}%` : '—';
-  
-  let savingsRateColor = 'slate';
-  if (rawSavingsRate !== null) {
-    if (rawSavingsRate >= 20) savingsRateColor = 'green';
-    else if (rawSavingsRate >= 10) savingsRateColor = 'orange';
-    else if (rawSavingsRate >= 0) savingsRateColor = 'blue';
-    else savingsRateColor = 'red';
-  }
-
   // Derive budget progress from actual data
   const budgetProgress = budgets.map(budget => {
     const actualSpent = expenses
@@ -226,13 +206,20 @@ const DashboardPage = () => {
   return (
     <Layout title="Finance Dashboard Overview">
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-8 mb-8 relative">
         <StatCard 
           icon={Wallet} 
           label="Total Perkiraan Pemasukan" 
           value={formatRupiah(totalIncome)} 
           color="blue" 
-          infoText="Jumlah seluruh pemasukan yang sudah kamu catat untuk bulan ini." 
+          infoText="Jumlah seluruh pemasukan yang sudah kamu catat untuk bulan ini, baik yang sudah dibayar maupun belum." 
+        />
+        <StatCard 
+          icon={TrendingUp} 
+          label="Total Pemasukan Aktual" 
+          value={formatRupiah(actualIncome)} 
+          color="green" 
+          infoText="Total uang yang benar-benar sudah diterima dan ditandai dengan status &quot;DIBAYAR&quot; atau &quot;LUNAS&quot;." 
         />
         <StatCard 
           icon={Receipt} 
@@ -249,25 +236,18 @@ const DashboardPage = () => {
           infoText="Total pengeluaran yang sudah ditandai selesai (status &quot;LUNAS&quot;) pada bulan ini." 
         />
         <StatCard 
-          icon={CircleDollarSign} 
-          label="Saldo Aktual" 
-          value={formatRupiah(actualIncome - actualExpense)} 
-          color="slate" 
-          infoText="Selisih antara total pemasukan dan pengeluaran aktual—menunjukkan uang yang benar-benar tersisa saat ini."
-        />
-        <StatCard 
           icon={PiggyBank} 
           label="Perkiraan Sisa Uang Bulan Ini" 
           value={formatRupiah(totalIncome - totalExpense)} 
           color="teal" 
-          infoText="Perkiraan sisa uang jika semua pengeluaran yang direncanakan terealisasi (pemasukan dikurangi seluruh pengeluaran)."
+          infoText="Perkiraan sisa uang jika semua pengeluaran dan pemasukan yang direncanakan terealisasi."
         />
         <StatCard 
-          icon={BarChart3} 
-          label="Rasio Tabungan" 
-          value={savingsRateDisplay} 
-          color={savingsRateColor} 
-          infoText="Persentase pemasukan yang dialokasikan ke kategori Tabungan dibandingkan total pemasukan bulan ini."
+          icon={CircleDollarSign} 
+          label="Saldo Aktual" 
+          value={formatRupiah(actualIncome - actualExpense)} 
+          color="slate" 
+          infoText="Selisih antara total pemasukan aktual dan pengeluaran aktual—menunjukkan uang tunai di tangan."
         />
       </div>
 

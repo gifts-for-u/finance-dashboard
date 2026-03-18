@@ -40,37 +40,37 @@ export const StatCard = ({ icon: Icon, label, value, subtext, color = 'blue', tr
   };
 
   return (
-    <div className={`bg-card text-card-foreground p-5 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:border-[#3f3f3f] flex flex-col gap-4 relative overflow-visible group hover:shadow-md transition-all duration-300 ${showInfo ? 'z-[60]' : 'z-10'}`}>
+    <div className={`bg-card text-card-foreground p-4 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:border-[#3f3f3f] flex flex-col gap-3 md:gap-4 relative overflow-visible group hover:shadow-md transition-all duration-300 ${showInfo ? 'z-[60]' : 'z-10'}`}>
       <div className="flex justify-between items-start z-10 w-full relative">
-        <div className={`p-4 rounded-2xl ${colorClasses[color]} transition-transform group-hover:scale-110 duration-300`}>
-          <Icon size={24} />
+        <div className={`p-3 md:p-4 rounded-xl md:rounded-2xl ${colorClasses[color]} transition-transform group-hover:scale-110 duration-300`}>
+          <Icon className="w-5 h-5 md:w-6 md:h-6" />
         </div>
       </div>
-      <div>
-        <div className="flex flex-wrap items-center gap-3">
-          <h3 className="text-2xl md:text-3xl font-bold font-mono text-slate-800 dark:text-white tracking-tight">{value}</h3>
+      <div className="flex-1 flex flex-col justify-end">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3">
+          <h3 className="text-lg sm:text-xl md:text-3xl font-bold font-mono text-slate-800 dark:text-white tracking-tight break-words">{value}</h3>
           {trend && (
-            <div className={`px-2.5 py-1 rounded-lg text-xs font-bold ${trend > 0 ? 'bg-green-500/10 text-green-600 dark:text-green-500' : 'bg-destructive/10 text-destructive'}`}>
+            <div className={`px-2 py-0.5 md:px-2.5 md:py-1 rounded-md md:rounded-lg text-[10px] md:text-xs font-bold whitespace-nowrap ${trend > 0 ? 'bg-green-500/10 text-green-600 dark:text-green-500' : 'bg-destructive/10 text-destructive'}`}>
               {trend > 0 ? '+' : ''}{trend}%
             </div>
           )}
         </div>
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1.5">{label}</p>
+        <p className="text-[9px] sm:text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mt-1 md:mt-1.5 line-clamp-2 md:line-clamp-1">{label}</p>
       </div>
-      {subtext && <p className="text-xs font-medium text-slate-400 z-10">{subtext}</p>}
+      {subtext && <p className="text-[10px] md:text-xs font-medium text-slate-400 z-10">{subtext}</p>}
       
       {infoText && (
         <div className="absolute top-2 right-2 md:top-4 md:right-4 z-20" ref={infoRef}>
           <button 
             type="button"
-            className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center cursor-pointer shadow-sm outline-none focus:outline-none transition-transform hover:scale-110 active:scale-95 ${solidColorClasses[color]}`}
+            className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center cursor-pointer shadow-sm outline-none focus:outline-none transition-transform hover:scale-110 active:scale-95 ${solidColorClasses[color]}`}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               setShowInfo(!showInfo);
             }}
           >
-            <Info size={14} strokeWidth={2.5} />
+            <Info className="w-3.5 h-3.5 md:w-4 md:h-4 stroke-[2.5]" />
           </button>
           
           {showInfo && (

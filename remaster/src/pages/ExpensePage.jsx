@@ -323,7 +323,7 @@ const ExpensePage = () => {
     <Layout title="Analisis Pengeluaran">
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-8 mb-8 relative">
         <StatCard icon={Receipt} label="Total Perkiraan Pengeluaran" value={formatRupiah(totalExpense)} color="red" trend={-8.2} infoText="Total semua pengeluaran yang direncanakan atau sudah diinput tanpa melihat status selesai." />
         <StatCard icon={AlertCircle} label="Tagihan Mendatang" value={formatRupiah(pendingTotal)} color="orange" subtext={`${pendingCount} Pending`} infoText="Jumlah total pengeluaran atau tagihan yang statusnya masih belum lunas (pending)." />
         <StatCard icon={CreditCard} label="Total Pengeluaran Aktual" value={formatRupiah(actualExpense)} color="purple" infoText="Total pengeluaran yang benar-benar sudah ditandai selesai (status &quot;LUNAS&quot;) pada bulan ini." />
