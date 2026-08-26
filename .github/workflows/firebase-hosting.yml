@@ -55,14 +55,17 @@ jobs:
           mkdir public
           cp -R remaster/dist/* public/
 
-      - name: Deploy to Firebase
+      - name: Deploy to Firebase Hosting
         id: deploy
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file }}
         shell: bash
         run: |
           set -euo pipefail
-          firebase deploy --only hosting,firestore:rules,firestore:indexes --project "$FIREBASE_PROJECT_ID" --json > deploy-output.json
+          if ! firebase deploy --only hosting --project "$FIREBASE_PROJECT_ID" --json > deploy-output.json; then
+            cat deploy-output.json || true
+            exit 1
+          fi
           cat deploy-output.json
           node <<'NODE' > deploy-metadata.txt
           const fs = require('fs');
