@@ -16,6 +16,7 @@ import {
   generateId,
   sanitizeBudgets,
   calculateBudgetProgress,
+  escapeHtml,
 } from "../state/derivations.js";
 import {
   saveMonthData,
@@ -35,11 +36,11 @@ function buildBudgetFormRow(category, value) {
 
   return `
     <div class="budget-form-item">
-      <label class="budget-form-label" for="budget-${category.id}">
-        <span class="budget-form-color" style="--budget-color: ${
+      <label class="budget-form-label" for="budget-${escapeHtml(category.id)}">
+        <span class="budget-form-color" style="--budget-color: ${escapeHtml(
           category.color || "var(--primary-color)"
-        }"></span>
-        <span class="budget-form-name">${category.name}</span>
+        )}"></span>
+        <span class="budget-form-name">${escapeHtml(category.name)}</span>
       </label>
       <div class="budget-form-input">
         <span class="budget-form-prefix">Rp</span>
@@ -47,9 +48,9 @@ function buildBudgetFormRow(category, value) {
           type="number"
           min="0"
           step="1000"
-          id="budget-${category.id}"
+          id="budget-${escapeHtml(category.id)}"
           class="form-input budget-input"
-          data-budget-category="${category.id}"
+          data-budget-category="${escapeHtml(category.id)}"
           value="${normalizedValue > 0 ? normalizedValue : ""}"
           placeholder="0"
         />

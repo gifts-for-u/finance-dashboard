@@ -175,15 +175,32 @@ const ReportsPage = () => {
 
   return (
     <Layout title="Laporan Keuangan">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-8 mb-8 relative">
-        <StatCard icon={PieChartIcon} label="Total Simpanan All-Time" value={formatRupiah(totalLifeTimeSavings)} color="blue" infoText="Akumulasi seluruh pemasukan aktual dikurangi pengeluaran aktual dari awal mula Anda mencatat hingga saat ini." />
-        <StatCard icon={TrendingUp} label={`Arus Kas Bersih (${latestMonth.name.toUpperCase()})`} value={formatRupiah(latestMonth.balance)} color={latestMonth.balance >= 0 ? "green" : "red"} subtext={latestMonth.balance >= 0 ? "Surplus" : "Defisit"} infoText="Uang bersih (pemasukan - pengeluaran aktual) secara khusus pada bulan analisis sebelumnya." />
-        <StatCard icon={TrendingDown} label="Tingkat Tabungan All-Time" value={`${savingRate}%`} color="purple" infoText="Persentase dari total seluruh pendapatan yang berhasil dipertahankan sebagai simpanan (tidak dibelanjakan)." />
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-8 mb-8 relative">
+        <StatCard 
+          icon={PieChartIcon} 
+          label="Total Simpanan All-Time" 
+          value={formatRupiah(totalLifeTimeSavings)} 
+          color="blue" 
+          infoText="Akumulasi seluruh pemasukan aktual dikurangi pengeluaran aktual dari awal mula Anda mencatat hingga saat ini." 
+        />
+        <StatCard 
+          icon={TrendingUp} 
+          label={
+            <span>
+              Arus Kas Bersih ({latestMonth.name.toUpperCase()}) <span className="inline-block mx-1 opacity-60">•</span> {latestMonth.balance >= 0 ? "Surplus" : "Defisit"}
+            </span>
+          } 
+          rawLabel={`Arus Kas Bersih (${latestMonth.name.toUpperCase()})`}
+          value={formatRupiah(latestMonth.balance)} 
+          color={latestMonth.balance >= 0 ? "green" : "red"} 
+          infoText="Uang bersih (pemasukan - pengeluaran aktual) secara khusus pada bulan analisis sebelumnya." 
+        />
         <StatCard 
           icon={BarChart3} 
           label="Rasio Tabungan Bulan Ini" 
           value={savingsRateDisplay} 
           color={savingsRateColor} 
+          className="col-span-2 lg:col-span-1"
           infoText="Persentase pemasukan aktual yang dialokasikan ke kategori Tabungan dibandingkan total pemasukan aktual bulan ini."
         />
       </div>

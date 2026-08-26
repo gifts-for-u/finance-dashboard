@@ -42,7 +42,7 @@ The repository includes a GitHub Actions workflow that automatically deploys the
 
 ### 4. Enable GitHub Actions
 
-Ensure GitHub Actions is enabled for the repository. Once enabled, every push to `main` triggers the deployment workflow defined in [`.github/workflows/firebase-hosting.yml`](.github/workflows/firebase-hosting.yml).
+Ensure GitHub Actions is enabled for the repository. Once enabled, every push triggers the deployment workflow defined in [`.github/workflows/firebase-hosting.yml`](.github/workflows/firebase-hosting.yml).
 
 The workflow performs the following steps:
 
@@ -50,9 +50,10 @@ The workflow performs the following steps:
 2. Sets up Node.js 20 for consistent CLI behaviour.
 3. Writes the `FIREBASE_SERVICE_ACCOUNT` secret to a temporary credentials file and points the Firebase CLI at it.
 4. Installs the Firebase CLI globally with `npm install -g firebase-tools`.
-5. Runs `npm run build` if a `package.json` is present (static sites without a build step simply skip it).
-6. Calls `firebase deploy --only hosting --project finance-dashboard-10nfl` to publish the latest assets.
-7. Publishes a run summary that links to the deployed site and release in the Firebase console.
+5. Runs security audit check (`npm audit --audit-level=high`) in the `remaster/` workspace.
+6. Builds the React app inside `remaster/` and prepares hosting output.
+7. Calls `firebase deploy --only hosting,firestore:rules,firestore:indexes --project "$FIREBASE_PROJECT_ID"` to deploy hosting assets along with verified Firestore Security Rules and indexes.
+8. Publishes a run summary that links to the deployed site and release in the Firebase console.
 
 ### 5. Monitor deployments
 

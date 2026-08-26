@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Info } from 'lucide-react';
+import { Info, X } from 'lucide-react';
 
-export const StatCard = ({ icon: Icon, label, value, subtext, color = 'blue', trend, infoText }) => {
+export const StatCard = ({ icon: Icon, label, rawLabel, value, subtext, color = 'blue', trend, infoText, className = "" }) => {
   const [showInfo, setShowInfo] = useState(false);
   const infoRef = useRef(null);
 
@@ -39,60 +39,91 @@ export const StatCard = ({ icon: Icon, label, value, subtext, color = 'blue', tr
     teal: 'bg-teal-600 dark:bg-teal-500 text-white',
   };
 
-  return (
-    <div className={`bg-card text-card-foreground p-4 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:border-[#3f3f3f] flex flex-col gap-3 md:gap-4 relative overflow-visible group hover:shadow-md transition-all duration-300 ${showInfo ? 'z-[60]' : 'z-10'}`}>
-      <div className="flex justify-between items-start z-10 w-full relative">
-        <div className={`p-3 md:p-4 rounded-xl md:rounded-2xl ${colorClasses[color]} transition-transform group-hover:scale-110 duration-300`}>
-          <Icon className="w-5 h-5 md:w-6 md:h-6" />
-        </div>
-      </div>
-      <div className="flex-1 flex flex-col justify-end">
-        <div className="flex flex-wrap items-center gap-2 md:gap-3">
-          <h3 className="text-lg sm:text-xl md:text-3xl font-bold font-mono text-slate-800 dark:text-white tracking-tight break-words">{value}</h3>
-          {trend && (
-            <div className={`px-2 py-0.5 md:px-2.5 md:py-1 rounded-md md:rounded-lg text-[10px] md:text-xs font-bold whitespace-nowrap ${trend > 0 ? 'bg-green-500/10 text-green-600 dark:text-green-500' : 'bg-destructive/10 text-destructive'}`}>
-              {trend > 0 ? '+' : ''}{trend}%
-            </div>
-          )}
-        </div>
-        <p className="text-[9px] sm:text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mt-1 md:mt-1.5 line-clamp-2 md:line-clamp-1">{label}</p>
-      </div>
-      {subtext && <p className="text-[10px] md:text-xs font-medium text-slate-400 z-10">{subtext}</p>}
-      
-      {infoText && (
-        <div className="absolute top-2 right-2 md:top-4 md:right-4 z-20" ref={infoRef}>
-          <button 
-            type="button"
-            className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center cursor-pointer shadow-sm outline-none focus:outline-none transition-transform hover:scale-110 active:scale-95 ${solidColorClasses[color]}`}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setShowInfo(!showInfo);
-            }}
-          >
-            <Info className="w-3.5 h-3.5 md:w-4 md:h-4 stroke-[2.5]" />
-          </button>
-          
-          {showInfo && (
-            <div className="absolute top-full right-0 mt-4 w-64 md:w-72 bg-white dark:bg-[#2a2a2a] rounded-3xl p-6 shadow-[0_10px_40px_rgba(0,0,0,0.15)] dark:shadow-[#000000_0px_10px_40px] border border-slate-100 dark:border-[#3f3f3f] animate-pop z-50 origin-top-right">
-              <h4 className={`text-sm font-black tracking-widest uppercase mb-3 ${colorClasses[color].split(' ')[2]}`}>{label}</h4>
-              <div className="w-full h-[1px] bg-slate-100 dark:bg-[#3f3f3f] mb-4"></div>
-              <p className="text-sm font-medium text-slate-600 dark:text-slate-300 leading-relaxed text-left">{infoText}</p>
-            </div>
-          )}
-        </div>
-      )}
+  const displayTitle = rawLabel || (typeof label === 'string' ? label : 'Informasi');
 
+  return (
+    <div className={`bg-card text-card-foreground p-4 sm:p-5 md:p-7 rounded-2xl shadow-sm border border-slate-100 dark:border-[#3f3f3f] flex flex-col justify-between gap-3 md:gap-4 relative overflow-visible group hover:shadow-md transition-all duration-300 min-h-[145px] sm:min-h-[160px] md:min-h-[190px] ${showInfo ? 'z-[75]' : 'z-[1]'} ${className}`}>
+      <div className="flex justify-between items-start z-10 w-full relative">
+        <div className={`p-2.5 sm:p-3 md:p-4 rounded-xl md:rounded-2xl ${colorClasses[color]} transition-transform group-hover:scale-105 duration-300`}>
+          <Icon className="w-5 h-5 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+        </div>
+
+        {infoText && (
+          <div className="relative" ref={infoRef}>
+            <button 
+              type="button"
+              className={`w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center cursor-pointer shadow-sm outline-none focus:outline-none transition-transform hover:scale-110 active:scale-95 ${solidColorClasses[color]}`}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowInfo(!showInfo);
+              }}
+              aria-label="Informasi"
+            >
+              <Info className="w-3.5 h-3.5 md:w-4 md:h-4 stroke-[2.5]" />
+            </button>
+            
+            {showInfo && (
+              <>
+                <div 
+                  className="fixed inset-0 z-[70] bg-black/40 sm:bg-black/10 dark:bg-black/60 sm:dark:bg-black/30 backdrop-blur-sm sm:backdrop-blur-[1px] cursor-default"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowInfo(false);
+                  }}
+                />
+                <div className="fixed sm:absolute top-1/2 sm:top-full left-1/2 sm:left-auto sm:right-0 -translate-x-1/2 sm:translate-x-0 -translate-y-1/2 sm:translate-y-0 w-[88vw] max-w-xs sm:max-w-none sm:w-72 md:w-80 mt-0 sm:mt-3 bg-white dark:bg-[#2a2a2a] rounded-3xl p-5 sm:p-6 shadow-2xl sm:shadow-[0_10px_40px_rgba(0,0,0,0.2)] dark:shadow-[#000000_0px_10px_40px] border border-slate-100 dark:border-[#3f3f3f] animate-pop z-[80] origin-center sm:origin-top-right">
+                  <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
+                    <h4 className={`text-xs sm:text-sm font-black tracking-widest uppercase ${colorClasses[color].split(' ')[2]}`}>{displayTitle}</h4>
+                    <button
+                      type="button"
+                      onClick={() => setShowInfo(false)}
+                      className="p-1 -mr-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                      aria-label="Tutup"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="w-full h-[1px] bg-slate-100 dark:bg-[#3f3f3f] mb-3 sm:mb-4"></div>
+                  <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 leading-relaxed text-left">{infoText}</p>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="flex-1 flex flex-col justify-end mt-1">
+        <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2 md:gap-3">
+          <h3 className="text-base sm:text-lg md:text-2xl lg:text-3xl font-bold font-mono text-slate-800 dark:text-white tracking-tight break-all sm:break-normal">
+            {value}
+          </h3>
+          {trend !== undefined && trend !== null && (
+            <div className={`px-1.5 py-0.5 sm:px-2 sm:py-0.5 md:px-2.5 md:py-1 rounded-md md:rounded-lg text-[9px] sm:text-[10px] md:text-xs font-bold whitespace-nowrap ${Number(trend) > 0 ? 'bg-green-500/10 text-green-600 dark:text-green-500' : 'bg-destructive/10 text-destructive'}`}>
+              {Number(trend) > 0 ? '+' : ''}{trend}%
+            </div>
+          )}
+        </div>
+        <div className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider mt-1 md:mt-1.5 line-clamp-2">
+          {label}
+        </div>
+        {subtext && (
+          <p className="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 mt-1 z-10">
+            {subtext}
+          </p>
+        )}
+      </div>
     </div>
   );
 };
 
 export const ChartCard = ({ title, extra, children, className = "" }) => {
   return (
-    <div className={`bg-card text-card-foreground p-5 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:border-[#3f3f3f] flex flex-col ${className}`}>
+    <div className={`bg-card text-card-foreground p-4 sm:p-5 md:p-8 rounded-2xl shadow-sm border border-slate-100 dark:border-[#3f3f3f] flex flex-col ${className}`}>
       {title && (
-        <div className="flex justify-between items-center mb-8">
-          <h3 className="text-xl font-bold text-slate-800">{title}</h3>
+        <div className="flex justify-between items-center mb-4 sm:mb-6 md:mb-8">
+          <h3 className="text-base sm:text-lg md:text-xl font-bold text-slate-800 dark:text-white">{title}</h3>
           {extra && <div>{extra}</div>}
         </div>
       )}

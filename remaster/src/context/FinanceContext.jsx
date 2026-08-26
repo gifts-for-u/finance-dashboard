@@ -264,53 +264,79 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
+  // Input validation helper
+  const validateAmount = (amount) => {
+    const num = Number(amount);
+    if (!Number.isFinite(num) || isNaN(num) || num <= 0) {
+      throw new Error("Nominal harus berupa angka valid lebih dari 0.");
+    }
+    if (num > 1000000000000) {
+      throw new Error("Nominal melebihi batas maksimum.");
+    }
+    return num;
+  };
+
   // --- INCOMES ---
   const addIncome = async (income) => {
-    const payload = {
-      ...income,
-      source: income.title || income.source || 'Pemasukan',
-      amount: Number(income.amount),
-      id: generateId(),
-      date: parseDateString(income.date),
-    };
-    delete payload.icon;
-    delete payload.title;
-    delete payload.hex;
-    const newArr = [...incomes.map(i => {
-      const clean = {...i};
-      delete clean.icon; delete clean.hex; delete clean.title;
-      if (clean.date && typeof clean.date === 'string') clean.date = parseDateString(clean.date);
-      return clean;
-    }), payload];
-
     try {
+      const validAmount = validateAmount(income.amount);
+      const sourceName = (income.title || income.source || 'Pemasukan').trim().slice(0, 100);
+      const descriptionText = (income.description || '').trim().slice(0, 255);
+
+      const payload = {
+        ...income,
+        source: sourceName,
+        description: descriptionText,
+        amount: validAmount,
+        id: generateId(),
+        date: parseDateString(income.date),
+      };
+      delete payload.icon;
+      delete payload.title;
+      delete payload.hex;
+      const newArr = [...incomes.map(i => {
+        const clean = {...i};
+        delete clean.icon; delete clean.hex; delete clean.title;
+        if (clean.date && typeof clean.date === 'string') clean.date = parseDateString(clean.date);
+        return clean;
+      }), payload];
+
       await updateMonthDoc({ incomes: newArr });
       toast.success("Pemasukan berhasil ditambahkan!");
-    } catch { toast.error("Gagal menambah pemasukan."); }
+    } catch (err) {
+      toast.error(err.message || "Gagal menambah pemasukan.");
+    }
   };
 
   const updateIncome = async (id, updatedIncome) => {
-    const newArr = incomes.map(i => {
-      const clean = {...i};
-      delete clean.icon; delete clean.title; delete clean.hex;
-      if (clean.date && typeof clean.date === 'string') clean.date = parseDateString(clean.date);
-      if (clean.id === id) {
-        const updated = { 
-          ...clean, 
-          ...updatedIncome, 
-          source: updatedIncome.title || updatedIncome.source || clean.source, 
-          amount: Number(updatedIncome.amount || clean.amount),
-          date: updatedIncome.date ? parseDateString(updatedIncome.date) : clean.date
-        };
-        delete updated.icon; delete updated.title; delete updated.hex;
-        return updated;
-      }
-      return clean;
-    });
     try {
+      const newArr = incomes.map(i => {
+        const clean = {...i};
+        delete clean.icon; delete clean.title; delete clean.hex;
+        if (clean.date && typeof clean.date === 'string') clean.date = parseDateString(clean.date);
+        if (clean.id === id) {
+          const rawAmount = updatedIncome.amount !== undefined ? updatedIncome.amount : clean.amount;
+          const validAmount = validateAmount(rawAmount);
+          const sourceName = (updatedIncome.title || updatedIncome.source || clean.source || 'Pemasukan').trim().slice(0, 100);
+
+          const updated = { 
+            ...clean, 
+            ...updatedIncome, 
+            source: sourceName, 
+            amount: validAmount,
+            date: updatedIncome.date ? parseDateString(updatedIncome.date) : clean.date
+          };
+          delete updated.icon; delete updated.title; delete updated.hex;
+          return updated;
+        }
+        return clean;
+      });
+
       await updateMonthDoc({ incomes: newArr });
       toast.success("Pemasukan diupdate!");
-    } catch { toast.error("Gagal update pemasukan."); }
+    } catch (err) {
+      toast.error(err.message || "Gagal update pemasukan.");
+    }
   };
 
   const deleteIncome = async (id) => {
@@ -328,72 +354,75 @@ export const FinanceProvider = ({ children }) => {
 
   // --- EXPENSES ---
   const addExpense = async (expense) => {
-    // Expense schema map UI input to Legacy Field
-    // UI gives: title, amount, category (name string), date
-    // Legacy wants: amount, category (id string), date, description, isRecurring, id, status
-    
-    // Find category ID based on the selected Name in UI
-    const catObj = expenseCategories.find(c => c.name === expense.category);
-    const catId = catObj ? catObj.id : (expense.category || "lainnya").toLowerCase().replace(/\s+/g, '-');
-
-    const payload = {
-      amount: Number(expense.amount),
-      category: catId,
-      date: parseDateString(expense.date),
-      description: expense.title || expense.description || 'Pengeluaran',
-      isRecurring: false,
-      id: generateId(),
-      status: (expense.status || 'done').toLowerCase()
-    };
-
-    const newArr = [...expenses.map(e => {
-      const clean = {...e};
-      clean.category = e.categoryId || e.category; // Restore Category ID!!!
-      if (clean.status) clean.status = clean.status.toLowerCase(); // Consistent DB lowercasing
-      delete clean.icon; delete clean.hex; delete clean.title; delete clean.categoryName; delete clean.categoryId;
-      if (clean.date && typeof clean.date === 'string') clean.date = parseDateString(clean.date);
-      return clean;
-    }), payload];
-
     try {
+      const validAmount = validateAmount(expense.amount);
+      const catObj = expenseCategories.find(c => c.name === expense.category);
+      const catId = catObj ? catObj.id : (expense.category || "lainnya").toLowerCase().replace(/\s+/g, '-');
+      const descText = (expense.title || expense.description || 'Pengeluaran').trim().slice(0, 255);
+
+      const payload = {
+        amount: validAmount,
+        category: catId,
+        date: parseDateString(expense.date),
+        description: descText,
+        isRecurring: false,
+        id: generateId(),
+        status: (expense.status || 'done').toLowerCase()
+      };
+
+      const newArr = [...expenses.map(e => {
+        const clean = {...e};
+        clean.category = e.categoryId || e.category;
+        if (clean.status) clean.status = clean.status.toLowerCase();
+        delete clean.icon; delete clean.hex; delete clean.title; delete clean.categoryName; delete clean.categoryId;
+        if (clean.date && typeof clean.date === 'string') clean.date = parseDateString(clean.date);
+        return clean;
+      }), payload];
+
       await updateMonthDoc({ expenses: newArr });
       toast.success("Pengeluaran ditambahkan!");
-    } catch { toast.error("Gagal tambah pengeluaran."); }
+    } catch (err) {
+      toast.error(err.message || "Gagal tambah pengeluaran.");
+    }
   };
 
   const updateExpense = async (id, updatedExpense) => {
-    const newArr = expenses.map(e => {
-      const clean = {...e};
-      clean.category = e.categoryId || e.category; // Restore Category ID
-      if (clean.status) clean.status = clean.status.toLowerCase();
-      delete clean.icon; delete clean.hex; delete clean.title; delete clean.categoryName; delete clean.categoryId;
-      if (clean.date && typeof clean.date === 'string') clean.date = parseDateString(clean.date);
-      
-      if (clean.id === id) {
-        const catObj = expenseCategories.find(c => c.name === updatedExpense.category);
-        const catId = catObj ? catObj.id : clean.category;
-        
-        let writeStatus = clean.status;
-        if (updatedExpense.status) {
-          writeStatus = updatedExpense.status.toLowerCase();
-        }
-
-        return { 
-          ...clean, 
-          amount: Number(updatedExpense.amount || clean.amount),
-          description: updatedExpense.title || clean.description,
-          category: catId,
-          status: writeStatus,
-          date: updatedExpense.date ? parseDateString(updatedExpense.date) : clean.date
-        };
-      }
-      return clean;
-    });
-
     try {
+      const newArr = expenses.map(e => {
+        const clean = {...e};
+        clean.category = e.categoryId || e.category;
+        if (clean.status) clean.status = clean.status.toLowerCase();
+        delete clean.icon; delete clean.hex; delete clean.title; delete clean.categoryName; delete clean.categoryId;
+        if (clean.date && typeof clean.date === 'string') clean.date = parseDateString(clean.date);
+        
+        if (clean.id === id) {
+          const rawAmount = updatedExpense.amount !== undefined ? updatedExpense.amount : clean.amount;
+          const validAmount = validateAmount(rawAmount);
+          const catObj = expenseCategories.find(c => c.name === updatedExpense.category);
+          const catId = catObj ? catObj.id : clean.category;
+          
+          let writeStatus = clean.status;
+          if (updatedExpense.status) {
+            writeStatus = updatedExpense.status.toLowerCase();
+          }
+
+          return { 
+            ...clean, 
+            amount: validAmount,
+            description: (updatedExpense.title || clean.description || 'Pengeluaran').trim().slice(0, 255),
+            category: catId,
+            status: writeStatus,
+            date: updatedExpense.date ? parseDateString(updatedExpense.date) : clean.date
+          };
+        }
+        return clean;
+      });
+
       await updateMonthDoc({ expenses: newArr });
       toast.success("Pengeluaran diupdate!");
-    } catch { toast.error("Gagal update."); }
+    } catch (err) {
+      toast.error(err.message || "Gagal update.");
+    }
   };
 
   const deleteExpense = async (id) => {
@@ -422,34 +451,50 @@ export const FinanceProvider = ({ children }) => {
 
   // --- CATEGORIES ---
   const addExpenseCategory = async (category) => {
-    const id = category.name.toLowerCase().replace(/\s+/g, '-');
-    const payload = {
-      color: category.color || '#94A3B8',
-      icon: category.icon || 'Tag',
-      id: id,
-      isDefault: false,
-      name: category.name
-    };
-    const newArr = [...expenseCategories, payload];
     try {
+      const catName = (category.name || '').trim();
+      if (!catName) {
+        throw new Error("Nama kategori tidak boleh kosong.");
+      }
+      const id = catName.toLowerCase().replace(/\s+/g, '-');
+      const payload = {
+        color: category.color || '#94A3B8',
+        icon: category.icon || 'Tag',
+        id: id,
+        isDefault: false,
+        name: catName.slice(0, 50)
+      };
+      const newArr = [...expenseCategories, payload];
       await updateCategoriesDoc(newArr);
       toast.success("Kategori ditambahkan!");
-    } catch { toast.error("Gagal ditambah."); }
+    } catch (err) {
+      toast.error(err.message || "Gagal ditambah.");
+    }
   };
 
   const updateExpenseCategory = async (id, updatedCategory) => {
-    const cat = expenseCategories.find(c => c.id === id);
-    
-    const newArr = expenseCategories.map(c => {
-      if (c.id === id) {
-        return { ...c, color: updatedCategory.color || c.color, name: updatedCategory.name || c.name, icon: updatedCategory.icon || c.icon };
-      }
-      return c;
-    });
     try {
+      const newArr = expenseCategories.map(c => {
+        if (c.id === id) {
+          const newName = (updatedCategory.name !== undefined ? updatedCategory.name : c.name).trim();
+          if (!newName) {
+            throw new Error("Nama kategori tidak boleh kosong.");
+          }
+          return {
+            ...c,
+            color: updatedCategory.color || c.color,
+            name: newName.slice(0, 50),
+            icon: updatedCategory.icon || c.icon
+          };
+        }
+        return c;
+      });
+
       await updateCategoriesDoc(newArr);
       toast.success("Kategori diupdate!");
-    } catch { toast.error("Gagal update."); }
+    } catch (err) {
+      toast.error(err.message || "Gagal update.");
+    }
   };
 
   const deleteExpenseCategory = async (id) => {
@@ -465,16 +510,24 @@ export const FinanceProvider = ({ children }) => {
 
   // --- BUDGETS ---
   const addBudget = async ({ category, limit }) => {
-    // category can be name or id depending on what UI passes, safely resolve to ID
-    const catObj = expenseCategories.find(c => c.name === category || c.id === category);
-    const catId = catObj ? catObj.id : category.toLowerCase().replace(/\s+/g, '-');
-
     try {
+      const numLimit = Number(limit);
+      if (!Number.isFinite(numLimit) || isNaN(numLimit) || numLimit < 0) {
+        throw new Error("Target budget harus berupa angka valid 0 atau lebih.");
+      }
+      if (numLimit > 1000000000000) {
+        throw new Error("Target budget melebihi batas maksimum.");
+      }
+
+      // category can be name or id depending on what UI passes, safely resolve to ID
+      const catObj = expenseCategories.find(c => c.name === category || c.id === category);
+      const catId = catObj ? catObj.id : category.toLowerCase().replace(/\s+/g, '-');
+
       // Firebase {merge:true} automatically merges nested fields inside `budgets`
-      await updateMonthDoc({ budgets: { [catId]: Number(limit) } });
+      await updateMonthDoc({ budgets: { [catId]: numLimit } });
       toast.success("Anggaran berhasil ditetapkan!");
-    } catch {
-      toast.error("Gagal menetapkan anggaran.");
+    } catch (err) {
+      toast.error(err.message || "Gagal menetapkan anggaran.");
     }
   };
 

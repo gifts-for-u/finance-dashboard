@@ -323,17 +323,42 @@ const ExpensePage = () => {
     <Layout title="Analisis Pengeluaran">
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-8 mb-8 relative">
-        <StatCard icon={Receipt} label="Total Perkiraan Pengeluaran" value={formatRupiah(totalExpense)} color="red" trend={-8.2} infoText="Total semua pengeluaran yang direncanakan atau sudah diinput tanpa melihat status selesai." />
-        <StatCard icon={AlertCircle} label="Tagihan Mendatang" value={formatRupiah(pendingTotal)} color="orange" subtext={`${pendingCount} Pending`} infoText="Jumlah total pengeluaran atau tagihan yang statusnya masih belum lunas (pending)." />
-        <StatCard icon={CreditCard} label="Total Pengeluaran Aktual" value={formatRupiah(actualExpense)} color="purple" infoText="Total pengeluaran yang benar-benar sudah ditandai selesai (status &quot;LUNAS&quot;) pada bulan ini." />
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-8 mb-8 relative">
+        <StatCard 
+          icon={Receipt} 
+          label="Total Perkiraan Pengeluaran" 
+          value={formatRupiah(totalExpense)} 
+          color="red" 
+          trend={-8.2} 
+          infoText="Total semua pengeluaran yang direncanakan atau sudah diinput tanpa melihat status selesai." 
+        />
+        <StatCard 
+          icon={AlertCircle} 
+          label={
+            <span>
+              Pending Bills <span className="inline-block mx-1 opacity-60">•</span> {pendingCount} Pending
+            </span>
+          } 
+          rawLabel="Pending Bills"
+          value={formatRupiah(pendingTotal)} 
+          color="orange" 
+          infoText="Jumlah total tagihan atau pengeluaran yang statusnya masih belum lunas (pending)." 
+        />
+        <StatCard 
+          icon={CreditCard} 
+          label="Total Pengeluaran Aktual" 
+          value={formatRupiah(actualExpense)} 
+          color="purple" 
+          className="col-span-2 lg:col-span-1"
+          infoText="Total pengeluaran yang benar-benar sudah ditandai selesai (status &quot;LUNAS&quot;) pada bulan ini." 
+        />
       </div>
 
       <div className="space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 items-stretch">
           {/* Left Column: Expense Trend */}
           <div className="lg:col-span-2">
-            <ChartCard title="Tren Pengeluaran Bulanan" className="h-[650px]">
+            <ChartCard title="Tren Pengeluaran Bulanan" className="h-[480px] sm:h-[550px] lg:h-[650px]">
               <div className="h-full w-full pb-8">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={trendData}>
@@ -378,7 +403,7 @@ const ExpensePage = () => {
           <div className="lg:col-span-1">
             <ChartCard 
               title="Pengeluaran Terbaru"
-              className="h-[650px]"
+              className="h-[480px] sm:h-[550px] lg:h-[650px]"
               extra={
                 <button 
                   onClick={handleAddClick}
@@ -462,14 +487,14 @@ const ExpensePage = () => {
           extra={
             <button 
               onClick={() => setIsCatManagerOpen(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-transparent text-[#1E56D1] dark:text-[#3b82f6] rounded-2xl font-bold border border-transparent hover:border-primary/50 dark:hover:border-primary hover:bg-primary/5 dark:hover:bg-[#3b82f6]/10 transition-all cursor-pointer active:scale-95 text-sm whitespace-nowrap"
+              className="flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3 bg-transparent text-[#1E56D1] dark:text-[#3b82f6] rounded-xl sm:rounded-2xl font-bold border border-transparent hover:border-primary/50 dark:hover:border-primary hover:bg-primary/5 dark:hover:bg-[#3b82f6]/10 transition-all cursor-pointer active:scale-95 text-xs sm:text-sm whitespace-nowrap"
             >
-              <Tag size={18} /> Kelola Kategori
+              <Tag size={16} /> Kelola Kategori
             </button>
           }
         >
-          <div className="flex flex-col lg:flex-row items-center justify-center gap-16 py-8">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-12 w-full max-w-5xl">
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-8 md:gap-16 py-4 sm:py-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 sm:gap-8 md:gap-12 w-full max-w-5xl justify-items-center">
               {categoryData.map((cat, idx) => (
                 <div key={idx} className="flex flex-col items-center gap-5 group">
                   <div className="h-32 w-32 relative transition-transform group-hover:scale-110 duration-300">

@@ -1,3 +1,11 @@
+// Firebase configuration loader
+// Priority:
+// 1. Environment variables (Vite import.meta.env)
+// 2. Window runtime config (window.__FIREBASE_CONFIG__ or window.firebaseConfig)
+// 3. HTML meta tag (meta[name="firebase-config"])
+// 4. Firebase Hosting init endpoint (/__/firebase/init.json)
+// 5. Default project configuration fallback
+
 const FALLBACK_CONFIG = {
   apiKey: "AIzaSyDxmGNxzxbX8UGBm82jn3PmzhiGq0GQT7Y",
   authDomain: "finance-dashboard-10nfl.firebaseapp.com",
@@ -8,9 +16,24 @@ const FALLBACK_CONFIG = {
 };
 
 const CONFIG_SOURCES = [
-  () => window.__FIREBASE_CONFIG__,
-  () => window.firebaseConfig,
   () => {
+    if (typeof import.meta !== "undefined" && import.meta.env?.VITE_FIREBASE_API_KEY) {
+      return {
+        apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+        authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+        projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+        storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+        appId: import.meta.env.VITE_FIREBASE_APP_ID,
+        measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+      };
+    }
+    return null;
+  },
+  () => (typeof window !== "undefined" ? window.__FIREBASE_CONFIG__ : null),
+  () => (typeof window !== "undefined" ? window.firebaseConfig : null),
+  () => {
+    if (typeof document === "undefined") return null;
     const meta = document.querySelector('meta[name="firebase-config"]');
     if (!meta?.content) return null;
     try {
@@ -78,7 +101,7 @@ async function resolveFirebaseConfig() {
   }
 
   console.warn(
-    "Falling back to default Firebase configuration. Update public/firebase-config.js or provide a runtime config.",
+    "Using default project Firebase configuration. To override for local dev, configure .env (VITE_FIREBASE_API_KEY, etc.) or provide runtime config.",
   );
   return { ...FALLBACK_CONFIG };
 }

@@ -1,4 +1,8 @@
-// Session Manager for handling user sessions and auto-logout
+/**
+ * Session Manager for handling user sessions and client-side auto-logout.
+ * NOTE: This is a client-side UX inactivity helper. Real authentication security and authorization
+ * boundaries are enforced by Firebase Authentication tokens and Firestore Security Rules.
+ */
 class SessionManager {
   constructor() {
     this.INACTIVITY_TIMEOUT = 60 * 60 * 1000; // 1 hour in milliseconds

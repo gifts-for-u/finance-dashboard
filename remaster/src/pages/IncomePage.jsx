@@ -284,17 +284,42 @@ const IncomePage = () => {
   return (
     <Layout title="Income Overview">
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-8 mb-8 relative">
-        <StatCard icon={Wallet} label="Total Perkiraan Pemasukan" value={formatRupiah(totalIncome)} color="blue" trend={12.5} infoText="Jumlah seluruh pemasukan yang sudah dicatat, terlepas dari apakah uangnya sudah diterima atau belum." />
-        <StatCard icon={Clock} label="Pending Invoices" value={formatRupiah(pendingTotal)} color="orange" subtext={`${pendingCount} Pending`} infoText="Jumlah piutang atau ekspektasi pemasukan yang statusnya masih menunggu pembayaran (belum lunas)." />
-        <StatCard icon={TrendingUp} label="Total Pemasukan Aktual" value={formatRupiah(actualIncome)} color="green" infoText="Total pendapatan yang uangnya benar-benar sudah diterima dan ditandai &quot;LUNAS&quot; bulan ini." />
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-8 mb-8 relative">
+        <StatCard 
+          icon={Wallet} 
+          label="Total Perkiraan Pemasukan" 
+          value={formatRupiah(totalIncome)} 
+          color="blue" 
+          trend={12.5} 
+          infoText="Jumlah seluruh pemasukan yang sudah dicatat, terlepas dari apakah uangnya sudah diterima atau belum." 
+        />
+        <StatCard 
+          icon={Clock} 
+          label={
+            <span>
+              Pending Invoices <span className="inline-block mx-1 opacity-60">•</span> {pendingCount} Pending
+            </span>
+          } 
+          rawLabel="Pending Invoices"
+          value={formatRupiah(pendingTotal)} 
+          color="orange" 
+          infoText="Jumlah piutang atau ekspektasi pemasukan yang statusnya masih menunggu pembayaran (belum lunas)." 
+        />
+        <StatCard 
+          icon={TrendingUp} 
+          label="Total Pemasukan Aktual" 
+          value={formatRupiah(actualIncome)} 
+          color="green" 
+          className="col-span-2 lg:col-span-1"
+          infoText="Total pendapatan yang uangnya benar-benar sudah diterima dan ditandai &quot;LUNAS&quot; bulan ini." 
+        />
       </div>
 
       <div className="space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 items-stretch">
           {/* Left Column: Income Trend */}
           <div className="lg:col-span-2">
-            <ChartCard title="Income Trend" className="h-[650px]">
+            <ChartCard title="Income Trend" className="h-[480px] sm:h-[550px] lg:h-[650px]">
               <div className="h-full w-full pb-8">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={trendData}>
@@ -339,7 +364,7 @@ const IncomePage = () => {
           <div className="lg:col-span-1">
             <ChartCard 
               title="Pemasukan Terbaru"
-              className="h-[650px]"
+              className="h-[480px] sm:h-[550px] lg:h-[650px]"
               extra={
                 <button 
                   onClick={() => setIsModalOpen(true)}
@@ -418,18 +443,18 @@ const IncomePage = () => {
         </div>
 
         {/* Bottom Full Width: Income Sources */}
-        <ChartCard title="Income Sources">
-          <div className="flex flex-col lg:flex-row items-center justify-center gap-16 py-4">
-            <div className="h-[400px] w-[400px] relative">
+        <ChartCard title="Sumber Pemasukan">
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-8 md:gap-16 py-4 sm:py-8">
+            <div className="h-[260px] w-[260px] sm:h-[340px] sm:w-[340px] md:h-[400px] md:w-[400px] relative max-w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={sourceData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={110}
-                    outerRadius={150}
-                    paddingAngle={8}
+                    innerRadius="65%"
+                    outerRadius="90%"
+                    paddingAngle={6}
                     dataKey="value"
                   >
                     {sourceData.map((entry, index) => (

@@ -1,8 +1,54 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidAmount(val) {
+      return val is number && val >= 0 && val <= 1000000000000;
+    }
+
+    // User data hierarchy
+    match /users/{userId} {
+      // User root document
+      allow read, write: if isOwner(userId);
+
+      // Categories
+      match /categories/{catId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Monthly financial data (incomes, expenses, budgets)
+      match /months/{monthId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Recurring templates
+      match /templates/{templateId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Migration status
+      match /migration/{migrationId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Catch-all for any other nested subcollections under user's domain
+      match /{allChildren=**} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // Deny access to any collection outside /users/{userId}
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }

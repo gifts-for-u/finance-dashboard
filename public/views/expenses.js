@@ -23,6 +23,7 @@ import {
   isExpenseDone,
   isSavingsCategory,
   getCategoryBadgePalette,
+  escapeHtml,
 } from "../state/derivations.js";
 import { updateBudgetProgress } from "./budgets.js";
 
@@ -297,16 +298,16 @@ export function updateIncomeTable() {
       return `
         <tr>
           <td>${formattedDate}</td>
-          <td style="font-weight: 500;">${income.source || "-"}</td>
+          <td style="font-weight: 500;">${escapeHtml(income.source || "-")}</td>
           <td style="font-weight: 600; color: var(--success-color);">${formatCurrency(
             normalizeAmount(income.amount)
           )}</td>
-          <td>${income.description || "-"}</td>
+          <td>${escapeHtml(income.description || "-")}</td>
           <td>
-            <button class="btn btn-sm btn-secondary" onclick="editIncome('${income.id}')">
+            <button class="btn btn-sm btn-secondary" onclick="editIncome('${escapeHtml(income.id)}')">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-sm btn-danger" onclick="deleteIncome('${income.id}')">
+            <button class="btn btn-sm btn-danger" onclick="deleteIncome('${escapeHtml(income.id)}')">
               <i class="fas fa-trash"></i>
             </button>
           </td>
@@ -431,24 +432,24 @@ export function updateExpenseTable() {
           <td>${formattedDate}</td>
           <td>
             <span class="category-badge" style="${badgeStyle}">
-              ${categoryName}
+              ${escapeHtml(categoryName)}
             </span>
           </td>
           <td style="font-weight: 600;">${formatCurrency(normalizeAmount(expense.amount))}</td>
-          <td>${description || "-"}</td>
+          <td>${escapeHtml(description || "-")}</td>
           <td>
             <button
               class="${toggleButtonClass}"
-              onclick="toggleExpenseStatus('${expense.id}')"
+              onclick="toggleExpenseStatus('${escapeHtml(expense.id)}')"
               title="${toggleLabel}"
               aria-label="${toggleLabel}"
             >
               <i class="fas ${toggleIcon}"></i>
             </button>
-            <button class="btn btn-sm btn-secondary" onclick="editExpense('${expense.id}')">
+            <button class="btn btn-sm btn-secondary" onclick="editExpense('${escapeHtml(expense.id)}')">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-sm btn-danger" onclick="deleteExpense('${expense.id}')">
+            <button class="btn btn-sm btn-danger" onclick="deleteExpense('${escapeHtml(expense.id)}')">
               <i class="fas fa-trash"></i>
             </button>
           </td>
@@ -584,7 +585,7 @@ export function updateCategorySelect() {
 
   if (select) {
     select.innerHTML = categories
-      .map((category) => `<option value="${category.id}">${category.name}</option>`)
+      .map((category) => `<option value="${escapeHtml(category.id)}">${escapeHtml(category.name)}</option>`)
       .join("");
   }
 
@@ -594,7 +595,7 @@ export function updateCategorySelect() {
     const options = [
       '<option value="all">Semua Kategori</option>',
       ...categories.map(
-        (category) => `<option value="${category.id}">${category.name}</option>`,
+        (category) => `<option value="${escapeHtml(category.id)}">${escapeHtml(category.name)}</option>`,
       ),
     ];
     filterSelect.innerHTML = options.join("");
@@ -622,9 +623,9 @@ export function updateCategoryList() {
       const colorValue = category.color || defaultCategoryColor;
       const colorDisplay = String(colorValue).toUpperCase();
       return `
-        <div class="template-item" style="border-left: 4px solid ${colorValue}">
+        <div class="template-item" style="border-left: 4px solid ${escapeHtml(colorValue)}">
           <div>
-            <strong>${category.name}</strong>
+            <strong>${escapeHtml(category.name)}</strong>
             ${
               category.isDefault
                 ? '<small style="color: var(--text-secondary)"> (Default)</small>'
@@ -633,20 +634,20 @@ export function updateCategoryList() {
             <div class="category-meta">
               <span
                 class="category-color-chip"
-                style="background-color: ${colorValue};"
+                style="background-color: ${escapeHtml(colorValue)};"
                 aria-hidden="true"
               ></span>
-              <small class="category-color-label">${colorDisplay}</small>
+              <small class="category-color-label">${escapeHtml(colorDisplay)}</small>
             </div>
           </div>
           <div>
-            <button class="btn btn-sm btn-secondary" onclick="editCategory('${category.id}')">
+            <button class="btn btn-sm btn-secondary" onclick="editCategory('${escapeHtml(category.id)}')">
               <i class="fas fa-pen"></i>
             </button>
             ${
               !category.isDefault
                 ? `
-                <button class="btn btn-sm btn-danger" onclick="deleteCategory('${category.id}')">
+                <button class="btn btn-sm btn-danger" onclick="deleteCategory('${escapeHtml(category.id)}')">
                   <i class="fas fa-trash"></i>
                 </button>
               `
@@ -685,11 +686,11 @@ export function updateTemplatesList() {
       return `
         <div class="template-item">
           <div>
-            <strong>${category ? category.name : template.category}</strong><br>
-            <small>${formatCurrency(template.amount)} - ${template.description}</small>
+            <strong>${escapeHtml(category ? category.name : template.category)}</strong><br>
+            <small>${formatCurrency(template.amount)} - ${escapeHtml(template.description)}</small>
           </div>
           <div>
-            <button class="btn btn-sm btn-danger" onclick="deleteTemplate('${template.id}')">
+            <button class="btn btn-sm btn-danger" onclick="deleteTemplate('${escapeHtml(template.id)}')">
               <i class="fas fa-trash"></i>
             </button>
           </div>

@@ -182,13 +182,49 @@ const BudgetPage = () => {
     { name: 'Remaining', value: Math.max(0, 100 - overallPercent), color: '#F1F5F9' },
   ];
 
+  const activeMonthLabel = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"][new Date(currentDate).getMonth()] + ' ' + new Date(currentDate).getFullYear();
+
   return (
     <Layout title="Ikhtisar Anggaran">
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-8 mb-8 relative">
-        <StatCard icon={PieChartIcon} label="Total Anggaran" value={formatRupiah(totalBudgetLimit)} color="blue" subtext="Aktif: Okt 2023" infoText="Total alokasi dana yang Anda anggarkan untuk membatasi pengeluaran pada bulan ini." />
-        <StatCard icon={Target} label="Terpakai Bulan Ini" value={formatRupiah(totalActualSpent)} color="red" subtext={`${overallPercent}% Terpakai`} infoText="Jumlah pengeluaran yang sudah terjadi dari seluruh kategori yang dianggarkan (berstatus &quot;LUNAS&quot;)." />
-        <StatCard icon={ShieldCheck} label="Sisa Anggaran" value={formatRupiah(Math.max(0, totalBudgetLimit - totalActualSpent))} color="green" subtext={`Status: ${overallPercent > 100 ? 'Overlimit' : 'Aman'}`} infoText="Sisa saldo atau sisa batas dari anggaran yang masih bisa digunakan pada bulan ini." />
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-8 mb-8 relative">
+        <StatCard 
+          icon={PieChartIcon} 
+          label={
+            <span>
+              Total Anggaran <span className="inline-block mx-1 opacity-60">•</span> Aktif: {activeMonthLabel}
+            </span>
+          } 
+          rawLabel="Total Anggaran"
+          value={formatRupiah(totalBudgetLimit)} 
+          color="blue" 
+          infoText="Total alokasi dana yang Anda anggarkan untuk membatasi pengeluaran pada bulan ini." 
+        />
+        <StatCard 
+          icon={Target} 
+          label={
+            <span>
+              Terpakai Bulan Ini <span className="inline-block mx-1 opacity-60">•</span> {overallPercent}% Terpakai
+            </span>
+          } 
+          rawLabel="Terpakai Bulan Ini"
+          value={formatRupiah(totalActualSpent)} 
+          color="red" 
+          infoText="Jumlah pengeluaran yang sudah terjadi dari seluruh kategori yang dianggarkan (berstatus &quot;LUNAS&quot;)." 
+        />
+        <StatCard 
+          icon={ShieldCheck} 
+          label={
+            <span>
+              Sisa Anggaran <span className="inline-block mx-1 opacity-60">•</span> Status: {overallPercent > 100 ? 'Overlimit' : 'Aman'}
+            </span>
+          } 
+          rawLabel="Sisa Anggaran"
+          value={formatRupiah(Math.max(0, totalBudgetLimit - totalActualSpent))} 
+          color="green" 
+          className="col-span-2 lg:col-span-1" 
+          infoText="Sisa saldo atau sisa batas dari anggaran yang masih bisa digunakan pada bulan ini." 
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">

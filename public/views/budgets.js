@@ -2,6 +2,7 @@ import { getCurrentMonthData, getCategories } from "../state/app-state.js";
 import {
   calculateBudgetProgress,
   formatCurrency,
+  escapeHtml,
 } from "../state/derivations.js";
 
 function formatRemainingText(item) {
@@ -53,10 +54,10 @@ function renderBudgetItem(item) {
     <div class="budget-item">
       <div class="budget-item-header">
         <div class="budget-item-title">
-          <span class="budget-color-indicator" style="--budget-color: ${
+          <span class="budget-color-indicator" style="--budget-color: ${escapeHtml(
             item.color || "var(--primary-color)"
-          }"></span>
-          <span class="budget-item-name">${item.name}</span>
+          )}"></span>
+          <span class="budget-item-name">${escapeHtml(item.name)}</span>
         </div>
         <div class="budget-item-limit">
           Target: ${item.limit > 0 ? formatCurrency(item.limit) : "Tidak ada"}

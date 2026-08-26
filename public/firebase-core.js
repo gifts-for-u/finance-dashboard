@@ -46,6 +46,21 @@ async function initialiseFirebase() {
   firebaseState.db = dbInstance;
   firebaseState.auth = authInstance;
 
+  // Initialize App Check if configured
+  if (typeof window !== "undefined" && window.__RECAPTCHA_SITE_KEY__) {
+    try {
+      const { initializeAppCheck, ReCaptchaV3Provider } = await import(
+        "https://www.gstatic.com/firebasejs/10.13.1/firebase-app-check.js"
+      );
+      initializeAppCheck(appInstance, {
+        provider: new ReCaptchaV3Provider(window.__RECAPTCHA_SITE_KEY__),
+        isTokenAutoRefreshEnabled: true,
+      });
+    } catch (error) {
+      console.warn("App Check initialization error:", error);
+    }
+  }
+
   return {
     app: appInstance,
     db: dbInstance,

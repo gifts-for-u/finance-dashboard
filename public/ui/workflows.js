@@ -19,7 +19,7 @@ import {
   setCurrentDate,
   SUMMARY_CARD_INFO,
 } from "../state/app-state.js";
-import { formatDate } from "../state/derivations.js";
+import { formatDate, escapeHtml } from "../state/derivations.js";
 import {
   refreshAllViews,
   registerTableSortButtons,
@@ -72,8 +72,8 @@ function updateUserProfile(user) {
   const userProfile = getElement("userProfile");
   if (userProfile) {
     userProfile.innerHTML = `
-      <img src="${user.photoURL || "https://via.placeholder.com/32"}" alt="Profile" class="user-avatar">
-      <span class="user-name">${user.displayName || user.email}</span>
+      <img src="${escapeHtml(user.photoURL || "https://via.placeholder.com/32")}" alt="Profile" class="user-avatar">
+      <span class="user-name">${escapeHtml(user.displayName || user.email)}</span>
     `;
   }
 }
