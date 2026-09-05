@@ -84,6 +84,7 @@ jobs:
         env:
           FIREBASE_PROJECT_ID: ${{ env.FIREBASE_PROJECT_ID }}
           FIREBASE_RULES_FILE: ./firestore.rules
+          DEBUG: "1"
         shell: bash
         run: |
           set -euo pipefail
