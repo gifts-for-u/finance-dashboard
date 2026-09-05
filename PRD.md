@@ -368,7 +368,18 @@ Karena arsitektur **serverless**, **Firestore Security Rules** adalah satu-satun
 ## 10. CI/CD & Deployment
 
 ### 10.1 Alur CI (`.github/workflows/firebase-hosting.yml`)
-Trigger: push ke `main` atau `remaster`, atau `workflow_dispatch`.
+Trigger: push ke `main` atau `remaster`, atau `workflow_dispatch`, atau pull_request ke branch tersebut.
+
+Step urutan:
+1. **Security audit** — `npm audit --audit-level=high` (gate CVE).
+2. **Run unit tests** — `npm test` (Vitest, lihat Section 11.3).
+3. **Build project** — `vite build` + copy dist → `public/`.
+4. **Deploy Firestore Rules and Indexes** — `firebase deploy --only firestore:rules,firestore:indexes`.
+5. **Deploy to Firebase Hosting** — `firebase deploy --only hosting`.
+6. **Publish deployment summary** — URL + channel info ke GitHub Actions summary.
+7. **Clean up credentials** — `shred --remove` pada service account temp file.
+
+Untuk pull_request: step 1-3 berjalan sebagai gate, step 4-7 di-skip (tidak ada deploy).
 
 Langkah:
 1. Checkout repo.
@@ -420,10 +431,24 @@ npm run dev          # vite dev server
 npm run build        # produksi build
 npm run lint         # eslint
 npm run preview      # preview hasil build
+npm test             # vitest run (sekali)
+npm run test:watch   # vitest watch mode
+npm run test:coverage # vitest + coverage
 
 # root repo (kalau pakai emulator)
 firebase emulators:start
 ```
+
+### 11.4 Test Coverage (Fase 6)
+- **Framework**: Vitest 5 dengan environment jsdom.
+- **File test**:
+  - `src/utils/dates.test.js` — extractDate, parseDateString, formatDateIdLong, parseDateToMs, getMonthKey, MONTH_NAMES_ID/LONG.
+  - `src/utils/validators.test.js` — validateAmount, validateBudgetAmount (boundary cases).
+  - `src/lib/iconMap.test.js` — IconMap integrity, getIcon fallback.
+  - `src/test/firestore.rules.test.js` — static analysis (brace balance, security invariants, helper functions, collection validation).
+- **CI**: `npm test` di workflow `.github/workflows/firebase-hosting.yml` (gate untuk push ke `main`/`remaster` dan pull_request).
+- **Dependabot**: `.github/dependabot.yml` untuk npm (weekly) + GitHub Actions. Major update untuk react, firebase, vite, vitest, react-router di-ignore (perlu review manual).
+- **Batas cakupan**: `vitest.config.js` saat ini hanya mengukur coverage untuk `src/utils/` dan `src/lib/`. Untuk perluasan ke components/context, lihat backlog Section 12.
 
 ---
 
@@ -437,10 +462,11 @@ firebase emulators:start
 5. ~~Hapus folder `public/` legacy dari main branch~~ ✅ Selesai (Fase 2.1).
 6. ~~Validasi tipe data di `firestore.rules` (shape validation)~~ ✅ Selesai (Fase 4).
 7. **Aktifkan Firebase App Check di production** (sedang). Daftar reCAPTCHA v3 site key, set sebagai secret, inject ke build.
-8. **Tambah unit/E2E test** (Vitest + Playwright) untuk FinanceContext dan rules (Fase 6).
+8. ~~Tambah unit/E2E test (Vitest + Playwright) untuk FinanceContext dan rules (Fase 6)~~ ✅ Selesai sebagian: Vitest setup + 66 test (utils, lib, rules static). Playwright E2E untuk component testing menyusul.
 9. **Ekspor CSV/PDF** untuk Reports.
 10. **Recurring templates** (cadangan `users/{uid}/templates/`) untuk transaksi berulang bulanan.
 11. **i18n** — pisahkan string UI ke dictionary.
+12. **Coverage expansion** — perbesar cakupan ke `src/components/` dan `src/context/` (saat ini hanya `utils/` + `lib/`).
 
 ### 12.2 Risiko
 - **Rules drift**: jika rules tidak sinkron dengan kode, kontrol akses bisa hilang tanpa terdeteksi.

@@ -157,7 +157,9 @@ Wajib dijalankan sebelum commit:
 cd remaster
 npm install
 npm run lint       # eslint harus lulus
+npm test           # vitest run (66 test: utils, lib, rules static)
 npm run build      # build harus sukses tanpa warning yang break
+npm run test:coverage  # opsional, untuk lihat coverage
 ```
 
 Untuk perubahan rules/data:
@@ -166,6 +168,11 @@ Untuk perubahan rules/data:
 firebase emulators:start
 # buka UI emulator, uji CRUD sebagai user terautentikasi & tidak terautentikasi
 ```
+
+Static analysis untuk firestore.rules (otomatis di `npm test`):
+- Lokasi: `src/test/firestore.rules.test.js`.
+- Cek brace balance, security invariants (no `if true`), helper functions, collection validation.
+- BUKAN pengganti emulator — hanya catch typo/konsistensi internal.
 
 Wajib dicek manual sebelum merge:
 - [ ] Login Google → Dashboard tampil.
