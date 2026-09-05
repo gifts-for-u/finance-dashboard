@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
 import { StatCard, ChartCard } from '../components/Cards';
 import { formatRupiah } from '../utils/formatter';
+import { MONTH_NAMES_ID } from '../utils/dates';
 import { 
   PieChart as PieChartIcon, 
   Target, 
@@ -71,7 +72,7 @@ const BudgetPage = () => {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const yyyy = d.getFullYear();
         const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const monthName = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"][d.getMonth()];
+        const monthName = MONTH_NAMES_ID[d.getMonth()];
         keys.push({ id: `${yyyy}-${mm}`, name: monthName });
       }
 
@@ -182,7 +183,7 @@ const BudgetPage = () => {
     { name: 'Remaining', value: Math.max(0, 100 - overallPercent), color: '#F1F5F9' },
   ];
 
-  const activeMonthLabel = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"][new Date(currentDate).getMonth()] + ' ' + new Date(currentDate).getFullYear();
+  const activeMonthLabel = MONTH_NAMES_ID[new Date(currentDate).getMonth()] + ' ' + new Date(currentDate).getFullYear();
 
   return (
     <Layout title="Ikhtisar Anggaran">

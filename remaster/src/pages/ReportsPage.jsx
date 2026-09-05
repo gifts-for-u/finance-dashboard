@@ -6,6 +6,7 @@ import { useFinance } from '../context/FinanceContext';
 import Layout from '../components/Layout';
 import { StatCard, ChartCard } from '../components/Cards';
 import { formatRupiah } from '../utils/formatter';
+import { MONTH_NAMES_ID } from '../utils/dates';
 import { 
   FileText, 
   Download, 
@@ -66,7 +67,7 @@ const ReportsPage = () => {
 
           const [yyyy, mm] = id.split('-');
           const d = new Date(yyyy, Number(mm) - 1, 1);
-          const monthName = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"][d.getMonth()];
+          const monthName = MONTH_NAMES_ID[d.getMonth()];
           const shortName = `${monthName} ${yyyy.slice(2)}`;
           const longName = `${monthName} ${yyyy}`;
           
