@@ -88,7 +88,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ./scripts/deploy-firestore-rules.sh
+          # Rules deploy via REST API. Kalau gagal (mis. permission issue),
+          # log warning tapi jangan block workflow. Hosting deploy tetap jalan.
+          if ! ./scripts/deploy-firestore-rules.sh; then
+            echo "::warning::Firestore rules deploy gagal. Rules perlu di-deploy manual via 'firebase deploy --only firestore:rules' dari workstation lokal. Lihat README."
+          fi
 
       - name: Deploy to Firebase Hosting
         if: github.event_name == 'push'
