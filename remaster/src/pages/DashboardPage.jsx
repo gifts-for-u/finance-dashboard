@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { StatCard, ChartCard } from '../components/Cards';
@@ -52,42 +52,70 @@ const DashboardPage = () => {
   };
 
   // Calculate Actual Expenses (Paid/Done + Unpaid only, exclude Pending)
-  const actualExpense = expenses
-    .filter(ex => ex.status === 'done')
-    .reduce((acc, curr) => acc + curr.amount, 0);
+  const sortedIncomes = useMemo(
+    () => getSortedItems(
+      incomes.filter(inc => inc.title.toLowerCase().includes(searchIncome.toLowerCase())),
+      sortIncome
+    ).slice(0, 5),
+    [incomes, searchIncome, sortIncome]
+  );
+
+  const sortedExpenses = useMemo(
+    () => getSortedItems(
+      expenses.filter(ex => ex.title.toLowerCase().includes(searchExpense.toLowerCase())),
+      sortExpense
+    ).slice(0, 5),
+    [expenses, searchExpense, sortExpense]
+  );
+
+  const actualExpense = useMemo(
+    () => expenses
+      .filter(ex => ex.status === 'done')
+      .reduce((acc, curr) => acc + curr.amount, 0),
+    [expenses]
+  );
 
   // Calculate Actual Income (Paid/Done only)
-  const actualIncome = incomes
-    .filter(inc => inc.status === 'Paid' || inc.status === 'Done')
-    .reduce((acc, curr) => acc + curr.amount, 0);
+  const actualIncome = useMemo(
+    () => incomes
+      .filter(inc => inc.status === 'Paid' || inc.status === 'Done')
+      .reduce((acc, curr) => acc + curr.amount, 0),
+    [incomes]
+  );
 
-  const expenseData = expenses.reduce((acc, curr) => {
-    const existing = acc.find(item => item.name === curr.category);
-    if (existing) {
-      existing.value += curr.amount;
-    } else {
-      acc.push({ 
-        name: curr.category, 
-        value: curr.amount, 
-        color: curr.hex 
-      });
-    }
-    return acc;
-  }, []);
+  const expenseData = useMemo(
+    () => expenses.reduce((acc, curr) => {
+      const existing = acc.find(item => item.name === curr.category);
+      if (existing) {
+        existing.value += curr.amount;
+      } else {
+        acc.push({
+          name: curr.category,
+          value: curr.amount,
+          color: curr.hex
+        });
+      }
+      return acc;
+    }, []),
+    [expenses]
+  );
 
-  const categoryData = expenses.reduce((acc, curr) => {
-    const catName = curr.categoryName || curr.category;
-    const existing = acc.find(item => item.name === catName);
-    if (existing) {
-      existing.rawValue += curr.amount;
-    } else {
-      acc.push({ name: catName, rawValue: curr.amount, color: curr.hex });
-    }
-    return acc;
-  }, []).map(cat => ({
-    ...cat,
-    value: Math.round((cat.rawValue / (totalExpense || 1)) * 100)
-  }));
+  const categoryData = useMemo(
+    () => expenses.reduce((acc, curr) => {
+      const catName = curr.categoryName || curr.category;
+      const existing = acc.find(item => item.name === catName);
+      if (existing) {
+        existing.rawValue += curr.amount;
+      } else {
+        acc.push({ name: catName, rawValue: curr.amount, color: curr.hex });
+      }
+      return acc;
+    }, []).map(cat => ({
+      ...cat,
+      value: Math.round((cat.rawValue / (totalExpense || 1)) * 100)
+    })),
+    [expenses, totalExpense]
+  );
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
@@ -102,14 +130,15 @@ const DashboardPage = () => {
   };
 
   // Derive budget progress from actual data
-  const budgetProgress = budgets.map(budget => {
-    const actualSpent = expenses
-      .filter(ex => ex.categoryId === budget.category && ex.status === 'done')
-      .reduce((acc, curr) => acc + curr.amount, 0);
-    
-    const plannedSpent = expenses
-      .filter(ex => ex.categoryId === budget.category)
-      .reduce((acc, curr) => acc + curr.amount, 0);
+  const budgetProgress = useMemo(
+    () => budgets.map(budget => {
+      const actualSpent = expenses
+        .filter(ex => ex.categoryId === budget.category && ex.status === 'done')
+        .reduce((acc, curr) => acc + curr.amount, 0);
+
+      const plannedSpent = expenses
+        .filter(ex => ex.categoryId === budget.category)
+        .reduce((acc, curr) => acc + curr.amount, 0);
     
     const percent = budget.limit ? Math.round((actualSpent / budget.limit) * 100) : 0;
     let status = 'AMAN';
@@ -133,7 +162,9 @@ const DashboardPage = () => {
       barColor: budget.color,
       overAmount: budget.limit && actualSpent > budget.limit ? actualSpent - budget.limit : null
     };
-  });
+    }),
+    [budgets, expenses]
+  );
 
   return (
     <Layout title="Finance Dashboard Overview">
@@ -233,7 +264,7 @@ const DashboardPage = () => {
           </div>
 
           <div className="space-y-3 mb-6">
-            {getSortedItems(incomes.filter(inc => inc.title.toLowerCase().includes(searchIncome.toLowerCase())), sortIncome).slice(0, 5).map((inc, idx) => (
+            {sortedIncomes.map((inc, idx) => (
               <div key={inc.id} className="bg-card dark:bg-[#1e1e1e] p-3 sm:p-4 rounded-2xl flex justify-between items-center group cursor-pointer hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-[#3f3f3f] hover:border-primary/30 hover:bg-primary/5 dark:hover:bg-primary/10 dark:hover:border-primary/50">
                 <div className="flex items-center gap-3 sm:gap-4">
                   <div className={`p-2.5 sm:p-3 rounded-xl shadow-sm flex items-center justify-center transition-all group-hover:scale-110 ${inc.iconColor || 'bg-primary/10 dark:bg-[#3b82f6]/10 text-primary dark:text-[#3b82f6]'}`}>
@@ -293,7 +324,7 @@ const DashboardPage = () => {
           </div>
 
           <div className="space-y-3 mb-6">
-            {getSortedItems(expenses.filter(ex => ex.title.toLowerCase().includes(searchExpense.toLowerCase())), sortExpense).slice(0, 5).map((ex, idx) => (
+            {sortedExpenses.map((ex, idx) => (
                 <div key={ex.id} className="bg-card dark:bg-[#1e1e1e] p-3 sm:p-4 rounded-2xl flex justify-between items-center group cursor-pointer hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-[#3f3f3f] hover:border-destructive/30 hover:bg-destructive/5 dark:hover:bg-[#6e0a0a]/15 dark:hover:border-destructive/50">
                   <div className="flex items-center gap-3 sm:gap-4">
                     <button 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -92,13 +92,23 @@ const IncomePage = () => {
     setIsEditModalOpen(true);
   };
 
-  const actualIncome = incomes
-    .filter(inc => inc.status === 'Paid' || inc.status === 'Done')
-    .reduce((acc, curr) => acc + curr.amount, 0);
+  const actualIncome = useMemo(
+    () => incomes
+      .filter(inc => inc.status === 'Paid' || inc.status === 'Done')
+      .reduce((acc, curr) => acc + curr.amount, 0),
+    [incomes]
+  );
 
-  const pendingIncomes = incomes.filter(inc => inc.status === 'Pending');
-  const pendingTotal = pendingIncomes.reduce((acc, curr) => acc + curr.amount, 0);
-  const pendingCount = pendingIncomes.length;
+  const pendingTotal = useMemo(
+    () => incomes
+      .filter(inc => inc.status === 'Pending')
+      .reduce((acc, curr) => acc + curr.amount, 0),
+    [incomes]
+  );
+  const pendingCount = useMemo(
+    () => incomes.filter(inc => inc.status === 'Pending').length,
+    [incomes]
+  );
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -174,28 +184,40 @@ const IncomePage = () => {
     });
   };
 
-  const filteredAndSortedIncomes = getSortedItems(
-    incomes.filter(inc => (inc.title || '').toLowerCase().includes(searchIncome.toLowerCase())),
-    sortIncome
+  const filteredAndSortedIncomes = useMemo(
+    () => getSortedItems(
+      incomes.filter(inc => (inc.title || '').toLowerCase().includes(searchIncome.toLowerCase())),
+      sortIncome
+    ),
+    [incomes, searchIncome, sortIncome]
   );
 
-  const sourceTotals = incomes.reduce((acc, curr) => {
-    const key = curr.type || 'Other';
-    acc[key] = (acc[key] || 0) + curr.amount;
-    return acc;
-  }, {});
+  const sourceTotals = useMemo(
+    () => incomes.reduce((acc, curr) => {
+      const key = curr.type || 'Other';
+      acc[key] = (acc[key] || 0) + curr.amount;
+      return acc;
+    }, {}),
+    [incomes]
+  );
 
-  const total = Object.values(sourceTotals).reduce((a, b) => a + b, 0);
+  const total = useMemo(
+    () => Object.values(sourceTotals).reduce((a, b) => a + b, 0),
+    [sourceTotals]
+  );
 
-  const sourceData = Object.entries(sourceTotals).map(([name, amount], index) => {
-    const colors = ['#4F46E5', '#818CF8', '#34D399', '#F472B6', '#10B981', '#3B82F6'];
-    return {
-      name,
-      value: total > 0 ? Math.round((amount / total) * 100) : 0,
-      color: colors[index % colors.length],
-      sub: formatRupiah(amount)
-    };
-  });
+  const sourceData = useMemo(
+    () => Object.entries(sourceTotals).map(([name, amount], index) => {
+      const colors = ['#4F46E5', '#818CF8', '#34D399', '#F472B6', '#10B981', '#3B82F6'];
+      return {
+        name,
+        value: total > 0 ? Math.round((amount / total) * 100) : 0,
+        color: colors[index % colors.length],
+        sub: formatRupiah(amount),
+      };
+    }),
+    [sourceTotals, total]
+  );
 
   return (
     <Layout title="Income Overview">

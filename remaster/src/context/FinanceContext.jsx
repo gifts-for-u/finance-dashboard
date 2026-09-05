@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { IconMap, ShoppingBag, HomeIcon, Car, CreditCard, Coffee, Briefcase, Layers, BarChart, Gift, ReceiptText } from '../lib/iconMap';
 
 import { db } from '../lib/firebase';
@@ -19,8 +19,14 @@ export const FinanceProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
 
-  const totalIncome = incomes.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
-  const totalExpense = expenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+  const totalIncome = useMemo(
+    () => incomes.reduce((acc, curr) => acc + Number(curr.amount || 0), 0),
+    [incomes]
+  );
+  const totalExpense = useMemo(
+    () => expenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0),
+    [expenses]
+  );
 
   // Apply theme
   useEffect(() => {

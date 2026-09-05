@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -87,14 +87,24 @@ const ExpensePage = () => {
 
   const [editingExpense, setEditingExpense] = useState(null);
 
-  const actualExpense = expenses
-    .filter(ex => ex.status === 'done')
-    .reduce((acc, curr) => acc + curr.amount, 0);
+  const actualExpense = useMemo(
+    () => expenses
+      .filter(ex => ex.status === 'done')
+      .reduce((acc, curr) => acc + curr.amount, 0),
+    [expenses]
+  );
 
   // planned strictly means Upcoming (Belum Lunas) doesn't enter actual expense
-  const pendingExpenses = expenses.filter(ex => ex.status === 'planned');
-  const pendingTotal = pendingExpenses.reduce((acc, curr) => acc + curr.amount, 0);
-  const pendingCount = pendingExpenses.length;
+  const pendingTotal = useMemo(
+    () => expenses
+      .filter(ex => ex.status === 'planned')
+      .reduce((acc, curr) => acc + curr.amount, 0),
+    [expenses]
+  );
+  const pendingCount = useMemo(
+    () => expenses.filter(ex => ex.status === 'planned').length,
+    [expenses]
+  );
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -169,24 +179,30 @@ const ExpensePage = () => {
     });
   };
 
-  const filteredAndSortedExpenses = getSortedItems(
-    expenses.filter(ex => ex.title.toLowerCase().includes(searchExpense.toLowerCase())),
-    sortExpense
+  const filteredAndSortedExpenses = useMemo(
+    () => getSortedItems(
+      expenses.filter(ex => ex.title.toLowerCase().includes(searchExpense.toLowerCase())),
+      sortExpense
+    ),
+    [expenses, searchExpense, sortExpense]
   );
 
   // Categories breakdown
-  const categoryData = expenses.reduce((acc, curr) => {
-    const existing = acc.find(item => item.name === curr.category);
-    if (existing) {
-      existing.rawValue += curr.amount;
-    } else {
-      acc.push({ name: curr.category, rawValue: curr.amount, color: curr.hex });
-    }
-    return acc;
-  }, []).map(cat => ({
-    ...cat,
-    value: Math.round((cat.rawValue / totalExpense) * 100)
-  }));
+  const categoryData = useMemo(
+    () => expenses.reduce((acc, curr) => {
+      const existing = acc.find(item => item.name === curr.category);
+      if (existing) {
+        existing.rawValue += curr.amount;
+      } else {
+        acc.push({ name: curr.category, rawValue: curr.amount, color: curr.hex });
+      }
+      return acc;
+    }, []).map(cat => ({
+      ...cat,
+      value: Math.round((cat.rawValue / totalExpense) * 100)
+    })),
+    [expenses, totalExpense]
+  );
 
   const handleEditClick = (expense) => {
     setEditingExpense(expense);
