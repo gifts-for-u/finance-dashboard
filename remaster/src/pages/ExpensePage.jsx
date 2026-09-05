@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -7,12 +7,14 @@ import { StatCard, ChartCard } from '../components/Cards';
 import Modal from '../components/Modal';
 import FullscreenTable from '../components/FullscreenTable';
 import { formatRupiah } from '../utils/formatter';
-import { 
-  CreditCard, 
-  Receipt, 
-  AlertCircle, 
-  Search, 
-  Filter, 
+import { MONTH_NAMES_ID, parseDateToMs } from '../utils/dates';
+import { IconSortDropdown } from '../components/SortControls';
+import { SORT_OPTIONS } from '../components/sortOptions';
+import {
+  CreditCard,
+  Receipt,
+  AlertCircle,
+  Search,
   Plus,
   Trash2,
   Save,
@@ -22,11 +24,7 @@ import {
   ReceiptText,
   Calendar,
   ArrowUpDown,
-  ChevronDown,
-  Clock,
-  ArrowDown,
-  ArrowUp,
-  Banknote
+  ChevronDown
 } from 'lucide-react';
 import {
   AreaChart,
@@ -40,7 +38,8 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { useFinance, IconMap } from '../context/FinanceContext';
+import { useFinance } from '../context/FinanceContext';
+import { IconMap } from '../lib/iconMap';
 import { CustomSelect, CustomDatePicker, DeferredColorPicker } from '../components/CustomInputs';
 
 
@@ -49,71 +48,6 @@ const STATUS_OPTIONS = [
   { value: 'done', label: 'Lunas' },
   { value: 'planned', label: 'Belum Lunas' }
 ];
-
-const SortTimeDesc = ({size}) => <div className="flex items-center gap-0.5"><Clock size={size}/><ArrowDown size={size-4} strokeWidth={3}/></div>;
-const SortTimeAsc = ({size}) => <div className="flex items-center gap-0.5"><Clock size={size}/><ArrowUp size={size-4} strokeWidth={3}/></div>;
-const SortAmountDesc = ({size}) => <div className="flex items-center gap-0.5"><Banknote size={size}/><ArrowDown size={size-4} strokeWidth={3}/></div>;
-const SortAmountAsc = ({size}) => <div className="flex items-center gap-0.5"><Banknote size={size}/><ArrowUp size={size-4} strokeWidth={3}/></div>;
-
-const IconSortDropdown = ({ value, onChange, options }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <button 
-        type="button"
-        className={`w-12 h-12 flex items-center justify-center bg-card dark:bg-[#1e1e1e] border border-slate-100 dark:border-[#3f3f3f] rounded-2xl transition-all cursor-pointer active:scale-95 focus:outline-none ${value ? 'text-primary dark:text-[#3b82f6] shadow-md border-primary/30 dark:border-primary/50' : 'hover:bg-slate-50 dark:hover:bg-[#2a2a2a] text-slate-400 dark:text-slate-300'}`}
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {(() => {
-          const selected = options.find(opt => opt.value === value);
-          if (selected && selected.icon) {
-            const Icon = selected.icon;
-            return <Icon size={18} />;
-          }
-          return <Filter size={18} />;
-        })()}
-      </button>
-      
-      {isOpen && (
-        <div className="absolute z-[60] top-[calc(100%+8px)] right-0 w-[160px] bg-card dark:bg-[#2f2f2f] text-card-foreground rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-md dark:shadow-[#1b1b1b] border border-slate-100 dark:border-[#3f3f3f] py-2 animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
-          <div className="max-h-[240px] overflow-y-auto overflow-x-hidden custom-scrollbar">
-            {options.map((opt, idx) => {
-              const IconOpt = opt.icon || Filter;
-              return (
-                <div
-                  key={idx}
-                  className={`w-full text-left px-4 py-2.5 cursor-pointer transition-colors flex items-center gap-3 text-sm font-semibold
-                    ${value === opt.value 
-                      ? 'bg-primary/10 text-primary dark:text-[#3b82f6]' 
-                      : 'hover:bg-slate-50 dark:hover:bg-[#3f3f3f] text-slate-600 dark:text-slate-300'}`}
-                  onClick={() => {
-                    onChange(opt.value);
-                    setIsOpen(false);
-                  }}
-                >
-                  <IconOpt size={16} />
-                  {opt.label}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
 
 const ExpensePage = () => {
   const { expenses, totalExpense, addExpense, updateExpense, deleteExpense, expenseCategories, addExpenseCategory, updateExpenseCategory, deleteExpenseCategory, currentDate } = useFinance();
@@ -131,7 +65,7 @@ const ExpensePage = () => {
   const [sortExpense, setSortExpense] = useState('');
   
   const d = new Date();
-  const formattedDateInit = `${d.getDate().toString().padStart(2, '0')} ${["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"][d.getMonth()]} ${d.getFullYear()}`;
+  const formattedDateInit = `${d.getDate().toString().padStart(2, '0')} ${MONTH_NAMES_ID[d.getMonth()]} ${d.getFullYear()}`;
   
   const initialFormState = {
     title: '',
@@ -153,14 +87,24 @@ const ExpensePage = () => {
 
   const [editingExpense, setEditingExpense] = useState(null);
 
-  const actualExpense = expenses
-    .filter(ex => ex.status === 'done')
-    .reduce((acc, curr) => acc + curr.amount, 0);
+  const actualExpense = useMemo(
+    () => expenses
+      .filter(ex => ex.status === 'done')
+      .reduce((acc, curr) => acc + curr.amount, 0),
+    [expenses]
+  );
 
   // planned strictly means Upcoming (Belum Lunas) doesn't enter actual expense
-  const pendingExpenses = expenses.filter(ex => ex.status === 'planned');
-  const pendingTotal = pendingExpenses.reduce((acc, curr) => acc + curr.amount, 0);
-  const pendingCount = pendingExpenses.length;
+  const pendingTotal = useMemo(
+    () => expenses
+      .filter(ex => ex.status === 'planned')
+      .reduce((acc, curr) => acc + curr.amount, 0),
+    [expenses]
+  );
+  const pendingCount = useMemo(
+    () => expenses.filter(ex => ex.status === 'planned').length,
+    [expenses]
+  );
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -186,7 +130,7 @@ const ExpensePage = () => {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const yyyy = d.getFullYear();
         const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const monthName = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"][d.getMonth()];
+        const monthName = MONTH_NAMES_ID[d.getMonth()];
         keys.push({ id: `${yyyy}-${mm}`, name: monthName });
       }
 
@@ -223,24 +167,6 @@ const ExpensePage = () => {
     fetchTrendData();
   }, [user?.uid, currentDate, expenses]);
 
-  const parseDateToMs = (dateStr) => {
-    try {
-      if (!dateStr) return 0;
-      const parts = dateStr.split(' ');
-      if (parts.length === 3) {
-        let [dd, mmm, yyyy] = parts;
-        let pMonthString = "Jan_Feb_Mar_Apr_Mei_Jun_Jul_Agu_Sep_Okt_Nov_Des";
-        let mIndex = pMonthString.split("_").indexOf(mmm);
-        if (mIndex !== -1) {
-          return new Date(parseInt(yyyy), mIndex, parseInt(dd)).getTime();
-        }
-      }
-      return new Date(dateStr).getTime() || 0;
-    } catch {
-      return 0;
-    }
-  };
-
   const getSortedItems = (items, sortMode) => {
     return [...items].sort((a, b) => {
       switch (sortMode) {
@@ -253,24 +179,30 @@ const ExpensePage = () => {
     });
   };
 
-  const filteredAndSortedExpenses = getSortedItems(
-    expenses.filter(ex => ex.title.toLowerCase().includes(searchExpense.toLowerCase())),
-    sortExpense
+  const filteredAndSortedExpenses = useMemo(
+    () => getSortedItems(
+      expenses.filter(ex => ex.title.toLowerCase().includes(searchExpense.toLowerCase())),
+      sortExpense
+    ),
+    [expenses, searchExpense, sortExpense]
   );
 
   // Categories breakdown
-  const categoryData = expenses.reduce((acc, curr) => {
-    const existing = acc.find(item => item.name === curr.category);
-    if (existing) {
-      existing.rawValue += curr.amount;
-    } else {
-      acc.push({ name: curr.category, rawValue: curr.amount, color: curr.hex });
-    }
-    return acc;
-  }, []).map(cat => ({
-    ...cat,
-    value: Math.round((cat.rawValue / totalExpense) * 100)
-  }));
+  const categoryData = useMemo(
+    () => expenses.reduce((acc, curr) => {
+      const existing = acc.find(item => item.name === curr.category);
+      if (existing) {
+        existing.rawValue += curr.amount;
+      } else {
+        acc.push({ name: curr.category, rawValue: curr.amount, color: curr.hex });
+      }
+      return acc;
+    }, []).map(cat => ({
+      ...cat,
+      value: Math.round((cat.rawValue / totalExpense) * 100)
+    })),
+    [expenses, totalExpense]
+  );
 
   const handleEditClick = (expense) => {
     setEditingExpense(expense);
@@ -308,7 +240,7 @@ const ExpensePage = () => {
     });
     setIsModalOpen(false);
     const d = new Date();
-    const formattedDateInit = `${d.getDate().toString().padStart(2, '0')} ${["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"][d.getMonth()]} ${d.getFullYear()}`;
+    const formattedDateInit = `${d.getDate().toString().padStart(2, '0')} ${MONTH_NAMES_ID[d.getMonth()]} ${d.getFullYear()}`;
     setFormData({
       title: '',
       amount: '',
@@ -425,15 +357,10 @@ const ExpensePage = () => {
                       className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#1e1e1e] border border-slate-100 dark:border-[#3f3f3f] rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-destructive/20 transition-all dark:text-white"
                     />
                   </div>
-                  <IconSortDropdown 
+                  <IconSortDropdown
                     value={sortExpense}
                     onChange={setSortExpense}
-                    options={[
-                      { value: "date-desc", label: "Terbaru", icon: SortTimeDesc },
-                      { value: "date-asc", label: "Terlama", icon: SortTimeAsc },
-                      { value: "amount-desc", label: "Terbesar", icon: SortAmountDesc },
-                      { value: "amount-asc", label: "Terkecil", icon: SortAmountAsc }
-                    ]}
+                    options={SORT_OPTIONS}
                   />
                 </div>
 

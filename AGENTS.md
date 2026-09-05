@@ -27,7 +27,7 @@ Baca [`PRD.md`](./PRD.md) sebelum mulai perubahan apa pun.
 
 ### 2.2 Tidak boleh hardcode kredensial
 - **JANGAN** menambahkan API key, project ID, atau secret Firebase lainnya ke source code.
-- `FALLBACK_CONFIG` yang ada di `public/firebase-config.js` dan `remaster/src/firebase-config.js` adalah **tech debt** yang harus dihapus/diisolasi.
+- `LEGACY_FALLBACK_CONFIG` yang ada di `remaster/src/firebase-config.js` adalah **tech debt** yang harus dihapus/diisolasi (saat ini rename + emit `console.error` untuk auditability; targeted removal menyusul).
 - Pakai chain resolusi yang ada: `VITE_FIREBASE_*` → `window.__FIREBASE_CONFIG__` → meta tag → `__/firebase/init.json`.
 
 ### 2.3 Sanitasi output
@@ -124,7 +124,7 @@ Tidak ada Cloud Functions, tidak ada backend API. Semua validasi data **harus** 
 - **Penamaan:**
   - Komponen: `PascalCase` (`DashboardPage`, `StatCard`).
   - Hook/variabel: `camelCase`.
-  - Konstanta: `UPPER_SNAKE_CASE` (`FALLBACK_CONFIG`, `CONFIG_SOURCES`).
+  - Konstanta: `UPPER_SNAKE_CASE` (`LEGACY_FALLBACK_CONFIG`, `CONFIG_SOURCES`).
   - File komponen: `PascalCase.jsx`. File util: `camelCase.js`.
 
 ### 5.2 Error handling
@@ -152,12 +152,22 @@ Tidak ada Cloud Functions, tidak ada backend API. Semua validasi data **harus** 
 
 ## 6. Testing & Verifikasi
 
+**Node.js minimum: 24 LTS.** vitest@5 + jsdom@30 + @asamuzakjp/css-color@6
+membutuhkan Node ^22.22.2 || ^24.15.0 || >=26.0.0. Node 20 tidak kompatibel
+(ditemukan error `webidl.util.markAsUncloneable` saat CI pakai Node 20).
+
+CI workflow (`.github/workflows/firebase-hosting.yml`) sudah di-set ke
+`node-version: "24"`. Untuk development lokal, pakai Node 22.22.2+ atau
+Node 24+ (lihat `.nvmrc` jika ada).
+
 Wajib dijalankan sebelum commit:
 ```bash
 cd remaster
 npm install
 npm run lint       # eslint harus lulus
+npm test           # vitest run (66 test: utils, lib, rules static)
 npm run build      # build harus sukses tanpa warning yang break
+npm run test:coverage  # opsional, untuk lihat coverage
 ```
 
 Untuk perubahan rules/data:
@@ -166,6 +176,11 @@ Untuk perubahan rules/data:
 firebase emulators:start
 # buka UI emulator, uji CRUD sebagai user terautentikasi & tidak terautentikasi
 ```
+
+Static analysis untuk firestore.rules (otomatis di `npm test`):
+- Lokasi: `src/test/firestore.rules.test.js`.
+- Cek brace balance, security invariants (no `if true`), helper functions, collection validation.
+- BUKAN pengganti emulator — hanya catch typo/konsistensi internal.
 
 Wajib dicek manual sebelum merge:
 - [ ] Login Google → Dashboard tampil.

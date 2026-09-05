@@ -1,17 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { StatCard, ChartCard } from '../components/Cards';
 import Modal from '../components/Modal';
 import { formatRupiah } from '../utils/formatter';
-import { 
-  Wallet, 
-  Receipt, 
-  CircleDollarSign, 
-  CreditCard, 
-  PiggyBank, 
+import {
+  Wallet,
+  Receipt,
+  CircleDollarSign,
+  CreditCard,
+  PiggyBank,
   Search,
-  Filter,
   Plus,
   Trash2,
   CheckCircle2,
@@ -20,79 +19,12 @@ import {
   Settings,
   ChevronRight,
   ChevronDown,
-  ArrowUpDown,
-  Clock,
-  ArrowDown,
-  ArrowUp,
-  Banknote
+  ArrowUpDown
 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { useFinance } from '../context/FinanceContext';
-
-const SortTimeDesc = ({size}) => <div className="flex items-center gap-0.5"><Clock size={size}/><ArrowDown size={size-4} strokeWidth={3}/></div>;
-const SortTimeAsc = ({size}) => <div className="flex items-center gap-0.5"><Clock size={size}/><ArrowUp size={size-4} strokeWidth={3}/></div>;
-const SortAmountDesc = ({size}) => <div className="flex items-center gap-0.5"><Banknote size={size}/><ArrowDown size={size-4} strokeWidth={3}/></div>;
-const SortAmountAsc = ({size}) => <div className="flex items-center gap-0.5"><Banknote size={size}/><ArrowUp size={size-4} strokeWidth={3}/></div>;
-
-const IconSortDropdown = ({ value, onChange, options }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <button 
-        type="button"
-        className={`w-12 h-12 flex flex-shrink-0 items-center justify-center bg-card dark:bg-[#1e1e1e] border border-slate-100 dark:border-[#3f3f3f] rounded-2xl transition-all cursor-pointer active:scale-95 focus:outline-none ${value ? 'text-primary dark:text-[#3b82f6] shadow-md border-primary/30 dark:border-primary/50' : 'hover:bg-slate-50 dark:hover:bg-[#2a2a2a] text-slate-400 dark:text-slate-300'}`}
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {(() => {
-          const selected = options.find(opt => opt.value === value);
-          if (selected && selected.icon) {
-            const Icon = selected.icon;
-            return <Icon size={18} />;
-          }
-          return <Filter size={18} />;
-        })()}
-      </button>
-      
-      {isOpen && (
-        <div className="absolute z-[60] top-[calc(100%+8px)] right-0 w-[160px] bg-card dark:bg-[#2f2f2f] text-card-foreground rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-md dark:shadow-[#1b1b1b] border border-slate-100 dark:border-[#3f3f3f] py-2 animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
-          <div className="max-h-[240px] overflow-y-auto overflow-x-hidden custom-scrollbar">
-            {options.map((opt, idx) => {
-              const IconOpt = opt.icon || Filter;
-              return (
-                <div
-                  key={idx}
-                  className={`w-full text-left px-4 py-2.5 cursor-pointer transition-colors flex items-center gap-3 text-sm font-semibold
-                    ${value === opt.value 
-                      ? 'bg-primary/10 text-primary dark:text-[#3b82f6]' 
-                      : 'hover:bg-slate-50 dark:hover:bg-[#3f3f3f] text-slate-600 dark:text-slate-300'}`}
-                  onClick={() => {
-                    onChange(opt.value);
-                    setIsOpen(false);
-                  }}
-                >
-                  <IconOpt size={16} />
-                  {opt.label}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+import { IconSortDropdown } from '../components/SortControls';
+import { SORT_OPTIONS } from '../components/sortOptions';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -120,42 +52,70 @@ const DashboardPage = () => {
   };
 
   // Calculate Actual Expenses (Paid/Done + Unpaid only, exclude Pending)
-  const actualExpense = expenses
-    .filter(ex => ex.status === 'done')
-    .reduce((acc, curr) => acc + curr.amount, 0);
+  const sortedIncomes = useMemo(
+    () => getSortedItems(
+      incomes.filter(inc => inc.title.toLowerCase().includes(searchIncome.toLowerCase())),
+      sortIncome
+    ).slice(0, 5),
+    [incomes, searchIncome, sortIncome]
+  );
+
+  const sortedExpenses = useMemo(
+    () => getSortedItems(
+      expenses.filter(ex => ex.title.toLowerCase().includes(searchExpense.toLowerCase())),
+      sortExpense
+    ).slice(0, 5),
+    [expenses, searchExpense, sortExpense]
+  );
+
+  const actualExpense = useMemo(
+    () => expenses
+      .filter(ex => ex.status === 'done')
+      .reduce((acc, curr) => acc + curr.amount, 0),
+    [expenses]
+  );
 
   // Calculate Actual Income (Paid/Done only)
-  const actualIncome = incomes
-    .filter(inc => inc.status === 'Paid' || inc.status === 'Done')
-    .reduce((acc, curr) => acc + curr.amount, 0);
+  const actualIncome = useMemo(
+    () => incomes
+      .filter(inc => inc.status === 'Paid' || inc.status === 'Done')
+      .reduce((acc, curr) => acc + curr.amount, 0),
+    [incomes]
+  );
 
-  const expenseData = expenses.reduce((acc, curr) => {
-    const existing = acc.find(item => item.name === curr.category);
-    if (existing) {
-      existing.value += curr.amount;
-    } else {
-      acc.push({ 
-        name: curr.category, 
-        value: curr.amount, 
-        color: curr.hex 
-      });
-    }
-    return acc;
-  }, []);
+  const expenseData = useMemo(
+    () => expenses.reduce((acc, curr) => {
+      const existing = acc.find(item => item.name === curr.category);
+      if (existing) {
+        existing.value += curr.amount;
+      } else {
+        acc.push({
+          name: curr.category,
+          value: curr.amount,
+          color: curr.hex
+        });
+      }
+      return acc;
+    }, []),
+    [expenses]
+  );
 
-  const categoryData = expenses.reduce((acc, curr) => {
-    const catName = curr.categoryName || curr.category;
-    const existing = acc.find(item => item.name === catName);
-    if (existing) {
-      existing.rawValue += curr.amount;
-    } else {
-      acc.push({ name: catName, rawValue: curr.amount, color: curr.hex });
-    }
-    return acc;
-  }, []).map(cat => ({
-    ...cat,
-    value: Math.round((cat.rawValue / (totalExpense || 1)) * 100)
-  }));
+  const categoryData = useMemo(
+    () => expenses.reduce((acc, curr) => {
+      const catName = curr.categoryName || curr.category;
+      const existing = acc.find(item => item.name === catName);
+      if (existing) {
+        existing.rawValue += curr.amount;
+      } else {
+        acc.push({ name: catName, rawValue: curr.amount, color: curr.hex });
+      }
+      return acc;
+    }, []).map(cat => ({
+      ...cat,
+      value: Math.round((cat.rawValue / (totalExpense || 1)) * 100)
+    })),
+    [expenses, totalExpense]
+  );
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
@@ -170,14 +130,15 @@ const DashboardPage = () => {
   };
 
   // Derive budget progress from actual data
-  const budgetProgress = budgets.map(budget => {
-    const actualSpent = expenses
-      .filter(ex => ex.categoryId === budget.category && ex.status === 'done')
-      .reduce((acc, curr) => acc + curr.amount, 0);
-    
-    const plannedSpent = expenses
-      .filter(ex => ex.categoryId === budget.category)
-      .reduce((acc, curr) => acc + curr.amount, 0);
+  const budgetProgress = useMemo(
+    () => budgets.map(budget => {
+      const actualSpent = expenses
+        .filter(ex => ex.categoryId === budget.category && ex.status === 'done')
+        .reduce((acc, curr) => acc + curr.amount, 0);
+
+      const plannedSpent = expenses
+        .filter(ex => ex.categoryId === budget.category)
+        .reduce((acc, curr) => acc + curr.amount, 0);
     
     const percent = budget.limit ? Math.round((actualSpent / budget.limit) * 100) : 0;
     let status = 'AMAN';
@@ -201,7 +162,9 @@ const DashboardPage = () => {
       barColor: budget.color,
       overAmount: budget.limit && actualSpent > budget.limit ? actualSpent - budget.limit : null
     };
-  });
+    }),
+    [budgets, expenses]
+  );
 
   return (
     <Layout title="Finance Dashboard Overview">
@@ -293,20 +256,15 @@ const DashboardPage = () => {
                 className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#1e1e1e] border border-slate-100 dark:border-[#3f3f3f] rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all dark:text-white"
               />
             </div>
-            <IconSortDropdown 
+            <IconSortDropdown
               value={sortIncome}
               onChange={setSortIncome}
-              options={[
-                { value: "date-desc", label: "Terbaru", icon: SortTimeDesc },
-                { value: "date-asc", label: "Terlama", icon: SortTimeAsc },
-                { value: "amount-desc", label: "Terbesar", icon: SortAmountDesc },
-                { value: "amount-asc", label: "Terkecil", icon: SortAmountAsc }
-              ]}
+              options={SORT_OPTIONS}
             />
           </div>
 
           <div className="space-y-3 mb-6">
-            {getSortedItems(incomes.filter(inc => inc.title.toLowerCase().includes(searchIncome.toLowerCase())), sortIncome).slice(0, 5).map((inc, idx) => (
+            {sortedIncomes.map((inc, idx) => (
               <div key={inc.id} className="bg-card dark:bg-[#1e1e1e] p-3 sm:p-4 rounded-2xl flex justify-between items-center group cursor-pointer hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-[#3f3f3f] hover:border-primary/30 hover:bg-primary/5 dark:hover:bg-primary/10 dark:hover:border-primary/50">
                 <div className="flex items-center gap-3 sm:gap-4">
                   <div className={`p-2.5 sm:p-3 rounded-xl shadow-sm flex items-center justify-center transition-all group-hover:scale-110 ${inc.iconColor || 'bg-primary/10 dark:bg-[#3b82f6]/10 text-primary dark:text-[#3b82f6]'}`}>
@@ -358,20 +316,15 @@ const DashboardPage = () => {
                 className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#1e1e1e] border border-slate-100 dark:border-[#3f3f3f] rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-destructive/20 transition-all dark:text-white"
               />
             </div>
-            <IconSortDropdown 
+            <IconSortDropdown
               value={sortExpense}
               onChange={setSortExpense}
-              options={[
-                { value: "date-desc", label: "Terbaru", icon: SortTimeDesc },
-                { value: "date-asc", label: "Terlama", icon: SortTimeAsc },
-                { value: "amount-desc", label: "Terbesar", icon: SortAmountDesc },
-                { value: "amount-asc", label: "Terkecil", icon: SortAmountAsc }
-              ]}
+              options={SORT_OPTIONS}
             />
           </div>
 
           <div className="space-y-3 mb-6">
-            {getSortedItems(expenses.filter(ex => ex.title.toLowerCase().includes(searchExpense.toLowerCase())), sortExpense).slice(0, 5).map((ex, idx) => (
+            {sortedExpenses.map((ex, idx) => (
                 <div key={ex.id} className="bg-card dark:bg-[#1e1e1e] p-3 sm:p-4 rounded-2xl flex justify-between items-center group cursor-pointer hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-[#3f3f3f] hover:border-destructive/30 hover:bg-destructive/5 dark:hover:bg-[#6e0a0a]/15 dark:hover:border-destructive/50">
                   <div className="flex items-center gap-3 sm:gap-4">
                     <button 

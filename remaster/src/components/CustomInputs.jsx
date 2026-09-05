@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Calendar, PenLine, ChevronLeft, ChevronRight } from 'lucide-react';
 import { HexColorPicker } from "react-colorful";
+import { MONTH_NAMES_ID, parseDateString } from '../utils/dates';
 
 export const CustomSelect = ({ value, onChange, options }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -62,16 +63,15 @@ export const CustomDatePicker = ({ value, onChange }) => {
   
   const parseLocalDate = (dateStr) => {
     if (!dateStr) return new Date();
-    
+
     if (typeof dateStr === 'string' && dateStr.includes(' ')) {
       const parts = dateStr.split(' ');
       const day = parseInt(parts[0]);
       const monthStr = parts[1];
       const yearStr = parts[2];
-      
-      const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
-      const monthIndex = monthNames.findIndex(m => m.toLowerCase() === monthStr?.toLowerCase());
-      
+
+      const monthIndex = MONTH_NAMES_ID.findIndex(m => m.toLowerCase() === monthStr?.toLowerCase());
+
       if (monthIndex !== -1 && !isNaN(day)) {
         const year = yearStr ? parseInt(yearStr) : new Date().getFullYear();
         return new Date(year, monthIndex, day);
@@ -107,7 +107,6 @@ export const CustomDatePicker = ({ value, onChange }) => {
 
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
   
   const handlePrevMonth = (e) => {
     e.stopPropagation();
@@ -122,8 +121,7 @@ export const CustomDatePicker = ({ value, onChange }) => {
   const handleDateClick = (day) => {
     const year = currentDate.getFullYear();
     const cday = day.toString().padStart(2, '0');
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
-    const monthStr = monthNames[currentDate.getMonth()];
+    const monthStr = MONTH_NAMES_ID[currentDate.getMonth()];
     onChange(`${cday} ${monthStr} ${year}`);
     setIsOpen(false);
   };
@@ -150,7 +148,7 @@ export const CustomDatePicker = ({ value, onChange }) => {
   }
 
   const checkValueDate = parseLocalDate(value);
-  const displayDate = value ? `${checkValueDate.getDate().toString().padStart(2, '0')} ${monthNames[checkValueDate.getMonth()]} ${checkValueDate.getFullYear()}` : 'Pilih Tanggal';
+  const displayDate = value ? `${checkValueDate.getDate().toString().padStart(2, '0')} ${MONTH_NAMES_ID[checkValueDate.getMonth()]} ${checkValueDate.getFullYear()}` : 'Pilih Tanggal';
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -170,7 +168,7 @@ export const CustomDatePicker = ({ value, onChange }) => {
               <ChevronLeft size={16} />
             </button>
             <span className="font-bold text-slate-800 text-sm">
-              {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+              {MONTH_NAMES_ID[currentDate.getMonth()]} {currentDate.getFullYear()}
             </span>
             <button type="button" onClick={handleNextMonth} className="p-1.5 hover:bg-slate-100 rounded-xl transition-colors text-slate-400 cursor-pointer">
               <ChevronRight size={16} />

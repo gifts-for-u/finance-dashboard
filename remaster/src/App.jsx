@@ -12,6 +12,21 @@ import ReportsPage from './pages/ReportsPage';
 import toast, { Toaster } from 'react-hot-toast';
 import './App.css';
 
+/**
+ * Auto-logout setelah 30 menit idle (tidak ada aktivitas mouse/keyboard/scroll).
+ *
+ * PENTING: Ini hanya kontrol UX (UX courtesy), BUKAN kontrol keamanan.
+ * Token Firebase Auth expire sendiri di server dan Firebase tidak akan
+ * mengizinkan request dengan token yang sudah invalid.
+ *
+ * Untuk kontrol sesi yang sebenarnya (server-side enforcement), perlu:
+ *   - Custom claims + Cloud Function yang memeriksa `auth_time`, ATAU
+ *   - Firebase Admin SDK untuk `revokeRefreshTokens(uid)` di backend.
+ *
+ * Lihat:
+ *   - PRD.md Section 8.4 (Security Model — Session)
+ *   - 01-vulnerabilities.md #8 (Session manager kosmetik)
+ */
 const SessionManager = () => {
   const { user, logout } = useAuth();
   

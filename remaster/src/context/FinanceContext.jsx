@@ -1,43 +1,12 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  Briefcase, 
-  Layers, 
-  BarChart, 
-  Gift,
-  ShoppingBag,
-  Home as HomeIcon,
-  Coffee,
-  Car,
-  CreditCard,
-  ReceiptText,
-  Tag,
-  Wallet,
-  Heart,
-  Smartphone,
-  Plane,
-  Shirt,
-  Music,
-  GraduationCap,
-  Utensils,
-  PiggyBank,
-  Landmark,
-  HeartHandshake,
-  Package,
-  Box,
-  Archive,
-  AlertTriangle,
-  Siren,
-  Stethoscope,
-  Pill
-} from 'lucide-react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { IconMap, ShoppingBag, HomeIcon, Car, CreditCard, Coffee, Briefcase, Layers, BarChart, Gift, ReceiptText } from '../lib/iconMap';
 
-export const IconMap = {
-  Briefcase, Layers, BarChart, Gift, ShoppingBag, Home: HomeIcon, Coffee, Car, CreditCard, ReceiptText, Tag, Wallet, Heart, Smartphone, Plane, Shirt, Music, GraduationCap, Utensils, PiggyBank, Landmark, HeartHandshake, Package, Box, Archive, AlertTriangle, Siren, Stethoscope, Pill
-};
 import { db } from '../lib/firebase';
 import { onSnapshot, setDoc, doc } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
 import toast from 'react-hot-toast';
+import { extractDate, parseDateString, getMonthKey } from '../utils/dates';
+import { validateAmount, validateBudgetAmount } from '../utils/validators';
 
 const FinanceContext = createContext();
 
@@ -51,8 +20,14 @@ export const FinanceProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
 
-  const totalIncome = incomes.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
-  const totalExpense = expenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+  const totalIncome = useMemo(
+    () => incomes.reduce((acc, curr) => acc + Number(curr.amount || 0), 0),
+    [incomes]
+  );
+  const totalExpense = useMemo(
+    () => expenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0),
+    [expenses]
+  );
 
   // Apply theme
   useEffect(() => {
@@ -64,45 +39,13 @@ export const FinanceProvider = ({ children }) => {
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
   // Helper Functions
-  const getMonthKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-  
   // Use crypto.randomUUID if available, else fallback
   const generateId = () => {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
   };
 
-  // Convert Firebase Timestamp to UI Formatted string (e.g. "1 Mar 2026")
-  const extractDate = (dateField) => {
-    let d = new Date();
-    if (dateField) {
-      if (typeof dateField.toDate === 'function') d = dateField.toDate();
-      else d = new Date(dateField);
-    }
-    // Handle invalid dates
-    if (isNaN(d.getTime())) d = new Date();
-    
-    const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
-    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
-  };
-
-  // Convert UI String back to Date for Firebase
-  const parseDateString = (dateStr) => {
-    if (!dateStr) return new Date();
-    const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
-    const parts = String(dateStr).split(' ');
-    if (parts.length === 3) {
-      const day = parseInt(parts[0], 10);
-      const month = months.indexOf(parts[1]);
-      const year = parseInt(parts[2], 10);
-      if (month !== -1) {
-        return new Date(year, month, day);
-      }
-    }
-    // Fallback
-    const fallbackD = new Date(dateStr);
-    return isNaN(fallbackD.getTime()) ? new Date() : fallbackD;
-  };
+  // extractDate, parseDateString, getMonthKey di-import dari utils/dates.js
 
   // Auto-inject icons on read
   const injectIcon = (type, categoryOrTitle, rawCategoryId = null) => {
@@ -264,17 +207,8 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
-  // Input validation helper
-  const validateAmount = (amount) => {
-    const num = Number(amount);
-    if (!Number.isFinite(num) || isNaN(num) || num <= 0) {
-      throw new Error("Nominal harus berupa angka valid lebih dari 0.");
-    }
-    if (num > 1000000000000) {
-      throw new Error("Nominal melebihi batas maksimum.");
-    }
-    return num;
-  };
+  // Input validation di-extract ke utils/validators.js agar bisa diunit test.
+  // Lihat src/utils/validators.js untuk behavior.
 
   // --- INCOMES ---
   const addIncome = async (income) => {
@@ -511,13 +445,7 @@ export const FinanceProvider = ({ children }) => {
   // --- BUDGETS ---
   const addBudget = async ({ category, limit }) => {
     try {
-      const numLimit = Number(limit);
-      if (!Number.isFinite(numLimit) || isNaN(numLimit) || numLimit < 0) {
-        throw new Error("Target budget harus berupa angka valid 0 atau lebih.");
-      }
-      if (numLimit > 1000000000000) {
-        throw new Error("Target budget melebihi batas maksimum.");
-      }
+      const numLimit = validateBudgetAmount(limit);
 
       // category can be name or id depending on what UI passes, safely resolve to ID
       const catObj = expenseCategories.find(c => c.name === category || c.id === category);
