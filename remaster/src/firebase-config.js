@@ -4,9 +4,17 @@
 // 2. Window runtime config (window.__FIREBASE_CONFIG__ or window.firebaseConfig)
 // 3. HTML meta tag (meta[name="firebase-config"])
 // 4. Firebase Hosting init endpoint (/__/firebase/init.json)
-// 5. Default project configuration fallback
+// 5. LEGACY_FALLBACK_CONFIG (see security notes below)
+//
+// SECURITY NOTE:
+// LEGACY_FALLBACK_CONFIG is a tech-debt fallback retained for backward
+// compatibility. It MUST NOT be relied upon for production deployments.
+// Production sites on Firebase Hosting should resolve via the init.json
+// endpoint (priority 4). Local development should set VITE_FIREBASE_* env
+// variables (priority 1). When this fallback is used, a loud console.error
+// is emitted so the situation is visible during debugging and audits.
 
-const FALLBACK_CONFIG = {
+const LEGACY_FALLBACK_CONFIG = {
   apiKey: "AIzaSyDxmGNxzxbX8UGBm82jn3PmzhiGq0GQT7Y",
   authDomain: "finance-dashboard-10nfl.firebaseapp.com",
   projectId: "finance-dashboard-10nfl",
@@ -100,10 +108,15 @@ async function resolveFirebaseConfig() {
     return hostingConfig;
   }
 
-  console.warn(
-    "Using default project Firebase configuration. To override for local dev, configure .env (VITE_FIREBASE_API_KEY, etc.) or provide runtime config.",
+  console.error(
+    "[firebase-config] All config resolution sources exhausted. " +
+    "Falling back to LEGACY_FALLBACK_CONFIG (hardcoded). This is a " +
+    "tech-debt fallback — production deployments MUST supply config via " +
+    "Firebase Hosting init.json (/__/firebase/init.json) or VITE_FIREBASE_* env vars. " +
+    "If you see this in production, audit your config deployment. " +
+    "See PRD.md Section 8.3 and AGENTS.md Section 2.2 for details."
   );
-  return { ...FALLBACK_CONFIG };
+  return { ...LEGACY_FALLBACK_CONFIG };
 }
 
 export function getFirebaseConfigSync() {
@@ -114,5 +127,9 @@ export function getFirebaseConfigSync() {
     }
   }
 
-  return { ...FALLBACK_CONFIG };
+  console.error(
+    "[firebase-config] getFirebaseConfigSync: no config source available, " +
+    "returning LEGACY_FALLBACK_CONFIG. See firebase-config.js header for details."
+  );
+  return { ...LEGACY_FALLBACK_CONFIG };
 }

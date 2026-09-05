@@ -27,7 +27,7 @@ Baca [`PRD.md`](./PRD.md) sebelum mulai perubahan apa pun.
 
 ### 2.2 Tidak boleh hardcode kredensial
 - **JANGAN** menambahkan API key, project ID, atau secret Firebase lainnya ke source code.
-- `FALLBACK_CONFIG` yang ada di `public/firebase-config.js` dan `remaster/src/firebase-config.js` adalah **tech debt** yang harus dihapus/diisolasi.
+- `LEGACY_FALLBACK_CONFIG` yang ada di `remaster/src/firebase-config.js` adalah **tech debt** yang harus dihapus/diisolasi (saat ini rename + emit `console.error` untuk auditability; targeted removal menyusul).
 - Pakai chain resolusi yang ada: `VITE_FIREBASE_*` → `window.__FIREBASE_CONFIG__` → meta tag → `__/firebase/init.json`.
 
 ### 2.3 Sanitasi output
@@ -124,7 +124,7 @@ Tidak ada Cloud Functions, tidak ada backend API. Semua validasi data **harus** 
 - **Penamaan:**
   - Komponen: `PascalCase` (`DashboardPage`, `StatCard`).
   - Hook/variabel: `camelCase`.
-  - Konstanta: `UPPER_SNAKE_CASE` (`FALLBACK_CONFIG`, `CONFIG_SOURCES`).
+  - Konstanta: `UPPER_SNAKE_CASE` (`LEGACY_FALLBACK_CONFIG`, `CONFIG_SOURCES`).
   - File komponen: `PascalCase.jsx`. File util: `camelCase.js`.
 
 ### 5.2 Error handling
