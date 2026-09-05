@@ -374,12 +374,17 @@ Step urutan:
 1. **Security audit** — `npm audit --audit-level=high` (gate CVE).
 2. **Run unit tests** — `npm test` (Vitest, lihat Section 11.3).
 3. **Build project** — `vite build` + copy dist → `public/`.
-4. **Deploy Firestore Rules and Indexes** — `firebase deploy --only firestore:rules,firestore:indexes`.
+4. **Deploy Firestore Rules** — via `scripts/deploy-firestore-rules.sh` (REST API firebaserules.googleapis.com). Bypass `firebase deploy` karena butuh `serviceusage.services.get` permission. Kalau step ini gagal, log warning tapi workflow tetap lanjut.
 5. **Deploy to Firebase Hosting** — `firebase deploy --only hosting`.
 6. **Publish deployment summary** — URL + channel info ke GitHub Actions summary.
 7. **Clean up credentials** — `shred --remove` pada service account temp file.
 
 Untuk pull_request: step 1-3 berjalan sebagai gate, step 4-7 di-skip (tidak ada deploy).
+
+**Catatan rules deploy:** Kalau CI deploy rules gagal (HTTP 4xx/5xx dari REST API), deploy manual dari workstation lokal:
+```bash
+firebase deploy --only firestore:rules --project finance-dashboard-10nfl
+```
 
 Langkah:
 1. Checkout repo.
