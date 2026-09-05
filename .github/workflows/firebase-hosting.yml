@@ -68,18 +68,29 @@ jobs:
           mkdir public
           cp -R remaster/dist/* public/
 
-      - name: Deploy Firestore Rules and Indexes
+      - name: Authenticate to Google Cloud
+        if: github.event_name == 'push'
+        id: gcloud_auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud CLI
+        if: github.event_name == 'push'
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy Firestore Rules
+        if: github.event_name == 'push'
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file }}
+          FIREBASE_PROJECT_ID: ${{ env.FIREBASE_PROJECT_ID }}
+          FIREBASE_RULES_FILE: ./firestore.rules
         shell: bash
         run: |
           set -euo pipefail
-          firebase deploy \
-            --only firestore:rules,firestore:indexes \
-            --project "$FIREBASE_PROJECT_ID" \
-            --non-interactive
+          ./scripts/deploy-firestore-rules.sh
 
       - name: Deploy to Firebase Hosting
+        if: github.event_name == 'push'
         id: deploy
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file }}
@@ -113,6 +124,7 @@ jobs:
           rm -f deploy-output.json deploy-metadata.txt
 
       - name: Publish deployment summary
+        if: github.event_name == 'push'
         shell: bash
         run: |
           set -euo pipefail
