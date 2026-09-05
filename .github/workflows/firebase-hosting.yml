@@ -55,6 +55,17 @@ jobs:
           mkdir public
           cp -R remaster/dist/* public/
 
+      - name: Deploy Firestore Rules and Indexes
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          firebase deploy \
+            --only firestore:rules,firestore:indexes \
+            --project "$FIREBASE_PROJECT_ID" \
+            --non-interactive
+
       - name: Deploy to Firebase Hosting
         id: deploy
         env:
