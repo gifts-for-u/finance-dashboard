@@ -6,6 +6,7 @@ import { onSnapshot, setDoc, doc } from 'firebase/firestore';
 import { useAuth } from './AuthContext';
 import toast from 'react-hot-toast';
 import { extractDate, parseDateString, getMonthKey } from '../utils/dates';
+import { validateAmount, validateBudgetAmount } from '../utils/validators';
 
 const FinanceContext = createContext();
 
@@ -206,17 +207,8 @@ export const FinanceProvider = ({ children }) => {
     }
   };
 
-  // Input validation helper
-  const validateAmount = (amount) => {
-    const num = Number(amount);
-    if (!Number.isFinite(num) || isNaN(num) || num <= 0) {
-      throw new Error("Nominal harus berupa angka valid lebih dari 0.");
-    }
-    if (num > 1000000000000) {
-      throw new Error("Nominal melebihi batas maksimum.");
-    }
-    return num;
-  };
+  // Input validation di-extract ke utils/validators.js agar bisa diunit test.
+  // Lihat src/utils/validators.js untuk behavior.
 
   // --- INCOMES ---
   const addIncome = async (income) => {
@@ -453,13 +445,7 @@ export const FinanceProvider = ({ children }) => {
   // --- BUDGETS ---
   const addBudget = async ({ category, limit }) => {
     try {
-      const numLimit = Number(limit);
-      if (!Number.isFinite(numLimit) || isNaN(numLimit) || numLimit < 0) {
-        throw new Error("Target budget harus berupa angka valid 0 atau lebih.");
-      }
-      if (numLimit > 1000000000000) {
-        throw new Error("Target budget melebihi batas maksimum.");
-      }
+      const numLimit = validateBudgetAmount(limit);
 
       // category can be name or id depending on what UI passes, safely resolve to ID
       const catObj = expenseCategories.find(c => c.name === category || c.id === category);
