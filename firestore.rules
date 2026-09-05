@@ -9,12 +9,29 @@ service cloud.firestore {
     // adalah SATU-SATUNYA lapisan otorisasi dan validasi — tidak ada backend
     // API lain. Lihat PRD.md Section 8 dan AGENTS.md Section 2.1.
     //
-    // Invarian yang dijaga:
+    // INVARIAN YANG DIJAGA:
     //   1. Setiap akses ke /users/{uid}/... HARUS oleh auth.uid == uid.
     //   2. Semua koleksi di luar /users/{uid}/... default deny.
     //   3. Shape dokumen divalidasi untuk mencegah injeksi field liar
     //      (defense in depth, walau server sudah di-scope per-uid).
+    //
+    // OPERATIONS:
+    //   Aplikasi HANYA melakukan create + update lewat setDoc({merge:true}).
+    //   Tidak ada deleteDoc call di codebase. Untuk forward safety, delete
+    //   operation akan ditolak jika ada rules yang mengakses
+    //   request.resource.data.* (yang null saat delete).
+    //   Pakai catch-all deny write di akhir sebagai safety net.
     // =========================================================================
+
+    // ---- Konstanta ----
+
+    // Batas nominal (IDR). 1e12 = 1.000.000.000.000 (satu triliun).
+    // Amount di storage adalah number (Firestore: int atau float).
+    // Tidak pakai scientific notation '1e12' untuk hindari parser
+    // inconsistency di beberapa rules runtime versi lama.
+    function MAX_AMOUNT() {
+      return 1000000000000;
+    }
 
     // ---- Helper functions ----
 
@@ -27,17 +44,25 @@ service cloud.firestore {
     }
 
     // Amount validator.
-    // INVARIAN: 0 <= amount <= 1e12. allow 0 karena:
+    // INVARIAN: 0 <= amount <= MAX_AMOUNT.
+    //
+    // Allow 0 karena:
     //   - addBudget() mengizinkan reset budget ke 0 (= "hapus budget").
-    //   - Beberapa entri historis mungkin amount = 0 (placeholder).
-    //   - Client-side validateAmount() yang reject <=0 hanya untuk UI hints,
-    //     bukan untuk enforcement. Rules allow 0 demi backward-compat data.
+    //   - Backward-compat: data existing mungkin amount = 0 (placeholder).
+    //
+    // Client-side validateAmount() yang reject <=0 hanya untuk UI hints,
+    // bukan untuk enforcement. Rules allow 0 demi backward-compat data.
     function isValidAmount(val) {
-      return val is number && val >= 0 && val <= 1000000000000;
+      return val is number
+          && val >= 0
+          && val <= MAX_AMOUNT();
     }
 
     // Shape validator untuk Category object dalam array categories[].
     // Field lain (custom) ditolak agar tidak ada injeksi metadata liar.
+    //
+    // keys().hasOnly() check HARUS diletakkan pertama karena subsequent
+    // field access (cat.id, cat.name, dll.) akan throw kalau key tidak ada.
     function isValidCategory(cat) {
       return cat.keys().hasOnly(['id', 'name', 'color', 'icon', 'isDefault'])
           && cat.id is string
@@ -47,16 +72,59 @@ service cloud.firestore {
           && cat.isDefault is bool;
     }
 
+    // Shape validator untuk IncomeItem (dokumentasi shape).
+    // TIDAK dipakai di rules aktif (lihat comment di /months match
+    // tentang element-by-element validation), tapi didefinisikan agar
+    // tersedia ketika aturan layer dalam dimatual.
+    //
+    // Catatan: keys().hasOnly dipakai untuk whitelist field. Saat ini
+    // field yang ditulis FinanceContext.addIncome/updateIncome:
+    //   id, source, description, amount, date
+    // Field 'title' di-internal-rename jadi 'source' sebelum write
+    // (lihat FinanceContext.jsx addIncome).
+    function isValidIncomeItem(item) {
+      return item.keys().hasOnly(['id', 'source', 'description', 'amount', 'date'])
+          && item.id is string
+          && item.source is string
+          && item.description is string
+          && isValidAmount(item.amount)
+          && item.date is timestamp;
+    }
+
+    // Shape validator untuk ExpenseItem (dokumentasi shape).
+    // Sama seperti isValidIncomeItem: tidak dipakai aktif, tapi tersedia.
+    //
+    // Field yang ditulis FinanceContext.addExpense:
+    //   id, category, description, amount, date, status, isRecurring
+    function isValidExpenseItem(item) {
+      return item.keys().hasOnly(['id', 'category', 'description', 'amount', 'date', 'status', 'isRecurring'])
+          && item.id is string
+          && item.category is string
+          && item.description is string
+          && isValidAmount(item.amount)
+          && item.date is timestamp
+          && item.status is string
+          && item.isRecurring is bool;
+    }
+
     // ---- User data hierarchy ----
 
     match /users/{userId} {
-      // User root document: read OK, write deny by default.
+      // User root document: read OK, write deny.
       // Aplikasi tidak menulis ke /users/{uid} (root), hanya ke subcollections.
       allow read: if isOwner(userId);
       allow write: if false;
 
-      // Categories: { categories: Category[] }
-      // Setiap Category harus sesuai shape (lihat isValidCategory).
+      // Categories: dokumen berisi field 'categories' (Category[]).
+      // Validasi:
+      //   - keys hasOnly ['categories'] (tidak ada field liar)
+      //   - categories is list
+      //   - size <= 200 (limit reasonable untuk kategori kustom)
+      //   - semua element valid sesuai isValidCategory
+      //
+      // Perhatikan: setDoc({merge:true}) → request.resource.data adalah
+      // MERGED state (data existing + payload baru). Validasi di atas
+      // apply ke merged state.
       match /categories/{catId} {
         allow read: if isOwner(userId);
         allow write: if isOwner(userId)
@@ -66,23 +134,26 @@ service cloud.firestore {
           && request.resource.data.categories.all(isValidCategory);
       }
 
-      // Monthly financial data:
-      //   { incomes?: IncomeItem[], expenses?: ExpenseItem[], budgets?: map<string, number> }
+      // Monthly financial data: { incomes?, expenses?, budgets? }
       //
-      // Setiap write via FinanceContext.updateMonthDoc() pakai
-      //   setDoc(monthRef, payload, { merge: true })
-      // sehingga request.resource.data adalah MERGED state (data existing
-      // ditambah payload). Validasi di bawah mempertimbangkan itu.
+      // Validasi outer shape saja:
+      //   - keys hasOnly ['incomes', 'expenses', 'budgets'] (whitelist)
+      //   - incomes/expenses is list (jika ada)
+      //   - budgets is map dengan values semua isValidAmount (jika ada)
       //
-      // Catatan PENTING:
-      //   - Budget 'allow' 0 untuk reset budget (lihat isValidAmount).
-      //   - Income/Expense item TIDAK divalidasi element-by-element di rules
-      //     karena Firestore rules tidak support loop ke array element dengan
-      //     mudah dan cost-nya tinggi. Validasi field ada di client
-      //     (FinanceContext.validateAmount, dll.) — lihat PRD.md Section 8.1.
-      //   - hasOnly(['incomes', 'expenses', 'budgets']) strict. Jika di masa
-      //     depan ada field baru (mis. 'updatedAt'), HARUS update rules ini
-      //     bersamaan — lihat AGENTS.md Section 2.1.
+      // ELEMENT-BY-ELEMENT validation untuk incomes/expenses items
+      // TIDAK dilakukan di rules karena:
+      //   1. Biaya tinggi (loop di Firestore rules expensive).
+      //   2. Client-side FinanceContext.validateAmount() sudah cover.
+      //   3. Defense in depth: rules catch type-level, client catch
+      //      value-level. Untuk enable element validation, ganti
+      //      'incomes is list' dengan 'incomes.all(isValidIncomeItem)'
+      //      (lihat helper di atas).
+      //
+      // TRADE-OFF: hasOnly(['incomes', 'expenses', 'budgets']) strict.
+      //   Jika di masa depan ada field baru (mis. 'updatedAt'), HARUS
+      //   update rules ini bersamaan dengan code — lihat AGENTS.md
+      //   Section 2.1.
       match /months/{monthId} {
         allow read: if isOwner(userId);
         allow write: if isOwner(userId)
@@ -93,26 +164,35 @@ service cloud.firestore {
               || request.resource.data.expenses is list)
           && (!('budgets' in request.resource.data) || (
                 request.resource.data.budgets is map
-                // setiap value di budgets map harus berupa amount valid
+                // Setiap value di budgets map harus amount valid.
+                // Map.values() di Firestore Rules mengembalikan list,
+                // .all() adalah standard list predicate.
                 && request.resource.data.budgets.values().all(isValidAmount)
               ));
       }
 
       // Recurring templates: reserved untuk fitur masa depan.
-      // Saat ini tidak ada write dari aplikasi; di-strict untuk write deny.
+      // Aplikasi tidak menulis di sini saat ini → strict deny write.
       match /templates/{templateId} {
         allow read: if isOwner(userId);
         allow write: if false;
       }
 
-      // Migration status: hanya baca, tulis deny.
+      // Migration status: reserved untuk fitur migrasi.
+      // Read OK untuk user, write deny (migration adalah satu-shot CLI tool).
       match /migration/{migrationId} {
         allow read: if isOwner(userId);
         allow write: if false;
       }
 
       // Catch-all untuk subcollection masa depan di bawah user namespace.
-      // Default deny write — harus di-explicit-kan saat menambah subcollection.
+      // Read OK, write DENY default → harus di-explicit-kan saat menambah
+      // subcollection baru (lihat AGENTS.md Section 2.1).
+      //
+      // Catatan: rule catch-all TIDAK override rule spesifik di atas
+      // (Firestore rules precedence: specific match wins). Jadi
+      // match /categories, /months, /templates, /migration yang didefine
+      // sebelumnya tetap dipakai untuk path mereka.
       match /{document=**} {
         allow read: if isOwner(userId);
         allow write: if false;
@@ -120,6 +200,7 @@ service cloud.firestore {
     }
 
     // Default deny untuk semua path di luar /users/{userId}.
+    // Path apapun yang tidak match /users/{userId}/... akan ditolak.
     match /{document=**} {
       allow read, write: if false;
     }
