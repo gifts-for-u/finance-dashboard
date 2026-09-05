@@ -325,16 +325,24 @@ Karena arsitektur **serverless**, **Firestore Security Rules** adalah satu-satun
 ### 8.1 Aturan Inti (`firestore.rules`)
 - Default deny untuk semua path.
 - Setiap akses harus `request.auth != null` **AND** `request.auth.uid == userId`.
-- Validasi tipe data: `amount is number`, `0 <= amount <= 1e12`.
-- Batas karakter untuk string field.
+- Validasi tipe data: `amount is number`, `0 <= amount <= 1e12` (`isValidAmount` helper).
+- Validasi shape dokumen:
+  - `users/{uid}/categories/main`: hanya field `categories`; setiap Category object hanya punya field `[id, name, color, icon, isDefault]` (whitelist via `hasOnly`).
+  - `users/{uid}/months/{YYYY-MM}`: hanya field `[incomes, expenses, budgets]` (whitelist via `hasOnly`); `incomes`/`expenses` harus `list`; `budgets` adalah `map` dengan setiap value bertipe `number` valid.
+- Budget **allow 0** untuk reset budget (backward-compat dengan data existing).
+- Income/Expense items **TIDAK divalidasi element-by-element** di rules — validasi ada di client (`FinanceContext.validateAmount`). Alasan: Firestore rules tidak efisien untuk deep validation dan biayanya tinggi.
+- `users/{uid}` root document: read OK, write **deny**.
+- `templates/*` & `migration/*`: read OK, write **deny** (reserved untuk fitur masa depan).
+- Catch-all untuk subcollection masa depan di bawah `/users/{uid}`: read OK, write **deny** — harus di-explicit-kan saat menambah subcollection baru (lihat AGENTS.md Section 2.1).
 
 ### 8.2 Firebase App Check
 - Inisialisasi otomatis di `lib/firebase.js` jika `VITE_RECAPTCHA_SITE_KEY` di-set.
 - `isTokenAutoRefreshEnabled = true`.
 - Di dev mode, debug token otomatis diaktifkan untuk emulator.
+- **Status:** `VITE_RECAPTCHA_SITE_KEY` belum di-set di production. Belum aktif (lihat backlog Section 12.1).
 
 ### 8.3 Konfigurasi Firebase
-- **Resolution order**: Vite env vars → `window.__FIREBASE_CONFIG__` → `<meta name="firebase-config">` → `https://<site>/__/firebase/init.json` → fallback.
+- **Resolution order**: Vite env vars → `window.__FIREBASE_CONFIG__` → `<meta name="firebase-config">` → `https://<site>/__/firebase/init.json` → `LEGACY_FALLBACK_CONFIG` (hardcoded, dengan `console.error` audit log — lihat AGENTS.md Section 2.2).
 - API key "public" (sesuai desain Firebase Web), tetapi **tidak boleh di-hardcode sebagai fallback utama**; pakai runtime config atau `.env`.
 
 ### 8.4 Session
@@ -379,8 +387,9 @@ Langkah:
 - Rewrites `** → /index.html` untuk SPA routing.
 
 ### 10.3 Deployment ke Firestore Rules
-- Deploy rules **manual** (`firebase deploy --only firestore:rules`) sampai aturan CI ditambah.
-- Target: rules deployment otomatis sinkron dengan hosting deploy (lihat backlog Section 12).
+- **Status (Fase 1):** Workflow `.github/workflows/firebase-hosting.yml` sekarang punya step `Deploy Firestore Rules and Indexes` sebelum deploy hosting. Service account yang dipakai sudah punya role `Firebase Hosting Admin` + `Firebase Rules Admin`. Setiap push ke `main`/`remaster` → rules & indexes otomatis ter-deploy.
+- **Verifikasi pasca-deploy:** Buka Firebase Console → Firestore → Rules, bandingkan dengan `firestore.rules` di repo. Pantau Firebase logs untuk permission-denied errors.
+- **Testing lokal:** `firebase emulators:start` (perlu `firebase-tools` ter-install). Wajib dijalankan untuk perubahan rules yang signifikan (lihat AGENTS.md Section 4.6).
 
 ---
 
@@ -421,14 +430,16 @@ firebase emulators:start
 ## 12. Backlog & Risiko
 
 ### 12.1 Backlog Teknis (Prioritas)
-1. **Tambah deploy Firestore Rules di workflow CI** (kritis).
-2. **Audit & fix `npm audit` high/critical** (tinggi).
-3. **Hapus/audit `dangerouslySetInnerHTML`** jika ada di React pages.
-4. **Hapus `FALLBACK_CONFIG` hardcode** di `public/firebase-config.js` dan `remaster/src/firebase-config.js`.
-5. **Hapus folder `public/` legacy** dari main branch (vanilla JS sudah *dead code*).
-6. **Tambah unit/E2E test** (Vitest + Playwright) untuk FinanceContext.
-8. **Ekspor CSV/PDF** untuk Reports.
-9. **Recurring templates** (cadangan `users/{uid}/templates/`) untuk transaksi berulang bulanan.
+1. ~~Tambah deploy Firestore Rules di workflow CI (kritis)~~ ✅ Selesai (Fase 1.2).
+2. ~~Audit & fix `npm audit` high/critical (tinggi)~~ ✅ Selesai (Fase 1.3).
+3. ~~Hapus/audit `dangerouslySetInnerHTML` jika ada di React pages~~ ✅ Tidak ada usage di React (verified).
+4. ~~Hapus `FALLBACK_CONFIG` hardcode di `public/firebase-config.js` dan `remaster/src/firebase-config.js`~~ ✅ Rename + audit (Fase 2.2); targeted removal menyusul.
+5. ~~Hapus folder `public/` legacy dari main branch~~ ✅ Selesai (Fase 2.1).
+6. ~~Validasi tipe data di `firestore.rules` (shape validation)~~ ✅ Selesai (Fase 4).
+7. **Aktifkan Firebase App Check di production** (sedang). Daftar reCAPTCHA v3 site key, set sebagai secret, inject ke build.
+8. **Tambah unit/E2E test** (Vitest + Playwright) untuk FinanceContext dan rules (Fase 6).
+9. **Ekspor CSV/PDF** untuk Reports.
+10. **Recurring templates** (cadangan `users/{uid}/templates/`) untuk transaksi berulang bulanan.
 11. **i18n** — pisahkan string UI ke dictionary.
 
 ### 12.2 Risiko
