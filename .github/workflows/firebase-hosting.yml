@@ -5,6 +5,10 @@ on:
     branches:
       - main
       - remaster
+  pull_request:
+    branches:
+      - main
+      - remaster
   workflow_dispatch:
 
 permissions:
@@ -44,6 +48,12 @@ jobs:
         run: |
           cd remaster
           npm audit --audit-level=high
+
+      - name: Run unit tests
+        run: |
+          cd remaster
+          npm ci --legacy-peer-deps
+          npm test
 
       - name: Build project
         run: |

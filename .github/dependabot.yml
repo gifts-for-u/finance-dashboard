@@ -1,0 +1,67 @@
+# Dependabot configuration.
+# Memantau update dependency & security advisory di seluruh ekosistem.
+# Lihat AGENTS.md Section 2.4 untuk policy dependency.
+version: 2
+updates:
+  # npm untuk frontend aktif (remaster/)
+  - package-ecosystem: "npm"
+    directory: "/remaster"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Asia/Jakarta"
+    open-pull-requests-limit: 10
+    # Group patch + minor update untuk kurangi noise.
+    groups:
+      patch-and-minor:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    # Auto-label untuk filter di PR view.
+    labels:
+      - "dependencies"
+      - "npm"
+    # Commit message conventional.
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    # Abaikan major updates untuk react, firebase, vite, react-router
+    # (butuh review manual karena potensi breaking change).
+    ignore:
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "firebase"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "vite"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "vitest"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-router-dom"
+        update-types: ["version-update:semver-major"]
+    # Assign reviewer (kolaborator utama).
+    # Catatan: kosongkan jika tidak ada kolaborator tetap;
+    # Dependabot akan fallback ke default reviewers.
+    # reviewers:
+    #   - "gifts-for-u"
+
+  # GitHub Actions untuk workflow CI/CD.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Asia/Jakarta"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
