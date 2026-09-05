@@ -152,6 +152,14 @@ Tidak ada Cloud Functions, tidak ada backend API. Semua validasi data **harus** 
 
 ## 6. Testing & Verifikasi
 
+**Node.js minimum: 24 LTS.** vitest@5 + jsdom@30 + @asamuzakjp/css-color@6
+membutuhkan Node ^22.22.2 || ^24.15.0 || >=26.0.0. Node 20 tidak kompatibel
+(ditemukan error `webidl.util.markAsUncloneable` saat CI pakai Node 20).
+
+CI workflow (`.github/workflows/firebase-hosting.yml`) sudah di-set ke
+`node-version: "24"`. Untuk development lokal, pakai Node 22.22.2+ atau
+Node 24+ (lihat `.nvmrc` jika ada).
+
 Wajib dijalankan sebelum commit:
 ```bash
 cd remaster

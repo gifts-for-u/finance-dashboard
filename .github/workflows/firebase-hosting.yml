@@ -29,7 +29,10 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          # Node 24 LTS diperlukan oleh vitest 5 + jsdom 30 + @asamuzakjp/css-color 6.
+          # jsdom@30.0.1 butuh Node ^22.22.2 || ^24.15.0 || >=26.0.0.
+          # Node 20 tidak kompatibel (lihat AGENTS.md Section 6).
+          node-version: "24"
 
       - name: Prepare Firebase credentials
         id: auth
