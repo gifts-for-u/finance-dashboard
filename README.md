@@ -47,7 +47,7 @@ Ensure GitHub Actions is enabled for the repository. Once enabled, every push tr
 The workflow performs the following steps:
 
 1. Checks out the repository.
-2. Sets up Node.js 20 for consistent CLI behaviour.
+2. Sets up Node.js 24 for consistent CLI behaviour.
 3. Writes the `FIREBASE_SERVICE_ACCOUNT` secret to a temporary credentials file and points the Firebase CLI at it.
 4. Installs the Firebase CLI globally with `npm install -g firebase-tools`.
 5. Runs security audit check (`npm audit --audit-level=high`) in the `remaster/` workspace.

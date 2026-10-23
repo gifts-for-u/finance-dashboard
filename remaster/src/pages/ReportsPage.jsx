@@ -130,7 +130,7 @@ const ReportsPage = () => {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-card text-card-foreground p-4 shadow-2xl border border-slate-100 dark:border-[#3f3f3f] rounded-2xl">
+        <div className="bg-card text-card-foreground p-4 shadow-2xl border border-slate-100 dark:border-slate-800 rounded-2xl">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{label}</p>
           {payload.map((entry, index) => (
             <div key={index} className="flex flex-col mb-1 last:mb-0">
@@ -248,8 +248,8 @@ const ReportsPage = () => {
 
       <ChartCard>
         <div className="flex justify-between items-center mb-10">
-          <h3 className="text-2xl font-bold text-slate-800">Laporan Bulanan</h3>
-          <button className="flex items-center gap-2 px-6 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition-all">
+          <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Laporan Bulanan</h3>
+          <button className="flex items-center gap-2 px-6 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-full text-sm font-bold text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-all">
             <Download size={18} />
             Unduh PDF
           </button>
@@ -258,7 +258,7 @@ const ReportsPage = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-slate-100">
+              <tr className="border-b border-slate-100 dark:border-slate-800">
                 <th className="pb-6 text-xs font-black text-slate-400 uppercase tracking-widest">Bulan</th>
                 <th className="pb-6 text-xs font-black text-slate-400 uppercase tracking-widest text-right">Pemasukan</th>
                 <th className="pb-6 text-xs font-black text-slate-400 uppercase tracking-widest text-right">Pengeluaran</th>
@@ -271,11 +271,11 @@ const ReportsPage = () => {
                   <td colSpan={4} className="py-6 text-center text-sm font-bold text-slate-400">Tidak ada riwayat data</td>
                 </tr>
               ) : tableData.map((row, idx) => (
-                <tr key={idx} className="group hover:bg-slate-50/50 transition-all dark:hover:bg-[#2f2f2f]/30">
+                <tr key={idx} className="group hover:bg-slate-50/50 transition-all dark:hover:bg-slate-800/40">
                   <td className="py-6 text-sm font-bold text-slate-700 dark:text-slate-200">{row.longName}</td>
                   <td className="py-6 text-sm font-bold text-green-600 dark:text-green-500 text-right">{formatRupiah(row.income)}</td>
                   <td className="py-6 text-sm font-bold text-destructive text-right">{formatRupiah(row.expense)}</td>
-                  <td className="py-6 text-sm font-black text-primary dark:text-[#3b82f6] text-right">{formatRupiah(row.balance)}</td>
+                  <td className="py-6 text-sm font-black text-primary dark:text-primary text-right">{formatRupiah(row.balance)}</td>
                 </tr>
               ))}
             </tbody>

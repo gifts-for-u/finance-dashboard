@@ -19,16 +19,16 @@ const FullscreenTable = ({ isOpen, onClose, data, title, onEditItem, onAddItem, 
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-5 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card border-b border-slate-100 dark:border-[#3f3f3f]">
+        <div className="p-5 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-card border-b border-slate-100 dark:border-slate-800">
           <div className="flex justify-between items-start gap-4">
             <div>
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-white tracking-tight">{title}</h2>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight">{title}</h2>
               <p className="text-slate-400 font-medium mt-1 text-sm sm:text-base">Kelola semua daftar transaksi Anda di satu tempat</p>
             </div>
             
             <button 
               onClick={onClose}
-              className="md:hidden p-3 h-fit bg-card dark:bg-[#1e1e1e] text-card-foreground dark:text-white border border-slate-100 dark:border-[#3f3f3f] text-slate-400 rounded-xl hover:bg-slate-50 dark:hover:bg-[#2f2f2f] transition-all shadow-sm cursor-pointer flex-shrink-0"
+              className="md:hidden p-3 h-fit bg-card dark:bg-slate-800 text-card-foreground dark:text-white border border-slate-100 dark:border-slate-800 text-slate-400 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm cursor-pointer flex-shrink-0"
             >
               <X size={20} />
             </button>
@@ -41,14 +41,14 @@ const FullscreenTable = ({ isOpen, onClose, data, title, onEditItem, onAddItem, 
                 <input 
                   type="text" 
                   placeholder="Cari transaksi..." 
-                  className="pl-12 pr-6 py-3.5 md:py-4 bg-card dark:bg-[#1e1e1e] text-card-foreground dark:text-white border border-slate-100 dark:border-[#3f3f3f] rounded-xl md:rounded-2xl w-full md:w-[300px] text-sm focus:outline-none focus:ring-4 focus:ring-blue-50/10 transition-all shadow-sm"
+                  className="pl-12 pr-6 py-3.5 md:py-4 bg-card dark:bg-slate-800 text-card-foreground dark:text-white border border-slate-100 dark:border-slate-800 rounded-xl md:rounded-2xl w-full md:w-[300px] text-sm focus:outline-none focus:ring-4 focus:ring-blue-50/10 transition-all shadow-sm"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
               <button 
                 onClick={onClose}
-                className="hidden md:flex p-3.5 md:p-4 bg-card dark:bg-[#1e1e1e] text-card-foreground dark:text-white border border-slate-100 dark:border-[#3f3f3f] text-slate-400 rounded-xl md:rounded-2xl hover:bg-slate-50 dark:hover:bg-[#2f2f2f] transition-all shadow-sm cursor-pointer flex-shrink-0"
+                className="hidden md:flex p-3.5 md:p-4 bg-card dark:bg-slate-800 text-card-foreground dark:text-white border border-slate-100 dark:border-slate-800 text-slate-400 rounded-xl md:rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm cursor-pointer flex-shrink-0"
               >
                 <X size={20} />
               </button>
@@ -60,7 +60,7 @@ const FullscreenTable = ({ isOpen, onClose, data, title, onEditItem, onAddItem, 
               {onAddItem && (
                 <button 
                   onClick={onAddItem}
-                  className="px-6 py-3.5 md:py-4 bg-primary hover:bg-blue-600 text-white rounded-xl md:rounded-2xl flex items-center justify-center gap-3 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 active:scale-95 text-sm font-bold flex-1 md:flex-none"
+                  className="px-6 py-3.5 md:py-4 bg-primary hover:bg-blue-600 text-white rounded-full flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-95 text-sm font-bold flex-1 md:flex-none cursor-pointer focus:outline-none focus:ring-4 focus:ring-primary/20"
                 >
                   <Plus size={20} />
                   {addButtonText}
@@ -72,16 +72,16 @@ const FullscreenTable = ({ isOpen, onClose, data, title, onEditItem, onAddItem, 
 
         {/* Table Content */}
         <div className="flex-1 overflow-auto p-4 sm:p-6 md:p-10 custom-scrollbar">
-          <div className="bg-card text-card-foreground rounded-2xl md:rounded-[32px] shadow-sm border border-slate-100 dark:border-[#3f3f3f] overflow-x-auto custom-scrollbar">
+          <div className="bg-card text-card-foreground rounded-2xl md:rounded-[32px] shadow-sm border border-slate-100 dark:border-slate-800 overflow-x-auto custom-scrollbar">
             <table className="w-full text-left border-collapse min-w-[700px] md:min-w-full">
               <thead>
-                <tr className="bg-slate-50/50 dark:bg-[#2a2a2a]">
-                  <th className="px-8 py-6 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-[#3f3f3f]">No</th>
-                  <th className="px-8 py-6 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-[#3f3f3f]">Sumber</th>
-                  <th className="px-8 py-6 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-[#3f3f3f]">Keterangan</th>
-                  <th className="px-8 py-6 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-[#3f3f3f] text-right">Jumlah</th>
-                  <th className="px-8 py-6 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-[#3f3f3f] text-center">Tanggal</th>
-                  <th className="px-8 py-6 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-[#3f3f3f] text-center">Status</th>
+                <tr className="bg-slate-50/50 dark:bg-slate-800/80">
+                  <th className="px-8 py-6 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">No</th>
+                  <th className="px-8 py-6 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">Sumber</th>
+                  <th className="px-8 py-6 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">Keterangan</th>
+                  <th className="px-8 py-6 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 text-right">Jumlah</th>
+                  <th className="px-8 py-6 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 text-center">Tanggal</th>
+                  <th className="px-8 py-6 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 text-center">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -89,7 +89,7 @@ const FullscreenTable = ({ isOpen, onClose, data, title, onEditItem, onAddItem, 
                   <tr 
                     key={item.id || index} 
                     onClick={() => onEditItem(item)}
-                    className="group cursor-pointer hover:bg-primary/5 dark:hover:bg-[#3b82f6]/10 transition-all border-b border-slate-50 dark:border-[#2f2f2f] last:border-0"
+                    className="group cursor-pointer hover:bg-primary/5 dark:hover:bg-primary/10 transition-all border-b border-slate-50 dark:border-slate-800 last:border-0"
                   >
                     <td className="px-8 py-6">
                       <span className="text-sm font-bold text-slate-400">#{index + 1}</span>
@@ -97,7 +97,7 @@ const FullscreenTable = ({ isOpen, onClose, data, title, onEditItem, onAddItem, 
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-3">
                         <div 
-                          className={`p-2 rounded-lg ${!item.hex ? (item.iconColor || 'bg-slate-50 text-slate-400 dark:bg-[#1e1e1e] dark:text-slate-300') : ''} scale-90`}
+                          className={`p-2 rounded-lg ${!item.hex ? (item.iconColor || 'bg-slate-50 text-slate-400 dark:bg-slate-800 dark:text-slate-300') : ''} scale-90`}
                           style={item.hex ? { backgroundColor: `${item.hex}1A`, color: item.hex } : {}}
                         >
                           {item.icon ? <item.icon size={16} /> : <Filter size={16} />}
@@ -106,7 +106,7 @@ const FullscreenTable = ({ isOpen, onClose, data, title, onEditItem, onAddItem, 
                       </div>
                     </td>
                     <td className="px-8 py-6">
-                      <span className="text-sm font-bold text-slate-600 dark:text-slate-300 group-hover:text-primary dark:group-hover:text-[#3b82f6] transition-colors uppercase tracking-wide">{item.title}</span>
+                      <span className="text-sm font-bold text-slate-600 dark:text-slate-300 group-hover:text-primary transition-colors uppercase tracking-wide">{item.title}</span>
                     </td>
                     <td className="px-8 py-6 text-right">
                       <span className="text-sm font-black text-green-600">{formatRupiah(item.amount)}</span>
@@ -137,7 +137,7 @@ const FullscreenTable = ({ isOpen, onClose, data, title, onEditItem, onAddItem, 
         </div>
 
         {/* Footer info */}
-        <div className="px-6 md:px-10 py-5 md:py-6 bg-card border-t border-slate-100 dark:border-[#3f3f3f] flex flex-col sm:flex-row justify-between items-center gap-3 text-center sm:text-left">
+        <div className="px-6 md:px-10 py-5 md:py-6 bg-card border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-3 text-center sm:text-left">
           <p className="text-sm text-slate-400 font-medium">Menampilkan <span className="text-slate-700 dark:text-slate-200 font-bold">{filteredData.length}</span> transaksi</p>
           <div className="flex items-center justify-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />

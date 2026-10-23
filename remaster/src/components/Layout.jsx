@@ -53,28 +53,28 @@ const Layout = ({ children, title }) => {
 
   return (
     <div className="min-h-screen bg-background text-foreground p-4 pb-28 md:p-6 md:pb-6 lg:p-10 lg:pb-10 relative">
-      <div className="flex justify-between items-center md:hidden mb-6 sticky top-0 bg-background/95 backdrop-blur-3xl p-4 -mx-4 z-40 border-b border-slate-100 dark:border-[#3f3f3f]">
-        <h1 className="text-xl font-bold text-slate-800 dark:text-white">{title}</h1>
+      <div className="flex justify-between items-center md:hidden mb-6 sticky top-0 bg-background/95 backdrop-blur-3xl p-4 -mx-4 z-40 border-b border-slate-100 dark:border-slate-800">
+        <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">{title}</h1>
         <button 
           onClick={() => setIsMobileMenuOpen(true)}
-          className="p-3 rounded-xl bg-slate-100 dark:bg-[#1e1e1e] border border-transparent dark:border-[#2f2f2f] text-slate-600 dark:text-white transition-all cursor-pointer hover:bg-slate-200 dark:hover:bg-[#2a2a2a] active:scale-95"
+          className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-transparent dark:border-slate-700 text-slate-600 dark:text-white transition-all cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95"
         >
           <Menu size={18} />
         </button>
       </div>
 
       {/* Date Selector (Mobile Only) */}
-      <div className="md:hidden flex items-center justify-between bg-card text-card-foreground p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-[#3f3f3f] mb-6">
+      <div className="md:hidden flex items-center justify-between bg-card text-card-foreground p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 mb-6">
         <button 
           onClick={() => changeMonth(-1)} 
-          className="p-3 bg-slate-100 dark:bg-[#1e1e1e] border border-transparent dark:border-[#2f2f2f] text-slate-500 dark:text-white rounded-xl transition-colors cursor-pointer hover:bg-slate-200 dark:hover:bg-[#2a2a2a] active:scale-95"
+          className="p-3 bg-slate-100 dark:bg-slate-800 border border-transparent dark:border-slate-700 text-slate-500 dark:text-slate-200 rounded-xl transition-colors cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95"
         >
           <ChevronLeft size={18} />
         </button>
-        <span className="text-sm font-bold text-primary dark:text-white whitespace-nowrap capitalize">{formattedDate}</span>
+        <span className="text-sm font-bold text-primary whitespace-nowrap capitalize">{formattedDate}</span>
         <button 
           onClick={() => changeMonth(1)} 
-          className="p-3 bg-slate-100 dark:bg-[#1e1e1e] border border-transparent dark:border-[#2f2f2f] text-slate-500 dark:text-white rounded-xl transition-colors cursor-pointer hover:bg-slate-200 dark:hover:bg-[#2a2a2a] active:scale-95"
+          className="p-3 bg-slate-100 dark:bg-slate-800 border border-transparent dark:border-slate-700 text-slate-500 dark:text-slate-200 rounded-xl transition-colors cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95"
         >
           <ChevronRight size={18} />
         </button>
@@ -82,11 +82,11 @@ const Layout = ({ children, title }) => {
 
       {/* Header Desktop */}
       <div className="hidden md:flex flex-row justify-between items-center mb-8 gap-4">
-        <h1 className="text-3xl font-bold text-slate-800 dark:text-white">{title}</h1>
+        <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">{title}</h1>
         
         <div className="flex items-center gap-4">
           {/* User Profile */}
-          <div className="flex items-center gap-3 bg-card text-card-foreground px-4 py-2 rounded-full shadow-sm border border-slate-100 dark:border-[#3f3f3f]">
+          <div className="flex items-center gap-3 bg-card text-card-foreground px-4 py-2 rounded-full shadow-sm border border-slate-100 dark:border-slate-800">
             <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
               {user?.photoURL ? (
                 <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
@@ -98,14 +98,14 @@ const Layout = ({ children, title }) => {
           </div>
 
           {/* Date Selector */}
-          <div className="flex items-center gap-2 bg-card text-card-foreground px-4 py-2 rounded-full shadow-sm border border-slate-100">
+          <div className="flex items-center gap-2 bg-card text-card-foreground px-4 py-2 rounded-full shadow-sm border border-slate-100 dark:border-slate-800">
             <button 
               onClick={() => changeMonth(-1)}
               className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
             >
               <ChevronLeft size={16} />
             </button>
-            <span className="text-sm font-medium text-slate-700 whitespace-nowrap capitalize">{formattedDate}</span>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-200 whitespace-nowrap capitalize">{formattedDate}</span>
             <button 
               onClick={() => changeMonth(1)}
               className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
@@ -123,7 +123,7 @@ const Layout = ({ children, title }) => {
           </button>
           <button 
             onClick={logout}
-            className="p-3 bg-card dark:bg-[#1e1e1e] text-slate-400 rounded-full border border-slate-100 dark:border-[#3f3f3f] shadow-sm transition-all hover:text-destructive active:scale-95 cursor-pointer"
+            className="p-3 bg-card dark:bg-slate-800 text-slate-400 rounded-full border border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:text-destructive active:scale-95 cursor-pointer"
           >
             <LogOut size={20} />
           </button>
@@ -177,9 +177,9 @@ const Layout = ({ children, title }) => {
       <div className={`fixed inset-0 z-50 md:hidden transition-all duration-300 ${isMobileMenuOpen ? 'visible' : 'invisible'}`}>
         <div className={`absolute inset-0 bg-slate-900/20 dark:bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 ${isMobileMenuOpen ? 'opacity-100' : 'opacity-0'}`} onClick={() => setIsMobileMenuOpen(false)} />
         
-        <div className={`absolute top-0 right-0 w-full max-w-[320px] h-full bg-slate-50 dark:bg-[#0a0f1d] border-l border-slate-100 dark:border-[#3f3f3f] shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-          <div className="p-5 flex justify-between items-center border-b border-slate-100 dark:border-[#3f3f3f] bg-background">
-            <h2 className="text-lg font-bold text-slate-800 dark:text-white">{title}</h2>
+        <div className={`absolute top-0 right-0 w-full max-w-[320px] h-full bg-slate-50 dark:bg-card border-l border-slate-100 dark:border-slate-800 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className="p-5 flex justify-between items-center border-b border-slate-100 dark:border-slate-800 bg-background">
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">{title}</h2>
             <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full transition-colors cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95">
               <X size={18} />
             </button>
@@ -187,7 +187,7 @@ const Layout = ({ children, title }) => {
 
           <div className="p-5 flex flex-col gap-4">
             {/* User Profile Card */}
-            <div className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 dark:border-[#3f3f3f] bg-white dark:bg-[#1e1e1e] shadow-sm">
+            <div className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 shadow-sm">
               <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                 {user?.photoURL ? (
                   <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
@@ -197,14 +197,14 @@ const Layout = ({ children, title }) => {
               </div>
               <div className="flex flex-col">
                 <span className="text-xs text-slate-500 font-medium tracking-wide">Selamat datang,</span>
-                <span className="font-bold text-slate-800 dark:text-white text-base">{user?.displayName ? user.displayName.split(' ')[0] + '.' : 'User.'}</span>
+                <span className="font-bold text-slate-800 dark:text-slate-100 text-base">{user?.displayName ? user.displayName.split(' ')[0] + '.' : 'User.'}</span>
               </div>
             </div>
 
             <div className="flex gap-3 mt-2">
               <button 
                 onClick={toggleTheme}
-                className="flex-1 flex justify-between items-center px-4 py-3 bg-white dark:bg-[#1e1e1e] border border-slate-200 dark:border-[#3f3f3f] rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer shadow-sm active:scale-95 transition-all outline-none"
+                className="flex-1 flex justify-between items-center px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer shadow-sm active:scale-95 transition-all outline-none"
               >
                 {theme === 'dark' ? 'Mode Gelap' : 'Mode Terang'}
                 <ChevronDown size={16} className="text-slate-400" />
@@ -228,7 +228,7 @@ const Layout = ({ children, title }) => {
       </main>
 
       {/* Bottom Navigation Navbar (Mobile Only) */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-card/90 backdrop-blur-xl border-t border-slate-100 dark:border-[#3f3f3f] rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_-5px_30px_-15px_rgba(0,0,0,0.5)] z-50 px-6 py-4 pb-safe flex justify-between items-center">
+      <nav className="md:hidden fixed bottom-0 left-0 w-full bg-card/90 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 rounded-t-3xl shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_-5px_30px_-15px_rgba(0,0,0,0.5)] z-50 px-6 py-4 pb-safe flex justify-between items-center">
         {mobileNavItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -257,7 +257,7 @@ const Layout = ({ children, title }) => {
                 </motion.div>
 
                 <motion.span
-                  className={`absolute bottom-0 text-[10px] font-bold ${isActive ? 'text-primary dark:text-[#3b82f6]' : 'text-slate-400 dark:text-slate-500'}`}
+                  className={`absolute bottom-0 text-[10px] font-bold ${isActive ? 'text-primary' : 'text-slate-400 dark:text-slate-500'}`}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ 
                     opacity: isActive ? 1 : 0, 

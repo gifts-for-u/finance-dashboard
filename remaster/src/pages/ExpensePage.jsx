@@ -109,7 +109,7 @@ const ExpensePage = () => {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-card text-card-foreground p-4 shadow-2xl border border-slate-100 dark:border-[#3f3f3f] rounded-2xl">
+        <div className="bg-card text-card-foreground p-4 shadow-2xl border border-slate-100 dark:border-slate-800 rounded-2xl">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label || payload[0].name}</p>
           <p className="text-sm font-bold text-destructive">{formatRupiah(payload[0].value)}</p>
         </div>
@@ -354,7 +354,7 @@ const ExpensePage = () => {
                       placeholder="Cari pengeluaran..." 
                       value={searchExpense}
                       onChange={(e) => setSearchExpense(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#1e1e1e] border border-slate-100 dark:border-[#3f3f3f] rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-destructive/20 transition-all dark:text-white"
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-destructive/20 transition-all dark:text-slate-100"
                     />
                   </div>
                   <IconSortDropdown
@@ -414,7 +414,7 @@ const ExpensePage = () => {
           extra={
             <button 
               onClick={() => setIsCatManagerOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3 bg-transparent text-[#1E56D1] dark:text-[#3b82f6] rounded-xl sm:rounded-2xl font-bold border border-transparent hover:border-primary/50 dark:hover:border-primary hover:bg-primary/5 dark:hover:bg-[#3b82f6]/10 transition-all cursor-pointer active:scale-95 text-xs sm:text-sm whitespace-nowrap"
+              className="flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-3 bg-transparent text-primary rounded-xl sm:rounded-2xl font-bold border border-transparent hover:border-primary/50 dark:hover:border-primary hover:bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer active:scale-95 text-xs sm:text-sm whitespace-nowrap"
             >
               <Tag size={16} /> Kelola Kategori
             </button>
@@ -642,7 +642,7 @@ const ExpensePage = () => {
         extraAction={
           <button 
             onClick={() => setIsCatManagerOpen(true)}
-            className="flex items-center gap-2 px-6 py-4 bg-card dark:bg-[#1e1e1e] text-[#1E56D1] dark:text-[#3b82f6] border border-slate-200 dark:border-[#3f3f3f] rounded-2xl font-bold hover:bg-slate-50 dark:hover:bg-[#2f2f2f] transition-all shadow-sm cursor-pointer active:scale-95 text-sm whitespace-nowrap"
+            className="flex items-center gap-2 px-6 py-4 bg-card dark:bg-slate-800/60 text-primary border border-slate-200 dark:border-slate-800 rounded-2xl font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm cursor-pointer active:scale-95 text-sm whitespace-nowrap"
           >
             <Tag size={18} /> Kelola Kategori
           </button>

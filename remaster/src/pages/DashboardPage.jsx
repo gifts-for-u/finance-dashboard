@@ -25,10 +25,13 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 import { useFinance } from '../context/FinanceContext';
 import { IconSortDropdown } from '../components/SortControls';
 import { SORT_OPTIONS } from '../components/sortOptions';
+import { CustomDatePicker, CustomSelect } from '../components/CustomInputs';
+import { formatDateIdLong } from '../utils/dates';
+import { Save } from 'lucide-react';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
-  const { incomes, totalIncome, expenses, totalExpense, addIncome, deleteIncome, addExpense, deleteExpense, toggleExpenseStatus, budgets } = useFinance();
+  const { incomes, totalIncome, expenses, totalExpense, addIncome, deleteIncome, addExpense, deleteExpense, toggleExpenseStatus, budgets, expenseCategories } = useFinance();
   const [searchIncome, setSearchIncome] = useState('');
   const [searchExpense, setSearchExpense] = useState('');
   const [sortIncome, setSortIncome] = useState('');
@@ -39,8 +42,17 @@ const DashboardPage = () => {
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   
   // Form States
-  const [newIncome, setNewIncome] = useState({ title: '', amount: '', date: 'Today' });
-  const [newExpense, setNewExpense] = useState({ title: '', category: 'Lainnya', amount: '', date: 'Today', hex: '#94A3B8' });
+  const [newIncome, setNewIncome] = useState({ title: '', amount: '', date: '' });
+  const [newExpense, setNewExpense] = useState({ title: '', category: 'Lainnya', amount: '', date: '', hex: '#94A3B8' });
+
+  
+  const categoryOptions = useMemo(() => {
+    return (expenseCategories || []).map(cat => ({
+      value: cat.name,
+      label: cat.name,
+      color: cat.color
+    }));
+  }, [expenseCategories]);
 
   const getSortedItems = (items, sortType) => {
     return [...items].sort((a, b) => {
@@ -122,7 +134,7 @@ const DashboardPage = () => {
       return (
         <div className="bg-card text-card-foreground p-4 shadow-2xl border border-slate-100 rounded-2xl">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{payload[0].name}</p>
-          <p className="text-sm font-bold text-primary dark:text-[#3b82f6]">{formatRupiah(payload[0].value)}</p>
+          <p className="text-sm font-bold text-primary text-primary">{formatRupiah(payload[0].value)}</p>
         </div>
       );
     }
@@ -253,7 +265,7 @@ const DashboardPage = () => {
                 placeholder="Cari pemasukan..." 
                 value={searchIncome}
                 onChange={(e) => setSearchIncome(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#1e1e1e] border border-slate-100 dark:border-[#3f3f3f] rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all dark:text-white"
+                className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all dark:text-white"
               />
             </div>
             <IconSortDropdown
@@ -265,9 +277,9 @@ const DashboardPage = () => {
 
           <div className="space-y-3 mb-6">
             {sortedIncomes.map((inc, idx) => (
-              <div key={inc.id} className="bg-card dark:bg-[#1e1e1e] p-3 sm:p-4 rounded-2xl flex justify-between items-center group cursor-pointer hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-[#3f3f3f] hover:border-primary/30 hover:bg-primary/5 dark:hover:bg-primary/10 dark:hover:border-primary/50">
+              <div key={inc.id} className="bg-card dark:bg-slate-800/60 p-3 sm:p-4 rounded-2xl flex justify-between items-center group cursor-pointer hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800 hover:border-primary/30 hover:bg-primary/5 dark:hover:bg-primary/10 dark:hover:border-primary/50">
                 <div className="flex items-center gap-3 sm:gap-4">
-                  <div className={`p-2.5 sm:p-3 rounded-xl shadow-sm flex items-center justify-center transition-all group-hover:scale-110 ${inc.iconColor || 'bg-primary/10 dark:bg-[#3b82f6]/10 text-primary dark:text-[#3b82f6]'}`}>
+                  <div className={`p-2.5 sm:p-3 rounded-xl shadow-sm flex items-center justify-center transition-all group-hover:scale-110 ${inc.iconColor || 'bg-primary/10 text-primary'}`}>
                     {(() => {
                       const Icon = inc.icon || Wallet;
                       return <Icon size={18} />;
@@ -280,7 +292,7 @@ const DashboardPage = () => {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex flex-col items-end">
-                    <span className="font-bold text-primary dark:text-[#3b82f6]">{formatRupiah(inc.amount)}</span>
+                    <span className="font-bold text-primary text-primary">{formatRupiah(inc.amount)}</span>
                     <span className="text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider mt-1 bg-green-500/10 text-green-500">{inc.status || 'PAID'}</span>
                   </div>
                   <button 
@@ -313,7 +325,7 @@ const DashboardPage = () => {
                 placeholder="Cari pengeluaran..." 
                 value={searchExpense}
                 onChange={(e) => setSearchExpense(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#1e1e1e] border border-slate-100 dark:border-[#3f3f3f] rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-destructive/20 transition-all dark:text-white"
+                className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-destructive/20 transition-all dark:text-white"
               />
             </div>
             <IconSortDropdown
@@ -325,7 +337,7 @@ const DashboardPage = () => {
 
           <div className="space-y-3 mb-6">
             {sortedExpenses.map((ex, idx) => (
-                <div key={ex.id} className="bg-card dark:bg-[#1e1e1e] p-3 sm:p-4 rounded-2xl flex justify-between items-center group cursor-pointer hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-[#3f3f3f] hover:border-destructive/30 hover:bg-destructive/5 dark:hover:bg-[#6e0a0a]/15 dark:hover:border-destructive/50">
+                <div key={ex.id} className="bg-card dark:bg-slate-800/60 p-3 sm:p-4 rounded-2xl flex justify-between items-center group cursor-pointer hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800 hover:border-destructive/30 hover:bg-destructive/5 dark:hover:bg-[#6e0a0a]/15 dark:hover:border-destructive/50">
                   <div className="flex items-center gap-3 sm:gap-4">
                     <button 
                       onClick={(e) => { e.stopPropagation(); toggleExpenseStatus(ex.id); }}
@@ -392,12 +404,12 @@ const DashboardPage = () => {
                         stroke="none"
                       >
                         <Cell fill={cat.color || '#94A3B8'} />
-                        <Cell fill="#F1F5F9" className="dark:fill-[#2f2f2f]" />
+                        <Cell fill="#F1F5F9" className="dark:fill-slate-800" />
                       </Pie>
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-xl font-black text-slate-800 dark:text-white">{cat.value}%</span>
+                    <span className="text-xl font-black text-slate-800 dark:text-slate-100">{cat.value}%</span>
                   </div>
                 </div>
                 <div className="text-center">
@@ -416,11 +428,11 @@ const DashboardPage = () => {
       {/* Budget Progress Section */}
       <ChartCard>
         <div className="flex justify-between items-center mb-10">
-          <h3 className="text-2xl font-bold text-slate-800">Progres Budget</h3>
+          <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Progres Budget</h3>
           <div className="flex gap-3">
             <button 
               onClick={() => navigate('/budget')}
-              className="bg-card text-card-foreground border border-slate-100 text-slate-600 px-6 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-slate-50 transition-all shadow-sm cursor-pointer active:scale-95"
+              className="bg-card text-card-foreground border border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 px-6 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm cursor-pointer active:scale-95"
             >
               <Settings size={18} />
               Kelola Budget
@@ -434,11 +446,11 @@ const DashboardPage = () => {
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
                   <div className={`w-3 h-3 rounded-full ${item.barColor.startsWith('bg-') ? item.barColor : ''}`} style={{ backgroundColor: item.barColor.startsWith('bg-') ? undefined : item.barColor }} />
-                  <h4 className="font-bold text-slate-700 text-lg">{item.title}</h4>
+                  <h4 className="font-bold text-slate-700 dark:text-slate-200 text-lg">{item.title}</h4>
                 </div>
                 <div className="text-right">
                   <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Target</p>
-                  <p className="text-sm font-medium text-slate-600">{item.target ? formatRupiah(item.target) : 'Total ada'}</p>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-300">{item.target ? formatRupiah(item.target) : 'Total ada'}</p>
                 </div>
               </div>
 

@@ -113,9 +113,9 @@ const IncomePage = () => {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-card text-card-foreground p-4 shadow-2xl border border-slate-100 dark:border-[#3f3f3f] rounded-2xl">
+        <div className="bg-card text-card-foreground p-4 shadow-2xl border border-slate-100 dark:border-slate-800 rounded-2xl">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label || payload[0].name}</p>
-          <p className="text-sm font-bold text-primary dark:text-[#3b82f6]">{formatRupiah(payload[0].value)}</p>
+          <p className="text-sm font-bold text-primary text-primary">{formatRupiah(payload[0].value)}</p>
         </div>
       );
     }
@@ -306,7 +306,7 @@ const IncomePage = () => {
               extra={
                 <button 
                   onClick={() => setIsModalOpen(true)}
-                  className="p-2 bg-primary/10 dark:bg-[#3b82f6]/10 text-primary dark:text-[#3b82f6] rounded-xl hover:bg-primary/20 dark:hover:bg-[#3b82f6]/20 transition-all active:scale-95 cursor-pointer"
+                  className="p-2 bg-primary/10 text-primary rounded-xl hover:bg-primary/20 hover:bg-primary/20 transition-all active:scale-95 cursor-pointer"
                 >
                   <Plus size={20} />
                 </button>
@@ -321,7 +321,7 @@ const IncomePage = () => {
                       placeholder="Cari pemasukan..." 
                       value={searchIncome}
                       onChange={(e) => setSearchIncome(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-[#1e1e1e] border border-slate-100 dark:border-[#3f3f3f] rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all dark:text-white"
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all dark:text-slate-100"
                     />
                   </div>
                   <IconSortDropdown
@@ -437,7 +437,7 @@ const IncomePage = () => {
             status: formData.status,
             icon: Wallet,
             color: 'bg-primary/10',
-            iconColor: 'bg-primary/10 dark:bg-[#3b82f6]/10 text-primary dark:text-[#3b82f6]'
+            iconColor: 'bg-primary/10 text-primary'
           });
           setIsModalOpen(false);
           setFormData(initialFormState);
@@ -596,7 +596,7 @@ const IncomePage = () => {
                     <button 
                       type="button"
                       onClick={() => setShowDeleteConfirm(false)}
-                      className="flex-1 py-3 bg-primary/10 dark:bg-[#3b82f6]/10 text-primary dark:text-[#3b82f6] rounded-2xl text-sm font-black hover:bg-primary/20 dark:hover:bg-[#3b82f6]/20 transition-all"
+                      className="flex-1 py-3 bg-primary/10 text-primary rounded-2xl text-sm font-black hover:bg-primary/20 hover:bg-primary/20 transition-all"
                     >
                       Tidak
                     </button>

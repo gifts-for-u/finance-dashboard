@@ -90,8 +90,8 @@ const ProtectedRoute = ({ children }) => {
   
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0a0f1d]">
-        <div className="w-8 h-8 border-4 border-slate-200 dark:border-slate-800 border-t-primary dark:border-t-[#3b82f6] rounded-full animate-spin"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-4 border-slate-200 dark:border-slate-800 border-t-primary rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -113,7 +113,7 @@ function App() {
           <Toaster 
             position="bottom-right"
             toastOptions={{
-              className: 'dark:bg-[#1e1e1e] dark:text-white dark:border dark:border-[#3f3f3f]',
+              className: 'dark:bg-card dark:text-slate-100 dark:border dark:border-slate-800 shadow-xl rounded-2xl font-medium',
               duration: 4000,
             }}
           />

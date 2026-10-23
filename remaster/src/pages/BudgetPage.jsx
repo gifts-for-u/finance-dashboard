@@ -125,7 +125,7 @@ const BudgetPage = () => {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-card text-card-foreground p-4 shadow-2xl border border-slate-100 dark:border-[#3f3f3f] rounded-2xl">
+        <div className="bg-card text-card-foreground p-4 shadow-2xl border border-slate-100 dark:border-slate-800 rounded-2xl">
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{label}</p>
           {payload.map((entry, index) => (
             <div key={index} className="flex flex-col mb-2 last:mb-0">
@@ -369,7 +369,7 @@ const BudgetPage = () => {
       >
         <form onSubmit={handleAddBudget} className="space-y-6">
           <div className="space-y-2">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Kategori</label>
+            <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">Kategori</label>
             <CustomSelect 
               value={budgetFormData.category}
               onChange={(val) => setBudgetFormData({...budgetFormData, category: val})}
@@ -377,10 +377,10 @@ const BudgetPage = () => {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Jumlah Anggaran</label>
+            <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">Jumlah Anggaran</label>
             <input 
               type="number" 
-              className="w-full p-4 bg-slate-50 border border-slate-100 rounded-3xl focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all font-bold text-primary"
+              className="w-full p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-3xl focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all font-mono font-bold text-primary"
               placeholder="0"
               value={budgetFormData.amount}
               onChange={(e) => setBudgetFormData({...budgetFormData, amount: e.target.value})}
@@ -391,7 +391,7 @@ const BudgetPage = () => {
           <div className="pt-2">
             <button 
               type="submit" 
-              className="w-auto px-10 py-4 bg-primary text-primary-foreground rounded-full font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-auto px-8 py-3.5 bg-primary text-primary-foreground rounded-full font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-4 focus:ring-primary/20"
             >
               <Save size={18} />
               Simpan

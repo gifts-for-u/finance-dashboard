@@ -1,10 +1,10 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&family=Geist+Mono:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,100..1000&family=Geist+Mono:wght@100..900&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: "Figtree", system-ui, sans-serif;
+  --font-sans: "Google Sans Flex", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: "Geist Mono", monospace;
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -39,7 +39,7 @@
 @layer base {
   :root {
     --background: 226 50% 98%;
-    --foreground: 240 4% 10%;
+    --foreground: 222.2 47.4% 11.2%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 47.4% 11.2%;
     --popover: 0 0% 100%;
@@ -61,25 +61,25 @@
   }
 
   .dark {
-    --background: 0 0% 14.1%;
+    --background: 224 25% 10%;
     --foreground: 210 40% 98%;
-    --card: 0 0% 16.9%;
+    --card: 224 20% 14%;
     --card-foreground: 210 40% 98%;
-    --popover: 0 0% 16.9%;
+    --popover: 224 20% 14%;
     --popover-foreground: 210 40% 98%;
-    --primary: 216 83.3% 23.5%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 217.2 32.6% 17.5%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 224 25% 10%;
+    --secondary: 224 16% 20%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
+    --muted: 224 16% 20%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 224 16% 20%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 100% 63.9%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 0 0% 24.7%;
-    --input: 0 0% 24.7%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 224 14% 22%;
+    --input: 224 14% 22%;
+    --ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -93,6 +93,45 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================================================
+   DESIGN SYSTEM UTILITY CLASSES (ponytail: reusable single source of truth)
+   ========================================================================== */
+
+/* Buttons */
+.btn-primary {
+  @apply px-8 py-3.5 bg-primary text-primary-foreground rounded-full font-bold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-4 focus:ring-primary/20;
+}
+
+.btn-destructive {
+  @apply px-8 py-3.5 bg-destructive text-destructive-foreground rounded-full font-bold shadow-lg shadow-destructive/20 hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-4 focus:ring-destructive/20;
+}
+
+.btn-ghost {
+  @apply px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-full font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer;
+}
+
+/* Form Fields */
+.input-base {
+  @apply w-full p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-3xl font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500;
+}
+
+.input-amount-primary {
+  @apply w-full p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-3xl font-mono font-bold text-primary focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all;
+}
+
+.input-amount-destructive {
+  @apply w-full p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-3xl font-mono font-bold text-destructive focus:outline-none focus:ring-4 focus:ring-destructive/20 transition-all;
+}
+
+.label-overline {
+  @apply text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1 block;
+}
+
+/* Surface containers */
+.card-surface {
+  @apply bg-card text-card-foreground rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800;
 }
 
 .card-32 {
