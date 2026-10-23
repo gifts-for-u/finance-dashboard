@@ -105,6 +105,8 @@ Tidak ada Cloud Functions, tidak ada backend API. Semua validasi data **harus** 
 - **JANGAN** menghapus step `Security audit` atau `Clean up credentials`.
 - **JANGAN** menulis ulang service account ke file lain selain `mktemp` temporary.
 - Kalau menambah target deploy baru (mis. Firestore Rules, Functions), tambah step setelah build, sebelum cleanup.
+- **Pinning versi CLI**: Selalu pin versi global CLI di CI (contoh: `npm install -g firebase-tools@15.34.0`). Jangan gunakan versi unpinned (`firebase-tools@latest`) agar pipeline terlindung dari breaking change mendadak upstream.
+- **Service Account IAM Role**: Service account `FIREBASE_SERVICE_ACCOUNT` membutuhkan role `Firebase Hosting Admin` dan `Firebase Rules Admin`. Jika menggunakan versi CLI yang memvalidasi status API via Google Service Usage API, tambahkan role `Service Usage Consumer` (`roles/serviceusage.serviceUsageConsumer`).
 
 ### 4.6 Mengubah skema rules
 1. Edit `firestore.rules`.
@@ -238,8 +240,9 @@ Wajib dicek manual sebelum merge:
 
 ---
 
-## 10. Incident Response
+## 10. Incident Response & Troubleshooting Terdata
 
+### 10.1 Prosedur Insiden Keamanan
 Kalau audit keamanan menemukan masalah (lihat [`01-vulnerabilities.md`](./01-vulnerabilities.md) sebagai referensi):
 
 1. **Klasifikasikan** severity (Critical / High / Medium / Low).
@@ -248,6 +251,25 @@ Kalau audit keamanan menemukan masalah (lihat [`01-vulnerabilities.md`](./01-vul
 4. **Update** `01-vulnerabilities.md`, `02-fixes.md`, `03-langkah-perbaikan.md`, `04-instruksi-agar-tidak-terulang.md` jika masih relevan.
 5. **Tambahkan regression test** (rules unit test via emulator) jika applicable.
 6. **Review** apakah ada pattern serupa di tempat lain — fix menyeluruh, bukan spot-fix.
+
+### 10.2 Catatan Masalah CI/CD & Resolusinya (Known Issues)
+
+#### Issue 1: `npm audit --audit-level=high` Gagal di CI (Transitive Dependency CVEs)
+- **Gejala**: Step `Security audit` exit code 1 karena kerentanan High pada dependensi transitif (misal: `@grpc/grpc-js`, `vite`, `source-map-js`, `vitest`).
+- **Penyebab**: CVE baru terdaftar di GitHub Advisory Database pada sub-dependensi Firebase SDK atau build tools.
+- **Resolusi & Aturan**:
+  - ❌ **DILARANG** menjalankan `npm audit fix --force` karena akan men-downgrade `firebase` ke v9 (breaking change fatal).
+  - ✅ Gunakan blok `"overrides"` di `remaster/package.json` untuk memaksa versi aman paket transitif (misal: `"@grpc/grpc-js": "^1.14.6"`).
+  - ✅ Perbarui versi patch paket langsung (`vite`, `vitest`) di devDependencies, lalu jalankan `npm audit fix` (tanpa `--force`).
+  - ✅ Wajib verifikasi lokal: `npm audit --audit-level=high`, `npm test`, dan `npm run build` sebelum push.
+
+#### Issue 2: `firebase deploy --only hosting` Gagal HTTP 403 `serviceusage.googleapis.com`
+- **Gejala**: Step `Deploy to Firebase Hosting` gagal dengan log:
+  `Request to https://serviceusage.googleapis.com/v1/projects/.../services/firebasehosting.googleapis.com had HTTP Error: 403, Permission denied to get service [firebasehosting.googleapis.com]`.
+- **Penyebab**: Mulai `firebase-tools@15.34.1` (rilis 22 Okt 2026), CLI menambahkan pre-flight check Service Usage API untuk memastikan API Hosting aktif. Service account standar hanya memiliki `roles/firebasehosting.admin` dan tidak memiliki permission `serviceusage.services.get`.
+- **Resolusi**:
+  - **Mitigasi CI**: Pin versi CLI di `.github/workflows/firebase-hosting.yml` ke versi yang stabil dan teruji (`npm install -g firebase-tools@15.34.0`).
+  - **Solusi GCP IAM**: Tambahkan role **`Service Usage Consumer`** (`roles/serviceusage.serviceUsageConsumer`) ke Service Account (`FIREBASE_SERVICE_ACCOUNT`) melalui Google Cloud Console IAM (**IAM & Admin → Edit Service Account → Add Role: Service Usage Consumer**).
 
 ---
 
