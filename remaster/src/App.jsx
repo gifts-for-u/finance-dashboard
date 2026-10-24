@@ -1,16 +1,25 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { FinanceProvider } from './context/FinanceContext';
 import ScrollToTop from './components/ScrollToTop';
-import LoginPage from './pages/LoginPage';
-import DashboardPage from './pages/DashboardPage';
-import IncomePage from './pages/IncomePage';
-import ExpensePage from './pages/ExpensePage';
-import BudgetPage from './pages/BudgetPage';
-import ReportsPage from './pages/ReportsPage';
+import ErrorBoundary from './components/ErrorBoundary';
 import toast, { Toaster } from 'react-hot-toast';
 import './App.css';
+
+// Lazy-loaded route components for optimized initial bundle loading
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const IncomePage = lazy(() => import('./pages/IncomePage'));
+const ExpensePage = lazy(() => import('./pages/ExpensePage'));
+const BudgetPage = lazy(() => import('./pages/BudgetPage'));
+const ReportsPage = lazy(() => import('./pages/ReportsPage'));
+
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="w-8 h-8 border-4 border-slate-200 dark:border-slate-800 border-t-primary rounded-full animate-spin"></div>
+  </div>
+);
 
 /**
  * Auto-logout setelah 30 menit idle (tidak ada aktivitas mouse/keyboard/scroll).
@@ -89,11 +98,7 @@ const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-8 h-8 border-4 border-slate-200 dark:border-slate-800 border-t-primary rounded-full animate-spin"></div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (!user) {
@@ -105,33 +110,37 @@ const ProtectedRoute = ({ children }) => {
 
 function App() {
   return (
-    <AuthProvider>
-      <FinanceProvider>
-        <Router>
-          <SessionManager />
-          <ScrollToTop />
-          <Toaster 
-            position="bottom-right"
-            toastOptions={{
-              className: 'dark:bg-card dark:text-slate-100 dark:border dark:border-slate-800 shadow-xl rounded-2xl font-medium',
-              duration: 4000,
-            }}
-          />
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            
-            <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-            <Route path="/income" element={<ProtectedRoute><IncomePage /></ProtectedRoute>} />
-            <Route path="/expenses" element={<ProtectedRoute><ExpensePage /></ProtectedRoute>} />
-            <Route path="/budget" element={<ProtectedRoute><BudgetPage /></ProtectedRoute>} />
-            <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
-            
-            {/* Fallback route */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Router>
-      </FinanceProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <FinanceProvider>
+          <Router>
+            <SessionManager />
+            <ScrollToTop />
+            <Toaster 
+              position="bottom-right"
+              toastOptions={{
+                className: 'dark:bg-card dark:text-slate-100 dark:border dark:border-slate-800 shadow-xl rounded-2xl font-medium',
+                duration: 4000,
+              }}
+            />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                
+                <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+                <Route path="/income" element={<ProtectedRoute><IncomePage /></ProtectedRoute>} />
+                <Route path="/expenses" element={<ProtectedRoute><ExpensePage /></ProtectedRoute>} />
+                <Route path="/budget" element={<ProtectedRoute><BudgetPage /></ProtectedRoute>} />
+                <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
+                
+                {/* Fallback route */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
+          </Router>
+        </FinanceProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

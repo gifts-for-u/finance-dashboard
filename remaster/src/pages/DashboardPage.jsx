@@ -26,7 +26,7 @@ import { useFinance } from '../context/FinanceContext';
 import { IconSortDropdown } from '../components/SortControls';
 import { SORT_OPTIONS } from '../components/sortOptions';
 import { CustomDatePicker, CustomSelect } from '../components/CustomInputs';
-import { formatDateIdLong } from '../utils/dates';
+import { formatDateIdLong, parseDateToMs } from '../utils/dates';
 import { Save } from 'lucide-react';
 
 const DashboardPage = () => {
@@ -56,10 +56,10 @@ const DashboardPage = () => {
 
   const getSortedItems = (items, sortType) => {
     return [...items].sort((a, b) => {
-      if (sortType === 'amount-desc') return b.amount - a.amount;
-      if (sortType === 'amount-asc') return a.amount - b.amount;
-      if (sortType === 'date-asc') return a.id - b.id;
-      return b.id - a.id; // date-desc (default)
+      if (sortType === 'amount-desc') return (Number(b.amount) || 0) - (Number(a.amount) || 0);
+      if (sortType === 'amount-asc') return (Number(a.amount) || 0) - (Number(b.amount) || 0);
+      if (sortType === 'date-asc') return parseDateToMs(a.date) - parseDateToMs(b.date);
+      return parseDateToMs(b.date) - parseDateToMs(a.date); // date-desc (default)
     });
   };
 

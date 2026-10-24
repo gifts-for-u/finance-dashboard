@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -6,7 +6,7 @@ import { useFinance } from '../context/FinanceContext';
 import Layout from '../components/Layout';
 import { StatCard, ChartCard } from '../components/Cards';
 import { formatRupiah } from '../utils/formatter';
-import { MONTH_NAMES_ID } from '../utils/dates';
+import { MONTH_NAMES_ID, getMonthKey } from '../utils/dates';
 import { 
   FileText, 
   Download, 
@@ -31,18 +31,22 @@ import {
 
 const ReportsPage = () => {
   const { user } = useAuth();
-  const { expenseCategories, incomes, expenses } = useFinance();
-  const [reportData, setReportData] = useState([]);
+  const { expenseCategories, incomes, expenses, currentDate } = useFinance();
+  const [historicalMonths, setHistoricalMonths] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Fetch data historis seluruh bulan hanya sekali saat user aktif dimuat.
+  // Mencegah read storm ke Firestore setiap kali ada transaksi yang diedit/ditambah.
   useEffect(() => {
     if (!user?.uid) return;
 
+    let isMounted = true;
     const fetchAllMonths = async () => {
       setIsLoading(true);
       try {
         const monthsRef = collection(db, "users", user.uid, "months");
         const snapshot = await getDocs(monthsRef);
+        if (!isMounted) return;
         
         const allMonths = [];
         snapshot.forEach(docSnap => {
@@ -83,24 +87,77 @@ const ReportsPage = () => {
         });
         
         allMonths.sort((a, b) => a.id.localeCompare(b.id));
-
-        // Let's override the last actual month safely if current month's dynamic change
-        // Wait, context values `incomes` and `expenses` reflect the active user's current month. 
-        // A simple re-fetch when they change is enough since we use getDocs.
-        setReportData(allMonths);
+        setHistoricalMonths(allMonths);
       } catch (err) {
         console.error("Error fetching reports", err);
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
 
     fetchAllMonths();
-  }, [user, incomes, expenses]);
+    return () => { isMounted = false; };
+  }, [user?.uid]);
+
+  // Menggabungkan mutasi data bulan aktif (dari context) secara in-memory
+  // tanpa melakukan query getDocs ulang ke koleksi dokumen masa lalu.
+  const activeMonthKey = currentDate ? getMonthKey(currentDate) : null;
+
+  const reportData = useMemo(() => {
+    if (historicalMonths.length === 0) return [];
+    if (!activeMonthKey) return historicalMonths;
+
+    let currentIncTotal = 0;
+    (incomes || []).forEach(inc => {
+      if ((inc.status || '').toLowerCase() !== 'pending') {
+        currentIncTotal += Number(inc.amount || 0);
+      }
+    });
+
+    let currentExpTotal = 0;
+    (expenses || []).forEach(exp => {
+      if ((exp.status || '').toLowerCase() === 'done') {
+        currentExpTotal += Number(exp.amount || 0);
+      }
+    });
+
+    let foundActive = false;
+    const merged = historicalMonths.map(m => {
+      if (m.id === activeMonthKey) {
+        foundActive = true;
+        return {
+          ...m,
+          income: currentIncTotal,
+          expense: currentExpTotal,
+          balance: currentIncTotal - currentExpTotal,
+          rawExpenses: expenses || []
+        };
+      }
+      return m;
+    });
+
+    // Jika bulan aktif belum ada di dokumen historis Firestore (bulan baru), sisipkan secara dinamis
+    if (!foundActive && (currentIncTotal > 0 || currentExpTotal > 0)) {
+      const [yyyy, mm] = activeMonthKey.split('-');
+      const d = new Date(yyyy, Number(mm) - 1, 1);
+      const monthName = MONTH_NAMES_ID[d.getMonth()];
+      merged.push({
+        id: activeMonthKey,
+        name: `${monthName} ${yyyy.slice(2)}`,
+        longName: `${monthName} ${yyyy}`,
+        income: currentIncTotal,
+        expense: currentExpTotal,
+        balance: currentIncTotal - currentExpTotal,
+        rawExpenses: expenses || []
+      });
+      merged.sort((a, b) => a.id.localeCompare(b.id));
+    }
+
+    return merged;
+  }, [historicalMonths, activeMonthKey, incomes, expenses]);
 
   const totalLifeTimeSavings = reportData.reduce((acc, curr) => acc + curr.balance, 0);
   const lifeTimeIncome = reportData.reduce((acc, curr) => acc + curr.income, 0);
-  const savingRate = lifeTimeIncome > 0 ? ((totalLifeTimeSavings / lifeTimeIncome) * 100).toFixed(1) : 0;
   
   const latestMonth = reportData.length > 0 ? reportData[reportData.length - 1] : { income: 0, expense: 0, balance: 0, name: '-' };
 
@@ -172,6 +229,16 @@ const ReportsPage = () => {
     else if (rawSavingsRate >= 10) savingsRateColor = 'orange';
     else if (rawSavingsRate >= 0) savingsRateColor = 'blue';
     else savingsRateColor = 'red';
+  }
+
+  if (isLoading) {
+    return (
+      <Layout title="Laporan Keuangan">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="w-8 h-8 border-4 border-slate-200 dark:border-slate-800 border-t-primary rounded-full animate-spin"></div>
+        </div>
+      </Layout>
+    );
   }
 
   return (

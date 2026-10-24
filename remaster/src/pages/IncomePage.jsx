@@ -334,7 +334,7 @@ const IncomePage = () => {
                 <div className="flex-1 overflow-y-auto px-1 custom-scrollbar space-y-4">
                   {filteredAndSortedIncomes.map((income, idx) => (
                     <div 
-                      key={idx} 
+                      key={income.id || idx} 
                       className="flex items-center gap-5 group cursor-pointer hover:bg-slate-500/5 dark:hover:bg-slate-800/50 border border-transparent hover:border-primary/50 dark:hover:border-primary hover:shadow-md dark:hover:shadow-primary/20 p-3 rounded-2xl transition-all"
                       onClick={() => handleEditClick(income)}
                     >
@@ -405,7 +405,7 @@ const IncomePage = () => {
 
             <div className="grid grid-cols-1 gap-y-6 flex-1 w-full max-w-md">
               {sourceData.map((source, idx) => (
-                <div key={idx} className="flex items-center gap-4">
+                <div key={source.name || idx} className="flex items-center gap-4">
                   <div className="w-4 h-4 rounded-full" style={{ backgroundColor: source.color }} />
                   <div className="flex-1">
                     <div className="flex justify-between items-center mb-1">

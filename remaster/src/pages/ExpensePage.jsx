@@ -367,7 +367,7 @@ const ExpensePage = () => {
                 <div className="flex-1 overflow-y-auto px-1 custom-scrollbar space-y-4">
                   {filteredAndSortedExpenses.map((expense, idx) => (
                     <div 
-                      key={idx} 
+                      key={expense.id || idx} 
                       className="flex items-center gap-5 group cursor-pointer hover:bg-slate-500/5 dark:hover:bg-slate-800/50 border border-transparent hover:border-destructive/50 dark:hover:border-destructive hover:shadow-md dark:hover:shadow-destructive/20 p-3 rounded-2xl transition-all"
                       onClick={() => handleEditClick(expense)}
                     >
@@ -423,7 +423,7 @@ const ExpensePage = () => {
           <div className="flex flex-col lg:flex-row items-center justify-center gap-8 md:gap-16 py-4 sm:py-8">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 sm:gap-8 md:gap-12 w-full max-w-5xl justify-items-center">
               {categoryData.map((cat, idx) => (
-                <div key={idx} className="flex flex-col items-center gap-5 group">
+                <div key={cat.name || idx} className="flex flex-col items-center gap-5 group">
                   <div className="h-32 w-32 relative transition-transform group-hover:scale-110 duration-300">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>

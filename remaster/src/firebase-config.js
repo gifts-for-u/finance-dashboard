@@ -14,6 +14,12 @@
 // variables (priority 1). When this fallback is used, a loud console.error
 // is emitted so the situation is visible during debugging and audits.
 
+// ponytail: Deliberate hardcoded fallback retained for offline testing without local .env.
+// CEILING:
+//   Contains project credentials directly in source bundle; violates zero-credential storage guidelines.
+// UPGRADE PATH:
+//   Replace getFirebaseConfigSync() with top-level await loadFirebaseConfig(), injecting config
+//   exclusively via Vite build environment or runtime /__/firebase/init.json, and completely delete this object.
 const LEGACY_FALLBACK_CONFIG = {
   apiKey: "AIzaSyDxmGNxzxbX8UGBm82jn3PmzhiGq0GQT7Y",
   authDomain: "finance-dashboard-10nfl.firebaseapp.com",

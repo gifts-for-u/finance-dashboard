@@ -182,6 +182,14 @@ export const FinanceProvider = ({ children }) => {
     return () => unsubMonth();
   }, [user, currentDate, expenseCategories]);
 
+  // ponytail: Deliberate single-document array storage for monthly data (/months/{monthKey}).
+  // CEILING:
+  //   1. Document size capped at Firestore 1 MiB hard limit (~1,500-2,000 items/month).
+  //   2. Concurrency: client array replacement risks clobbering simultaneous writes across multiple devices/tabs.
+  // UPGRADE PATH:
+  //   Migrate monthly transactions from embedded arrays to subcollections:
+  //   /users/{uid}/months/{monthKey}/transactions/{txId}
+  //   Use Firestore collection queries with limit/orderBy and atomic collection writes.
   // Generic Month Updater
   const updateMonthDoc = async (payload) => {
     if (!user?.uid) return;

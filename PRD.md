@@ -316,6 +316,15 @@ erDiagram
     }
 ```
 
+### 7.4 Batasan Arsitektur & Roadmap Skalabilitas (Ponytail Note)
+1. **Model Saat Ini (Single Document Array per Bulan):**
+   - Transaksi bulanan (incomes, expenses) dan udgets dikelompokkan dalam satu dokumen per bulan (/months/{YYYY-MM}).
+   - **Ceiling:** Firestore membatasi ukuran per dokumen maksimum 1 MiB (~1.500 transaksi per bulan). Penulisan transaksi saat ini mengganti array dokumen, dengan asumsi *single-user, single-active-session*.
+2. **Upgrade Path (Subcollections Migration):**
+   - Pada fase pertumbuhan berikutnya, struktur dapat dimigrasikan ke subcollection:
+     /users/{uid}/months/{monthKey}/transactions/{txId}
+   - Memungkinkan operasi tulis atomik (create, delete, update per item), query berpaginasi, dan meniadakan batas 1 MiB dokumen bulanan.
+
 ---
 
 ## 8. Security Model
