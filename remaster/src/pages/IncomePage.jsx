@@ -63,7 +63,8 @@ const IncomePage = () => {
     amount: '',
     source: '',
     description: '',
-    date: formattedDateInit
+    date: formattedDateInit,
+    status: 'Paid'
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -72,7 +73,8 @@ const IncomePage = () => {
     amount: '',
     source: '',
     description: '',
-    date: ''
+    date: '',
+    status: 'Paid'
   });
 
   const handleAddClick = () => {
@@ -86,7 +88,8 @@ const IncomePage = () => {
       amount: inc.amount.toString(),
       source: inc.type || '',
       description: inc.title || '',
-      date: inc.fullDate || inc.date || formattedDateInit
+      date: inc.fullDate || inc.date || formattedDateInit,
+      status: inc.status || 'Paid'
     });
     setShowDeleteConfirm(false);
     setIsEditModalOpen(true);
