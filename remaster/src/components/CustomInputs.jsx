@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { ChevronDown, Calendar, PenLine, ChevronLeft, ChevronRight } from 'lucide-react';
 import { HexColorPicker } from "react-colorful";
 import { MONTH_NAMES_ID, MONTH_NAMES_LONG_ID } from '../utils/dates';
+import { formatNumberWithDots } from '../utils/formatter';
 
 export const CustomSelect = ({ value, onChange, options }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -431,14 +432,16 @@ export const CustomDatePicker = ({ value, onChange }) => {
 
 export const DeferredColorPicker = ({ value, onChange }) => {
   const [localColor, setLocalColor] = useState(value);
+  const [prevValue, setPrevValue] = useState(value);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const popoverRef = useRef(null);
 
-  useEffect(() => {
+  if (value !== prevValue) {
+    setPrevValue(value);
     if (!popoverOpen) {
       setLocalColor(value);
     }
-  }, [value, popoverOpen]);
+  }
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -480,6 +483,85 @@ export const DeferredColorPicker = ({ value, onChange }) => {
           <div className="absolute bottom-full left-10 -mb-px w-0 h-0 border-l-[8px] border-r-[8px] border-b-[8px] border-l-transparent border-r-transparent border-b-white filter drop-shadow-[0_-1px_0_theme(colors.slate.100)]" />
         </div>
       )}
+    </div>
+  );
+};
+
+
+
+
+/**
+ * CurrencyInput - Input masking live nominal mata uang Rupiah.
+ * - Mengembalikan unformatted raw string digits ke handler onChange (drop-in replacement untuk type="number").
+ * - Aksesibel: inputMode="numeric", pattern="[0-9.]*", aria-label, prefix visual aria-hidden="true".
+ * - Ponytail compliant: tanpa third-party library, performa tinggi, native React.
+ */
+export const CurrencyInput = ({
+  value,
+  onChange,
+  placeholder = '0',
+  variant = 'primary', // 'primary' | 'destructive'
+  id,
+  name,
+  required = false,
+  disabled = false,
+  className = '',
+  'aria-label': ariaLabel,
+  prefix = 'Rp',
+  ...rest
+}) => {
+  const displayValue = formatNumberWithDots(value);
+
+  const handleChange = (e) => {
+    const rawVal = e.target.value;
+    const digitsOnly = rawVal.replace(/\D/g, '');
+
+    // Normalisasi leading zero (kecuali single '0') dan batasi 13 digit
+    let cleanVal = digitsOnly.length > 1 ? digitsOnly.replace(/^0+/, '') || '0' : digitsOnly;
+    cleanVal = cleanVal.slice(0, 13);
+
+    if (onChange) {
+      onChange({
+        ...e,
+        target: {
+          ...e.target,
+          name: name || e.target?.name,
+          value: cleanVal
+        }
+      });
+    }
+  };
+
+  const variantStyles = variant === 'destructive'
+    ? 'text-destructive focus:ring-destructive/20 focus:border-destructive/30'
+    : 'text-primary focus:ring-primary/20 focus:border-primary/30';
+
+  return (
+    <div className="relative flex items-center w-full">
+      {prefix && (
+        <span 
+          className="absolute left-4 text-sm font-bold text-slate-400 dark:text-slate-500 select-none pointer-events-none"
+          aria-hidden="true"
+        >
+          {prefix}
+        </span>
+      )}
+      <input
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9.]*"
+        autoComplete="off"
+        id={id}
+        name={name}
+        required={required}
+        disabled={disabled}
+        placeholder={placeholder}
+        value={displayValue}
+        onChange={handleChange}
+        aria-label={ariaLabel || (placeholder ? `Nominal, contoh ${placeholder}` : 'Jumlah nominal')}
+        className={`w-full p-4 ${prefix ? 'pl-11' : 'pl-4'} bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-3xl font-mono font-bold transition-all focus:outline-none focus:ring-4 disabled:opacity-50 disabled:cursor-not-allowed ${variantStyles} ${className}`}
+        {...rest}
+      />
     </div>
   );
 };

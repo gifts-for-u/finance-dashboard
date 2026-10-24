@@ -36,7 +36,7 @@ import {
 
 import { useFinance } from '../context/FinanceContext';
 import Modal from '../components/Modal';
-import { CustomSelect } from '../components/CustomInputs';
+import { CustomSelect, CurrencyInput } from '../components/CustomInputs';
 
 const BudgetPage = () => {
   const { budgets, expenses, addBudget, expenseCategories, currentDate } = useFinance();
@@ -377,13 +377,13 @@ const BudgetPage = () => {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">Jumlah Anggaran</label>
-            <input 
-              type="number" 
-              className="w-full p-4 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-3xl focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all font-mono font-bold text-primary"
+            <label htmlFor="budget-amount" className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">Jumlah Anggaran</label>
+            <CurrencyInput
+              id="budget-amount"
               placeholder="0"
               value={budgetFormData.amount}
               onChange={(e) => setBudgetFormData({...budgetFormData, amount: e.target.value})}
+              variant="primary"
               required
             />
           </div>

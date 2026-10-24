@@ -40,7 +40,7 @@ import {
 } from 'recharts';
 import { useFinance } from '../context/FinanceContext';
 import { IconMap } from '../lib/iconMap';
-import { CustomSelect, CustomDatePicker, DeferredColorPicker } from '../components/CustomInputs';
+import { CustomSelect, CustomDatePicker, DeferredColorPicker, CurrencyInput } from '../components/CustomInputs';
 
 
 
@@ -479,13 +479,13 @@ const ExpensePage = () => {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Jumlah</label>
-              <input 
-                type="number" 
-                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-3xl focus:outline-none focus:ring-4 focus:ring-destructive/20 transition-all font-bold text-destructive"
+              <label htmlFor="expense-amount-add" className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Jumlah</label>
+              <CurrencyInput
+                id="expense-amount-add"
                 placeholder="0"
                 value={formData.amount}
                 onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                variant="destructive"
                 required
               />
             </div>
@@ -544,12 +544,13 @@ const ExpensePage = () => {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Jumlah</label>
-              <input 
-                type="number" 
-                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-3xl focus:outline-none focus:ring-4 focus:ring-destructive/20 transition-all font-bold text-destructive"
+              <label htmlFor="expense-amount-edit" className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Jumlah</label>
+              <CurrencyInput
+                id="expense-amount-edit"
+                placeholder="0"
                 value={formData.amount}
                 onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                variant="destructive"
                 required
               />
             </div>

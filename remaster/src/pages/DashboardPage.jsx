@@ -25,7 +25,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 import { useFinance } from '../context/FinanceContext';
 import { IconSortDropdown } from '../components/SortControls';
 import { SORT_OPTIONS } from '../components/sortOptions';
-import { CustomDatePicker, CustomSelect } from '../components/CustomInputs';
+import { CustomDatePicker, CustomSelect, CurrencyInput } from '../components/CustomInputs';
 import { formatDateIdLong, parseDateToMs } from '../utils/dates';
 import { Save } from 'lucide-react';
 
@@ -506,13 +506,14 @@ const DashboardPage = () => {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Jumlah (Rp)</label>
-            <input 
-              type="number" 
+            <label htmlFor="dashboard-income-amount" className="text-xs font-bold text-slate-400 uppercase tracking-widest">Jumlah</label>
+            <CurrencyInput
+              id="dashboard-income-amount"
               placeholder="0"
-              className="w-full p-4 bg-slate-50 border border-slate-100 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="rounded-[20px] focus:ring-2"
               value={newIncome.amount}
               onChange={(e) => setNewIncome({...newIncome, amount: e.target.value})}
+              variant="primary"
               required
             />
           </div>
@@ -556,13 +557,14 @@ const DashboardPage = () => {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Jumlah (Rp)</label>
-              <input 
-                type="number" 
+              <label htmlFor="dashboard-expense-amount" className="text-xs font-bold text-slate-400 uppercase tracking-widest">Jumlah</label>
+              <CurrencyInput
+                id="dashboard-expense-amount"
                 placeholder="0"
-                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-[20px] focus:outline-none focus:ring-2 focus:ring-destructive/20"
+                className="rounded-[20px] focus:ring-2"
                 value={newExpense.amount}
                 onChange={(e) => setNewExpense({...newExpense, amount: e.target.value})}
+                variant="destructive"
                 required
               />
             </div>

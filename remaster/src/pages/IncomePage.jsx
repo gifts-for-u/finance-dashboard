@@ -39,7 +39,7 @@ import {
   Cell
 } from 'recharts';
 import { useFinance } from '../context/FinanceContext';
-import { CustomDatePicker, CustomSelect } from '../components/CustomInputs';
+import { CustomDatePicker, CustomSelect, CurrencyInput } from '../components/CustomInputs';
 
 const STATUS_OPTIONS = [
   { value: 'Paid', label: 'Sudah Dibayar' },
@@ -459,13 +459,13 @@ const IncomePage = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Jumlah</label>
-              <input 
-                type="number" 
+              <label htmlFor="income-amount-add" className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Jumlah</label>
+              <CurrencyInput
+                id="income-amount-add"
                 placeholder="0"
-                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-3xl focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all font-bold text-primary"
                 value={formData.amount}
                 onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                variant="primary"
                 required
               />
             </div>
@@ -542,13 +542,13 @@ const IncomePage = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Jumlah</label>
-              <input 
-                type="number" 
+              <label htmlFor="income-amount-edit" className="text-xs font-black text-slate-400 uppercase tracking-widest px-1">Jumlah</label>
+              <CurrencyInput
+                id="income-amount-edit"
                 placeholder="0"
-                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-3xl focus:outline-none focus:ring-4 focus:ring-primary/20 transition-all font-bold text-primary"
                 value={editFormData.amount}
                 onChange={(e) => setEditFormData({...editFormData, amount: e.target.value})}
+                variant="primary"
                 required
               />
             </div>

@@ -209,7 +209,15 @@ Wajib dicek manual sebelum merge:
 
 ---
 
-## 8. Hal yang DIREKOMENDASIKAN
+## 8. Hal yang DIREKOMENDASIKAN & Aturan Workflow Git
+
+### 8.1 Aturan Workflow Git untuk Agent & Kontributor
+- 🛑 **JANGAN langsung push tiap perubahan kecil:** Kumpulkan perubahan terkait dalam satu batch kerja yang telah diverifikasi lokal (`npm test` dan `npm run build`).
+- 🌿 **Strategi Branching:**
+  - **Perubahan Kecil (Quick Wins / Hotfixes):** Perbaikan typo, styling kecil, atau satu file terisolasi (misal: live currency input masking) boleh langsung di-commit ke `main`.
+  - **Perubahan Signifikan (Major Feature / Schema / Rules):** Fitur baru yang melibatkan banyak file, modifikasi Firestore rules, atau penambahan state baru (misal: Multi-Wallet + 50/30/20) **WAJIB** dibuatkan branch baru (`feat/<nama-fitur>`), diuji menyeluruh, lalu di-merge ke `main`.
+
+### 8.2 Praktik Terbaik Kode
 
 - ✅ Ekstrak helper yang berulang (icon mapping, color, formatter) ke `utils/` atau `lib/`.
 - ✅ Tambahkan `console.warn` (bukan `console.error`) untuk fallback config yang disengaja.

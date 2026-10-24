@@ -1,7 +1,8 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { CustomDatePicker, CustomSelect } from './CustomInputs';
+import { CustomDatePicker, CustomSelect, CurrencyInput } from './CustomInputs';
+import { formatNumberWithDots } from '../utils/formatter';
 
 describe('CustomDatePicker', () => {
   it('merender tombol trigger dengan tanggal yang diformat', () => {
@@ -106,5 +107,87 @@ describe('CustomSelect', () => {
     fireEvent.click(optionBtn);
 
     expect(handleChange).toHaveBeenCalledWith('cat-2');
+  });
+});
+
+
+describe('formatNumberWithDots', () => {
+  it('memformat angka dan string angka dengan titik pemisah ribuan', () => {
+    expect(formatNumberWithDots(1000)).toBe('1.000');
+    expect(formatNumberWithDots('50000')).toBe('50.000');
+    expect(formatNumberWithDots('1250000')).toBe('1.250.000');
+    expect(formatNumberWithDots(0)).toBe('0');
+    expect(formatNumberWithDots('0')).toBe('0');
+  });
+
+  it('mengembalikan string kosong untuk input kosong, null, atau non-numeric', () => {
+    expect(formatNumberWithDots('')).toBe('');
+    expect(formatNumberWithDots(null)).toBe('');
+    expect(formatNumberWithDots(undefined)).toBe('');
+    expect(formatNumberWithDots('abc')).toBe('');
+  });
+
+  it('membersihkan karakter non-digit sebelum memformat', () => {
+    expect(formatNumberWithDots('Rp 50.000')).toBe('50.000');
+    expect(formatNumberWithDots('10,000,000')).toBe('10.000.000');
+  });
+});
+
+describe('CurrencyInput', () => {
+  it('merender input dengan nilai yang diformat dan prefix Rp', () => {
+    render(<CurrencyInput value="50000" onChange={() => {}} placeholder="0" />);
+    
+    const input = screen.getByRole('textbox');
+    expect(input).toHaveValue('50.000');
+    expect(screen.getByText('Rp')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('memiliki atribut aksesibilitas input numeric mobile yang tepat', () => {
+    render(
+      <CurrencyInput 
+        value="" 
+        onChange={() => {}} 
+        id="test-amount"
+        aria-label="Nominal Pengeluaran"
+      />
+    );
+    
+    const input = screen.getByRole('textbox', { name: 'Nominal Pengeluaran' });
+    expect(input).toHaveAttribute('inputmode', 'numeric');
+    expect(input).toHaveAttribute('pattern', '[0-9.]*');
+    expect(input).toHaveAttribute('autocomplete', 'off');
+    expect(input).toHaveAttribute('id', 'test-amount');
+  });
+
+  it('mengirimkan unformatted raw digits ke callback onChange', () => {
+    const handleChange = vi.fn();
+    render(<CurrencyInput value="1000" onChange={handleChange} name="amount" />);
+    
+    const input = screen.getByRole('textbox');
+    // Simulasikan user mengetik '0' di belakang '1.000'
+    fireEvent.change(input, { target: { value: '1.0000' } });
+    
+    expect(handleChange).toHaveBeenCalled();
+    const eventArg = handleChange.mock.calls[0][0];
+    expect(eventArg.target.value).toBe('10000');
+    expect(eventArg.target.name).toBe('amount');
+  });
+
+  it('menormalkan leading zero saat user mengetik angka setelah 0', () => {
+    const handleChange = vi.fn();
+    render(<CurrencyInput value="0" onChange={handleChange} />);
+    
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: '05' } });
+    
+    expect(handleChange).toHaveBeenCalled();
+    expect(handleChange.mock.calls[0][0].target.value).toBe('5');
+  });
+
+  it('merender varian destructive dengan styling yang sesuai', () => {
+    render(<CurrencyInput value="25000" onChange={() => {}} variant="destructive" />);
+    
+    const input = screen.getByRole('textbox');
+    expect(input.className).toContain('text-destructive');
   });
 });
