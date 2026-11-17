@@ -69,5 +69,5 @@ node_modules/
 .dataconnect
 
 # Build output & sync duplicates
-public/
+/public/
 **/* (1).*

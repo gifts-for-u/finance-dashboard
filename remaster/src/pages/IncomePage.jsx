@@ -40,6 +40,7 @@ import {
 } from 'recharts';
 import { useFinance } from '../context/FinanceContext';
 import { CustomDatePicker, CustomSelect, CurrencyInput } from '../components/CustomInputs';
+import { EmptyState, SkeletonList } from '../components/States';
 
 const STATUS_OPTIONS = [
   { value: 'Paid', label: 'Sudah Dibayar' },
@@ -59,7 +60,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const IncomePage = () => {
-  const { incomes, totalIncome, addIncome, updateIncome, deleteIncome, currentDate } = useFinance();
+  const { incomes, totalIncome, addIncome, updateIncome, deleteIncome, currentDate, isLoading } = useFinance();
   const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -308,20 +309,23 @@ const IncomePage = () => {
               className="h-[480px] sm:h-[550px] lg:h-[650px]"
               extra={
                 <button 
+                  type="button"
                   onClick={() => setIsModalOpen(true)}
+                  aria-label="Tambah pemasukan baru"
                   className="p-2 bg-primary/10 text-primary rounded-xl hover:bg-primary/20 hover:bg-primary/20 transition-all active:scale-95 cursor-pointer"
                 >
-                  <Plus size={20} />
+                  <Plus size={20} aria-hidden="true" />
                 </button>
               }
             >
               <div className="absolute inset-0 flex flex-col">
                 <div className="flex gap-4 mb-8">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} aria-hidden="true" />
                     <input 
                       type="text" 
                       placeholder="Cari pemasukan..." 
+                      aria-label="Cari pemasukan"
                       value={searchIncome}
                       onChange={(e) => setSearchIncome(e.target.value)}
                       className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all dark:text-slate-100"
@@ -335,36 +339,56 @@ const IncomePage = () => {
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-1 custom-scrollbar space-y-4">
-                  {filteredAndSortedIncomes.map((income, idx) => (
-                    <div 
-                      key={income.id || idx} 
-                      className="flex items-center gap-5 group cursor-pointer hover:bg-slate-500/5 dark:hover:bg-slate-800/50 border border-transparent hover:border-primary/50 dark:hover:border-primary hover:shadow-md dark:hover:shadow-primary/20 p-3 rounded-2xl transition-all"
-                      onClick={() => handleEditClick(income)}
-                    >
-                      <div className={`p-4 rounded-2xl ${income.iconColor} transition-all group-hover:scale-110 shadow-sm`}>
-                        {(() => {
-                          const Icon = income.icon;
-                          return <Icon size={20} />;
-                        })()}
-                      </div>
-                      <div className="flex-1 border-b border-slate-100 pb-4">
-                        <div className="flex justify-between items-start mb-1">
-                          <h4 className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors">{income.title}</h4>
-                          <span className="font-black text-green-600 text-sm">{formatRupiah(income.amount)}</span>
+                  {isLoading ? (
+                    <SkeletonList count={4} />
+                  ) : filteredAndSortedIncomes.length === 0 ? (
+                    <EmptyState
+                      icon={Wallet}
+                      title="Belum ada pemasukan"
+                      description="Mulai catat gaji, bonus, atau pemasukan lainnya."
+                      actionLabel="Tambah Pemasukan"
+                      onAction={handleAddClick}
+                    />
+                  ) : (
+                    filteredAndSortedIncomes.map((income, idx) => (
+                      <div 
+                        key={income.id || idx} 
+                        role="button"
+                        tabIndex={0}
+                        className="flex items-center gap-5 group cursor-pointer hover:bg-slate-500/5 dark:hover:bg-slate-800/50 border border-transparent hover:border-primary/50 dark:hover:border-primary hover:shadow-md dark:hover:shadow-primary/20 p-3 rounded-2xl transition-all focus:outline-none focus:ring-2 focus:ring-primary/40"
+                        onClick={() => handleEditClick(income)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleEditClick(income);
+                          }
+                        }}
+                      >
+                        <div className={`p-4 rounded-2xl ${income.iconColor} transition-all group-hover:scale-110 shadow-sm`}>
+                          {(() => {
+                            const Icon = income.icon;
+                            return <Icon size={20} aria-hidden="true" />;
+                          })()}
                         </div>
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-slate-400 font-medium">{income.type}</span>
-                            <span className="w-1 h-1 rounded-full bg-slate-300" />
-                            <span className="text-xs text-slate-400 font-medium">{income.date}</span>
+                        <div className="flex-1 border-b border-slate-100 pb-4">
+                          <div className="flex justify-between items-start mb-1">
+                            <h4 className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors">{income.title}</h4>
+                            <span className="font-black text-green-600 text-sm">{formatRupiah(income.amount)}</span>
                           </div>
-                          <span className="px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-green-500/10 text-green-500">
-                            {income.status || 'PAID'}
-                          </span>
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-slate-400 font-medium">{income.type}</span>
+                              <span className="w-1 h-1 rounded-full bg-slate-300" />
+                              <span className="text-xs text-slate-400 font-medium">{income.date}</span>
+                            </div>
+                            <span className="px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-green-500/10 text-green-500">
+                              {income.status || 'PAID'}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
                 
                 <button 

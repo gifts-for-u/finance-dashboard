@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, 
   ArrowUpRight, 
@@ -20,10 +21,11 @@ import {
 
 import { useFinance } from '../context/FinanceContext';
 import { useAuth } from '../context/AuthContext';
+import { OfflineBanner } from './States';
 
 const Layout = ({ children, title }) => {
   const location = useLocation();
-  const { currentDate, changeMonth, theme, toggleTheme } = useFinance();
+  const { currentDate, changeMonth, theme, toggleTheme, isOffline } = useFinance();
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -52,30 +54,42 @@ const Layout = ({ children, title }) => {
 
   return (
     <div className="min-h-screen bg-background text-foreground p-4 pb-28 md:p-6 md:pb-6 lg:p-10 lg:pb-10 relative">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-xl focus:font-bold focus:shadow-lg"
+      >
+        Lewati ke konten utama
+      </a>
       <div className="flex justify-between items-center md:hidden mb-6 sticky top-0 bg-background/95 backdrop-blur-3xl p-4 -mx-4 z-40 border-b border-slate-100 dark:border-slate-800">
         <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">{title}</h1>
         <button 
+          type="button"
           onClick={() => setIsMobileMenuOpen(true)}
+          aria-label="Buka menu navigasi"
           className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-transparent dark:border-slate-700 text-slate-600 dark:text-white transition-all cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95"
         >
-          <Menu size={18} />
+          <Menu size={18} aria-hidden="true" />
         </button>
       </div>
 
       {/* Date Selector (Mobile Only) */}
       <div className="md:hidden flex items-center justify-between bg-card text-card-foreground p-3 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 mb-6">
         <button 
+          type="button"
           onClick={() => changeMonth(-1)} 
+          aria-label="Bulan sebelumnya"
           className="p-3 bg-slate-100 dark:bg-slate-800 border border-transparent dark:border-slate-700 text-slate-500 dark:text-slate-200 rounded-xl transition-colors cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95"
         >
-          <ChevronLeft size={18} />
+          <ChevronLeft size={18} aria-hidden="true" />
         </button>
         <span className="text-sm font-bold text-primary whitespace-nowrap capitalize">{formattedDate}</span>
         <button 
+          type="button"
           onClick={() => changeMonth(1)} 
+          aria-label="Bulan berikutnya"
           className="p-3 bg-slate-100 dark:bg-slate-800 border border-transparent dark:border-slate-700 text-slate-500 dark:text-slate-200 rounded-xl transition-colors cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95"
         >
-          <ChevronRight size={18} />
+          <ChevronRight size={18} aria-hidden="true" />
         </button>
       </div>
 
@@ -90,7 +104,7 @@ const Layout = ({ children, title }) => {
               {user?.photoURL ? (
                 <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" />
               ) : (
-                <User size={18} className="text-slate-500 dark:text-slate-400" />
+                <User size={18} className="text-slate-500 dark:text-slate-400" aria-hidden="true" />
               )}
             </div>
             <span className="font-medium text-slate-700 dark:text-slate-200">{user?.displayName || 'User'}</span>
@@ -99,32 +113,40 @@ const Layout = ({ children, title }) => {
           {/* Date Selector */}
           <div className="flex items-center gap-2 bg-card text-card-foreground px-4 py-2 rounded-full shadow-sm border border-slate-100 dark:border-slate-800">
             <button 
+              type="button"
               onClick={() => changeMonth(-1)}
+              aria-label="Bulan sebelumnya"
               className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={16} aria-hidden="true" />
             </button>
             <span className="text-sm font-medium text-slate-700 dark:text-slate-200 whitespace-nowrap capitalize">{formattedDate}</span>
             <button 
+              type="button"
               onClick={() => changeMonth(1)}
+              aria-label="Bulan berikutnya"
               className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={16} aria-hidden="true" />
             </button>
           </div>
 
           {/* Actions */}
           <button 
+            type="button"
             onClick={toggleTheme} // Changed onClick to toggleTheme
+            aria-label={theme === 'dark' ? 'Aktifkan mode terang' : 'Aktifkan mode gelap'}
             className={`p-3 rounded-full transition-all active:scale-95 shadow-lg cursor-pointer ${theme === 'dark' ? 'bg-yellow-400 text-slate-900 shadow-yellow-100' : 'bg-primary hover:opacity-90 text-primary-foreground shadow-primary/30'}`} // Dynamic class based on theme
           >
-            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />} {/* Dynamic icon based on theme */}
+            {theme === 'dark' ? <Sun size={20} aria-hidden="true" /> : <Moon size={20} aria-hidden="true" />} {/* Dynamic icon based on theme */}
           </button>
           <button 
+            type="button"
             onClick={logout}
+            aria-label="Keluar dari akun"
             className="p-3 bg-card dark:bg-slate-800 text-slate-400 rounded-full border border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:text-destructive active:scale-95 cursor-pointer"
           >
-            <LogOut size={20} />
+            <LogOut size={20} aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -179,8 +201,8 @@ const Layout = ({ children, title }) => {
         <div className={`absolute top-0 right-0 w-full max-w-[320px] h-full bg-slate-50 dark:bg-card border-l border-slate-100 dark:border-slate-800 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
           <div className="p-5 flex justify-between items-center border-b border-slate-100 dark:border-slate-800 bg-background">
             <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">{title}</h2>
-            <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full transition-colors cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95">
-              <X size={18} />
+            <button type="button" onClick={() => setIsMobileMenuOpen(false)} aria-label="Tutup menu navigasi" className="p-2 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full transition-colors cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95">
+              <X size={18} aria-hidden="true" />
             </button>
           </div>
 
@@ -222,7 +244,8 @@ const Layout = ({ children, title }) => {
       </div>
 
       {/* Main Content */}
-      <main className="animate-in fade-in slide-in-from-bottom-4 duration-700 h-full">
+      <OfflineBanner isOffline={isOffline} />
+      <main id="main-content" tabIndex={-1} className="animate-in fade-in slide-in-from-bottom-4 duration-700 h-full focus:outline-none">
         {children}
       </main>
 

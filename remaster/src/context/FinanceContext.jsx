@@ -17,8 +17,29 @@ export const FinanceProvider = ({ children }) => {
   const [budgets, setBudgets] = useState([]);
   const [expenseCategories, setExpenseCategories] = useState([]);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(() =>
+    typeof navigator !== 'undefined' ? !navigator.onLine : false
+  );
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleOnline = () => {
+      setIsOffline(false);
+      toast.success('Koneksi kembali terhubung. Data disinkronkan.', { id: 'network-status' });
+    };
+    const handleOffline = () => {
+      setIsOffline(true);
+      toast('Anda sedang offline. Menampilkan data tersimpan.', { icon: '📡', id: 'network-status' });
+    };
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const totalIncome = useMemo(
     () => incomes.reduce((acc, curr) => acc + Number(curr.amount || 0), 0),
@@ -109,9 +130,11 @@ export const FinanceProvider = ({ children }) => {
   useEffect(() => {
     if (!user?.uid) {
       setIncomes([]); setExpenses([]); setBudgets([]);
+      setIsLoading(false);
       return;
     }
 
+    setIsLoading(true);
     const monthKey = getMonthKey(currentDate);
     const monthRef = doc(db, "users", user.uid, "months", monthKey);
     const unsubMonth = onSnapshot(monthRef, (docSnap) => {
@@ -174,9 +197,11 @@ export const FinanceProvider = ({ children }) => {
         setExpenses([]);
         setBudgets([]);
       }
+      setIsLoading(false);
     }, (err) => {
       console.error("Firebase Sync Error:", err);
       toast.error("Gagal sinkronisasi data bulanan.");
+      setIsLoading(false);
     });
 
     return () => unsubMonth();
@@ -480,7 +505,7 @@ export const FinanceProvider = ({ children }) => {
       incomes, setIncomes, totalIncome, 
       expenses, setExpenses, totalExpense,
       currentDate, changeMonth,
-      isLoading, setIsLoading,
+      isLoading, setIsLoading, isOffline,
       handleMigration,
       theme, toggleTheme,
       addIncome, updateIncome, deleteIncome,
