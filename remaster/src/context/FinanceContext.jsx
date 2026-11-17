@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { IconMap, ShoppingBag, HomeIcon, Car, CreditCard, Coffee, Briefcase, Layers, BarChart, Gift, ReceiptText } from '../lib/iconMap';
 
 import { db } from '../lib/firebase';
@@ -48,7 +48,7 @@ export const FinanceProvider = ({ children }) => {
   // extractDate, parseDateString, getMonthKey di-import dari utils/dates.js
 
   // Auto-inject icons on read
-  const injectIcon = (type, categoryOrTitle, rawCategoryId = null) => {
+  const injectIcon = useCallback((type, categoryOrTitle, rawCategoryId = null) => {
     const term = (categoryOrTitle || '').toLowerCase();
     if (type === 'expense') {
       const catObj = expenseCategories.find(c => c.name.toLowerCase() === term || c.id === rawCategoryId);
@@ -69,7 +69,7 @@ export const FinanceProvider = ({ children }) => {
       return Briefcase;
     }
     return ReceiptText;
-  };
+  }, [expenseCategories]);
 
   const mapBudgetIcon = (categoryId) => {
     const term = (categoryId || '').toLowerCase();
@@ -156,7 +156,7 @@ export const FinanceProvider = ({ children }) => {
         // Map Budgets Object to Array
         if (data.budgets) {
           const budgetArr = Object.entries(data.budgets)
-            .filter(([_, limit]) => Number(limit) > 0)
+            .filter(([, limit]) => Number(limit) > 0)
             .map(([catId, limit]) => ({
             id: catId,
             category: catId, 
@@ -180,7 +180,7 @@ export const FinanceProvider = ({ children }) => {
     });
 
     return () => unsubMonth();
-  }, [user, currentDate, expenseCategories]);
+  }, [user, currentDate, expenseCategories, injectIcon]);
 
   // ponytail: Deliberate single-document array storage for monthly data (/months/{monthKey}).
   // CEILING:
@@ -493,4 +493,5 @@ export const FinanceProvider = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useFinance = () => useContext(FinanceContext);

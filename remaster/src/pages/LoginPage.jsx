@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { PieChart } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 const LoginPage = () => {
   const { loginWithGoogle, user } = useAuth();
@@ -27,7 +26,7 @@ const LoginPage = () => {
     try {
       await loginWithGoogle();
       navigate('/');
-    } catch (error) {
+    } catch {
       // Error is handled in AuthContext via toast
       setIsLoggingIn(false);
     }

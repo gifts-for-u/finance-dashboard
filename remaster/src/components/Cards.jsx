@@ -45,7 +45,7 @@ export const StatCard = ({ icon: Icon, label, rawLabel, value, subtext, color = 
     <div className={`bg-card text-card-foreground p-5 sm:p-6 md:p-7 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col justify-between gap-3 md:gap-4 relative overflow-visible group hover:shadow-md transition-all duration-300 min-h-[145px] sm:min-h-[160px] md:min-h-[190px] ${showInfo ? 'z-[75]' : 'z-[1]'} ${className}`}>
       <div className="flex justify-between items-start z-10 w-full relative">
         <div className={`p-2.5 sm:p-3 md:p-4 rounded-2xl ${colorClasses[color]} transition-transform group-hover:scale-105 duration-300`}>
-          <Icon className="w-5 h-5 sm:w-5 sm:h-5 md:w-6 md:h-6" aria-hidden="true" />
+          {Icon && <Icon className="w-5 h-5 sm:w-5 sm:h-5 md:w-6 md:h-6" aria-hidden="true" />}
         </div>
 
         {infoText && (

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
@@ -49,6 +49,18 @@ const STATUS_OPTIONS = [
   { value: 'planned', label: 'Belum Lunas' }
 ];
 
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-card text-card-foreground p-4 shadow-2xl border border-slate-100 dark:border-slate-800 rounded-2xl">
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label || payload[0].name}</p>
+        <p className="text-sm font-bold text-destructive">{formatRupiah(payload[0].value)}</p>
+      </div>
+    );
+  }
+  return null;
+};
+
 const ExpensePage = () => {
   const { expenses, totalExpense, addExpense, updateExpense, deleteExpense, expenseCategories, addExpenseCategory, updateExpenseCategory, deleteExpenseCategory, currentDate } = useFinance();
   const { user } = useAuth();
@@ -60,7 +72,6 @@ const ExpensePage = () => {
   const [isCatEditOpen, setIsCatEditOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [catFormData, setCatFormData] = useState({ name: '', color: '#1E56D1', icon: 'Tag' });
-  const [showCatDeleteConfirm, setShowCatDeleteConfirm] = useState(false);
   const [searchExpense, setSearchExpense] = useState('');
   const [sortExpense, setSortExpense] = useState('');
   
@@ -105,18 +116,6 @@ const ExpensePage = () => {
     () => expenses.filter(ex => ex.status === 'planned').length,
     [expenses]
   );
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-card text-card-foreground p-4 shadow-2xl border border-slate-100 dark:border-slate-800 rounded-2xl">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label || payload[0].name}</p>
-          <p className="text-sm font-bold text-destructive">{formatRupiah(payload[0].value)}</p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   const [trendData, setTrendData] = useState([]);
 

@@ -38,22 +38,37 @@ import { useFinance } from '../context/FinanceContext';
 import Modal from '../components/Modal';
 import { CustomSelect, CurrencyInput } from '../components/CustomInputs';
 
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-card text-card-foreground p-4 shadow-2xl border border-slate-100 dark:border-slate-800 rounded-2xl">
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{label}</p>
+        {payload.map((entry, index) => (
+          <div key={index} className="flex flex-col mb-2 last:mb-0">
+            <span className="text-[10px] uppercase font-bold" style={{ color: entry.color, opacity: 0.8 }}>{entry.name}</span>
+            <span className="text-sm font-bold" style={{ color: entry.color }}>
+              {formatRupiah(entry.value)}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
 const BudgetPage = () => {
   const { budgets, expenses, addBudget, expenseCategories, currentDate } = useFinance();
   const { user } = useAuth();
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
   const [budgetFormData, setBudgetFormData] = useState({ category: '', amount: '' });
 
-  useEffect(() => {
-    if (expenseCategories.length > 0 && !budgetFormData.category) {
-      setBudgetFormData(prev => ({ ...prev, category: expenseCategories[0].name }));
-    }
-  }, [expenseCategories]);
+  const activeCategory = budgetFormData.category || expenseCategories[0]?.name || '';
 
   const handleAddBudget = async (e) => {
     e.preventDefault();
-    if (!budgetFormData.category || !budgetFormData.amount) return;
-    await addBudget({ category: budgetFormData.category, limit: budgetFormData.amount });
+    if (!activeCategory || !budgetFormData.amount) return;
+    await addBudget({ category: activeCategory, limit: budgetFormData.amount });
     setIsBudgetModalOpen(false);
     setBudgetFormData({ category: expenseCategories[0]?.name || '', amount: '' });
   };
@@ -121,25 +136,6 @@ const BudgetPage = () => {
     };
     fetchHistoryData();
   }, [user, currentDate, budgets, expenses]);
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-card text-card-foreground p-4 shadow-2xl border border-slate-100 dark:border-slate-800 rounded-2xl">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{label}</p>
-          {payload.map((entry, index) => (
-            <div key={index} className="flex flex-col mb-2 last:mb-0">
-              <span className="text-[10px] uppercase font-bold" style={{ color: entry.color, opacity: 0.8 }}>{entry.name}</span>
-              <span className="text-sm font-bold" style={{ color: entry.color }}>
-                {formatRupiah(entry.value)}
-              </span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
 
   const derivedCategories = budgets.map(budget => {
     const actualSpent = expenses
@@ -371,7 +367,7 @@ const BudgetPage = () => {
           <div className="space-y-2">
             <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">Kategori</label>
             <CustomSelect 
-              value={budgetFormData.category}
+              value={activeCategory}
               onChange={(val) => setBudgetFormData({...budgetFormData, category: val})}
               options={categoryOptions}
             />

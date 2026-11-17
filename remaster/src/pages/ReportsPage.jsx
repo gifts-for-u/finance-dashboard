@@ -157,7 +157,6 @@ const ReportsPage = () => {
   }, [historicalMonths, activeMonthKey, incomes, expenses]);
 
   const totalLifeTimeSavings = reportData.reduce((acc, curr) => acc + curr.balance, 0);
-  const lifeTimeIncome = reportData.reduce((acc, curr) => acc + curr.income, 0);
   
   const latestMonth = reportData.length > 0 ? reportData[reportData.length - 1] : { income: 0, expense: 0, balance: 0, name: '-' };
 

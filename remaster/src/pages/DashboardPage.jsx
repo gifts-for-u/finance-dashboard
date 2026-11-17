@@ -26,12 +26,24 @@ import { useFinance } from '../context/FinanceContext';
 import { IconSortDropdown } from '../components/SortControls';
 import { SORT_OPTIONS } from '../components/sortOptions';
 import { CustomDatePicker, CustomSelect, CurrencyInput } from '../components/CustomInputs';
-import { formatDateIdLong, parseDateToMs } from '../utils/dates';
+import { parseDateToMs } from '../utils/dates';
 import { Save } from 'lucide-react';
+
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-card text-card-foreground p-4 shadow-2xl border border-slate-100 rounded-2xl">
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{payload[0].name}</p>
+        <p className="text-sm font-bold text-primary text-primary">{formatRupiah(payload[0].value)}</p>
+      </div>
+    );
+  }
+  return null;
+};
 
 const DashboardPage = () => {
   const navigate = useNavigate();
-  const { incomes, totalIncome, expenses, totalExpense, addIncome, deleteIncome, addExpense, deleteExpense, toggleExpenseStatus, budgets, expenseCategories } = useFinance();
+  const { incomes, totalIncome, expenses, totalExpense, addIncome, deleteIncome, addExpense, deleteExpense, toggleExpenseStatus, budgets } = useFinance();
   const [searchIncome, setSearchIncome] = useState('');
   const [searchExpense, setSearchExpense] = useState('');
   const [sortIncome, setSortIncome] = useState('');
@@ -44,15 +56,6 @@ const DashboardPage = () => {
   // Form States
   const [newIncome, setNewIncome] = useState({ title: '', amount: '', date: '' });
   const [newExpense, setNewExpense] = useState({ title: '', category: 'Lainnya', amount: '', date: '', hex: '#94A3B8' });
-
-  
-  const categoryOptions = useMemo(() => {
-    return (expenseCategories || []).map(cat => ({
-      value: cat.name,
-      label: cat.name,
-      color: cat.color
-    }));
-  }, [expenseCategories]);
 
   const getSortedItems = (items, sortType) => {
     return [...items].sort((a, b) => {
@@ -128,18 +131,6 @@ const DashboardPage = () => {
     })),
     [expenses, totalExpense]
   );
-
-  const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-card text-card-foreground p-4 shadow-2xl border border-slate-100 rounded-2xl">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{payload[0].name}</p>
-          <p className="text-sm font-bold text-primary text-primary">{formatRupiah(payload[0].value)}</p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   // Derive budget progress from actual data
   const budgetProgress = useMemo(
@@ -276,7 +267,7 @@ const DashboardPage = () => {
           </div>
 
           <div className="space-y-3 mb-6">
-            {sortedIncomes.map((inc, idx) => (
+            {sortedIncomes.map((inc) => (
               <div key={inc.id} className="bg-card dark:bg-slate-800/60 p-3 sm:p-4 rounded-2xl flex justify-between items-center group cursor-pointer hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800 hover:border-primary/30 hover:bg-primary/5 dark:hover:bg-primary/10 dark:hover:border-primary/50">
                 <div className="flex items-center gap-3 sm:gap-4">
                   <div className={`p-2.5 sm:p-3 rounded-xl shadow-sm flex items-center justify-center transition-all group-hover:scale-110 ${inc.iconColor || 'bg-primary/10 text-primary'}`}>
@@ -336,7 +327,7 @@ const DashboardPage = () => {
           </div>
 
           <div className="space-y-3 mb-6">
-            {sortedExpenses.map((ex, idx) => (
+            {sortedExpenses.map((ex) => (
                 <div key={ex.id} className="bg-card dark:bg-slate-800/60 p-3 sm:p-4 rounded-2xl flex justify-between items-center group cursor-pointer hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800 hover:border-destructive/30 hover:bg-destructive/5 dark:hover:bg-[#6e0a0a]/15 dark:hover:border-destructive/50">
                   <div className="flex items-center gap-3 sm:gap-4">
                     <button 

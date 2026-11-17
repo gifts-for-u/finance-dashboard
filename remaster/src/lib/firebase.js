@@ -2,9 +2,9 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
-import { getFirebaseConfigSync } from '../firebase-config';
+import { loadFirebaseConfig } from '../firebase-config';
 
-const firebaseConfig = getFirebaseConfigSync();
+const firebaseConfig = await loadFirebaseConfig();
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);

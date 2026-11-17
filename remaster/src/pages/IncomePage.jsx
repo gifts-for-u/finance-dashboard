@@ -46,6 +46,18 @@ const STATUS_OPTIONS = [
   { value: 'Pending', label: 'Belum Dibayar' }
 ];
 
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-card text-card-foreground p-4 shadow-2xl border border-slate-100 dark:border-slate-800 rounded-2xl">
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label || payload[0].name}</p>
+        <p className="text-sm font-bold text-primary text-primary">{formatRupiah(payload[0].value)}</p>
+      </div>
+    );
+  }
+  return null;
+};
+
 const IncomePage = () => {
   const { incomes, totalIncome, addIncome, updateIncome, deleteIncome, currentDate } = useFinance();
   const { user } = useAuth();
@@ -112,18 +124,6 @@ const IncomePage = () => {
     () => incomes.filter(inc => inc.status === 'Pending').length,
     [incomes]
   );
-
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-card text-card-foreground p-4 shadow-2xl border border-slate-100 dark:border-slate-800 rounded-2xl">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{label || payload[0].name}</p>
-          <p className="text-sm font-bold text-primary text-primary">{formatRupiah(payload[0].value)}</p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   const [trendData, setTrendData] = useState([]);
 

@@ -4,30 +4,6 @@
 // 2. Window runtime config (window.__FIREBASE_CONFIG__ or window.firebaseConfig)
 // 3. HTML meta tag (meta[name="firebase-config"])
 // 4. Firebase Hosting init endpoint (/__/firebase/init.json)
-// 5. LEGACY_FALLBACK_CONFIG (see security notes below)
-//
-// SECURITY NOTE:
-// LEGACY_FALLBACK_CONFIG is a tech-debt fallback retained for backward
-// compatibility. It MUST NOT be relied upon for production deployments.
-// Production sites on Firebase Hosting should resolve via the init.json
-// endpoint (priority 4). Local development should set VITE_FIREBASE_* env
-// variables (priority 1). When this fallback is used, a loud console.error
-// is emitted so the situation is visible during debugging and audits.
-
-// ponytail: Deliberate hardcoded fallback retained for offline testing without local .env.
-// CEILING:
-//   Contains project credentials directly in source bundle; violates zero-credential storage guidelines.
-// UPGRADE PATH:
-//   Replace getFirebaseConfigSync() with top-level await loadFirebaseConfig(), injecting config
-//   exclusively via Vite build environment or runtime /__/firebase/init.json, and completely delete this object.
-const LEGACY_FALLBACK_CONFIG = {
-  apiKey: "AIzaSyDxmGNxzxbX8UGBm82jn3PmzhiGq0GQT7Y",
-  authDomain: "finance-dashboard-10nfl.firebaseapp.com",
-  projectId: "finance-dashboard-10nfl",
-  storageBucket: "finance-dashboard-10nfl.firebasestorage.app",
-  messagingSenderId: "875656039609",
-  appId: "1:875656039609:web:4f5e11a81c58de312f9f68",
-};
 
 const CONFIG_SOURCES = [
   () => {
@@ -75,6 +51,25 @@ function normaliseConfig(config) {
   return normalised.apiKey ? normalised : null;
 }
 
+function getMissingConfigFallback() {
+  if (typeof import.meta !== "undefined" && import.meta.env?.MODE === "test") {
+    return {
+      apiKey: "test-api-key",
+      authDomain: "localhost",
+      projectId: "demo-finance-dashboard",
+    };
+  }
+
+  console.error(
+    "[firebase-config] Missing Firebase configuration. Supply VITE_FIREBASE_* in .env or deploy to Firebase Hosting (/__/firebase/init.json)."
+  );
+  return {
+    apiKey: "missing-api-key",
+    authDomain: "localhost",
+    projectId: "missing-project-id",
+  };
+}
+
 async function fetchHostingConfig() {
   try {
     const response = await fetch("/__/firebase/init.json", {
@@ -114,15 +109,7 @@ async function resolveFirebaseConfig() {
     return hostingConfig;
   }
 
-  console.error(
-    "[firebase-config] All config resolution sources exhausted. " +
-    "Falling back to LEGACY_FALLBACK_CONFIG (hardcoded). This is a " +
-    "tech-debt fallback — production deployments MUST supply config via " +
-    "Firebase Hosting init.json (/__/firebase/init.json) or VITE_FIREBASE_* env vars. " +
-    "If you see this in production, audit your config deployment. " +
-    "See PRD.md Section 8.3 and AGENTS.md Section 2.2 for details."
-  );
-  return { ...LEGACY_FALLBACK_CONFIG };
+  return getMissingConfigFallback();
 }
 
 export function getFirebaseConfigSync() {
@@ -133,9 +120,5 @@ export function getFirebaseConfigSync() {
     }
   }
 
-  console.error(
-    "[firebase-config] getFirebaseConfigSync: no config source available, " +
-    "returning LEGACY_FALLBACK_CONFIG. See firebase-config.js header for details."
-  );
-  return { ...LEGACY_FALLBACK_CONFIG };
+  return getMissingConfigFallback();
 }
