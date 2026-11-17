@@ -1,5 +1,10 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 import { loadFirebaseConfig } from '../firebase-config';
@@ -7,7 +12,22 @@ import { loadFirebaseConfig } from '../firebase-config';
 const firebaseConfig = await loadFirebaseConfig();
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+
+let db;
+try {
+  if (typeof window !== 'undefined' && typeof indexedDB !== 'undefined' && import.meta.env?.MODE !== 'test') {
+    db = initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager(),
+      }),
+    });
+  } else {
+    db = getFirestore(app);
+  }
+} catch {
+  db = getFirestore(app);
+}
+
 const auth = getAuth(app);
 
 // Initialize Firebase App Check if site key is configured

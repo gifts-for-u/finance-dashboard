@@ -37,6 +37,7 @@ import {
 import { useFinance } from '../context/FinanceContext';
 import Modal from '../components/Modal';
 import { CustomSelect, CurrencyInput } from '../components/CustomInputs';
+import { EmptyState, SkeletonList } from '../components/States';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -58,7 +59,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const BudgetPage = () => {
-  const { budgets, expenses, addBudget, expenseCategories, currentDate } = useFinance();
+  const { budgets, expenses, addBudget, expenseCategories, currentDate, isLoading } = useFinance();
   const { user } = useAuth();
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
   const [budgetFormData, setBudgetFormData] = useState({ category: '', amount: '' });
@@ -292,10 +293,11 @@ const BudgetPage = () => {
           <h3 className="text-2xl font-bold text-slate-800">Alokasi Anggaran per Kategori</h3>
           <div className="flex items-center gap-3 w-full md:w-auto">
             <div className="relative flex-1 md:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} aria-hidden="true" />
               <input 
                 type="text" 
                 placeholder="Cari kategori..." 
+                aria-label="Cari kategori anggaran"
                 className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
               />
             </div>
@@ -313,7 +315,18 @@ const BudgetPage = () => {
         </div>
 
         <div className="space-y-6">
-          {derivedCategories.map((cat, idx) => (
+          {isLoading ? (
+            <SkeletonList count={3} />
+          ) : derivedCategories.length === 0 ? (
+            <EmptyState
+              icon={Target}
+              title="Belum ada anggaran"
+              description="Tetapkan anggaran kategori pertama Anda bulan ini."
+              actionLabel="Anggaran Baru"
+              onAction={() => setIsBudgetModalOpen(true)}
+            />
+          ) : (
+            derivedCategories.map((cat, idx) => (
             <div key={idx} className="bg-slate-50/50 p-6 rounded-[32px] border border-slate-100/50 group hover:shadow-md transition-all duration-300">
               <div className="flex justify-between items-start mb-6">
                 <div className="flex items-center gap-4">
@@ -348,7 +361,8 @@ const BudgetPage = () => {
                 />
               </div>
             </div>
-          ))}
+            ))
+          )}
         </div>
 
         <button className="w-full mt-10 py-2 flex items-center justify-center gap-2 text-sm font-bold text-primary hover:text-primary transition-all">

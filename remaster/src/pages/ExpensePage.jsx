@@ -41,6 +41,7 @@ import {
 import { useFinance } from '../context/FinanceContext';
 import { IconMap } from '../lib/iconMap';
 import { CustomSelect, CustomDatePicker, DeferredColorPicker, CurrencyInput } from '../components/CustomInputs';
+import { EmptyState, SkeletonList } from '../components/States';
 
 
 
@@ -62,7 +63,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const ExpensePage = () => {
-  const { expenses, totalExpense, addExpense, updateExpense, deleteExpense, expenseCategories, addExpenseCategory, updateExpenseCategory, deleteExpenseCategory, currentDate } = useFinance();
+  const { expenses, totalExpense, addExpense, updateExpense, deleteExpense, expenseCategories, addExpenseCategory, updateExpenseCategory, deleteExpenseCategory, currentDate, isLoading } = useFinance();
   const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -337,20 +338,23 @@ const ExpensePage = () => {
               className="h-[480px] sm:h-[550px] lg:h-[650px]"
               extra={
                 <button 
+                  type="button"
                   onClick={handleAddClick}
+                  aria-label="Tambah pengeluaran baru"
                   className="p-2 bg-destructive/10 text-destructive rounded-xl hover:bg-destructive/20 transition-all active:scale-95 cursor-pointer"
                 >
-                  <Plus size={20} />
+                  <Plus size={20} aria-hidden="true" />
                 </button>
               }
             >
               <div className="absolute inset-0 flex flex-col">
                 <div className="flex gap-4 mb-8">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} aria-hidden="true" />
                     <input 
                       type="text" 
                       placeholder="Cari pengeluaran..." 
+                      aria-label="Cari pengeluaran"
                       value={searchExpense}
                       onChange={(e) => setSearchExpense(e.target.value)}
                       className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-destructive/20 transition-all dark:text-slate-100"
@@ -364,36 +368,57 @@ const ExpensePage = () => {
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-1 custom-scrollbar space-y-4">
-                  {filteredAndSortedExpenses.map((expense, idx) => (
-                    <div 
-                      key={expense.id || idx} 
-                      className="flex items-center gap-5 group cursor-pointer hover:bg-slate-500/5 dark:hover:bg-slate-800/50 border border-transparent hover:border-destructive/50 dark:hover:border-destructive hover:shadow-md dark:hover:shadow-destructive/20 p-3 rounded-2xl transition-all"
-                      onClick={() => handleEditClick(expense)}
-                    >
-                      <div className="p-4 rounded-2xl transition-all group-hover:scale-110 shadow-sm" style={{ backgroundColor: `${expense.hex}1A`, color: expense.hex }}>
-                        {(() => {
-                          const Icon = expense.icon || ReceiptText;
-                          return <Icon size={20} />;
-                        })()}
-                      </div>
-                      <div className="flex-1 border-b border-slate-100 pb-4">
-                        <div className="flex justify-between items-start mb-1">
-                          <h4 className="font-bold text-slate-800 text-sm group-hover:text-destructive transition-colors">{expense.title}</h4>
-                          <span className="font-black text-destructive text-sm">{formatRupiah(expense.amount)}</span>
+                  {isLoading ? (
+                    <SkeletonList count={4} />
+                  ) : filteredAndSortedExpenses.length === 0 ? (
+                    <EmptyState
+                      icon={Receipt}
+                      title="Belum ada pengeluaran"
+                      description="Catat pengeluaran bulan ini untuk memantau realisasi anggaran."
+                      actionLabel="Tambah Pengeluaran"
+                      onAction={handleAddClick}
+                      variant="destructive"
+                    />
+                  ) : (
+                    filteredAndSortedExpenses.map((expense, idx) => (
+                      <div 
+                        key={expense.id || idx} 
+                        role="button"
+                        tabIndex={0}
+                        className="flex items-center gap-5 group cursor-pointer hover:bg-slate-500/5 dark:hover:bg-slate-800/50 border border-transparent hover:border-destructive/50 dark:hover:border-destructive hover:shadow-md dark:hover:shadow-destructive/20 p-3 rounded-2xl transition-all focus:outline-none focus:ring-2 focus:ring-destructive/40"
+                        onClick={() => handleEditClick(expense)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleEditClick(expense);
+                          }
+                        }}
+                      >
+                        <div className="p-4 rounded-2xl transition-all group-hover:scale-110 shadow-sm" style={{ backgroundColor: `${expense.hex}1A`, color: expense.hex }}>
+                          {(() => {
+                            const Icon = expense.icon || ReceiptText;
+                            return <Icon size={20} aria-hidden="true" />;
+                          })()}
                         </div>
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-slate-400 font-medium">{expense.category}</span>
-                            <span className="w-1 h-1 rounded-full bg-slate-300" />
-                            <span className="text-xs text-slate-400 font-medium">{expense.date}</span>
+                        <div className="flex-1 border-b border-slate-100 pb-4">
+                          <div className="flex justify-between items-start mb-1">
+                            <h4 className="font-bold text-slate-800 text-sm group-hover:text-destructive transition-colors">{expense.title}</h4>
+                            <span className="font-black text-destructive text-sm">{formatRupiah(expense.amount)}</span>
                           </div>
-                          <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${expense.status === 'done' ? 'bg-green-500/10 text-green-500' : 'bg-slate-500/10 text-slate-500'}`}>
-                            {expense.status === 'done' ? 'LUNAS' : 'BELUM LUNAS'}
-                          </span>
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-slate-400 font-medium">{expense.category}</span>
+                              <span className="w-1 h-1 rounded-full bg-slate-300" />
+                              <span className="text-xs text-slate-400 font-medium">{expense.date}</span>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${expense.status === 'done' ? 'bg-green-500/10 text-green-500' : 'bg-slate-500/10 text-slate-500'}`}>
+                              {expense.status === 'done' ? 'LUNAS' : 'BELUM LUNAS'}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
                 
                 <button 

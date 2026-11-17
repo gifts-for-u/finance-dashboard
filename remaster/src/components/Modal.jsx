@@ -1,7 +1,20 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 
 const Modal = ({ isOpen, onClose, title, children }) => {
+  const modalRef = useRef(null);
+  const previousFocusRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      previousFocusRef.current = document.activeElement;
+      modalRef.current?.focus();
+    } else if (previousFocusRef.current) {
+      previousFocusRef.current.focus();
+      previousFocusRef.current = null;
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e) => {
@@ -22,10 +35,12 @@ const Modal = ({ isOpen, onClose, title, children }) => {
       role="presentation"
     >
       <div 
+        ref={modalRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className="bg-card text-card-foreground rounded-[32px] w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-300 overflow-visible"
+        className="bg-card text-card-foreground rounded-[32px] w-full max-w-lg shadow-2xl border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-300 overflow-visible focus:outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6 sm:p-8 pb-0 flex justify-between items-center">

@@ -26,6 +26,7 @@ import { useFinance } from '../context/FinanceContext';
 import { IconSortDropdown } from '../components/SortControls';
 import { SORT_OPTIONS } from '../components/sortOptions';
 import { CustomDatePicker, CustomSelect, CurrencyInput } from '../components/CustomInputs';
+import { EmptyState, SkeletonCard, SkeletonList } from '../components/States';
 import { parseDateToMs } from '../utils/dates';
 import { Save } from 'lucide-react';
 
@@ -43,7 +44,7 @@ const CustomTooltip = ({ active, payload }) => {
 
 const DashboardPage = () => {
   const navigate = useNavigate();
-  const { incomes, totalIncome, expenses, totalExpense, addIncome, deleteIncome, addExpense, deleteExpense, toggleExpenseStatus, budgets } = useFinance();
+  const { incomes, totalIncome, expenses, totalExpense, addIncome, deleteIncome, addExpense, deleteExpense, toggleExpenseStatus, budgets, isLoading } = useFinance();
   const [searchIncome, setSearchIncome] = useState('');
   const [searchExpense, setSearchExpense] = useState('');
   const [sortIncome, setSortIncome] = useState('');
@@ -172,7 +173,10 @@ const DashboardPage = () => {
   return (
     <Layout title="Finance Dashboard Overview">
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-8 mb-8 relative">
+      {isLoading ? (
+        <SkeletonCard count={6} />
+      ) : (
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-8 mb-8 relative">
         <StatCard 
           icon={Wallet} 
           label="Total Perkiraan Pemasukan" 
@@ -216,31 +220,45 @@ const DashboardPage = () => {
           infoText="Selisih antara total pemasukan aktual dan pengeluaran aktual—menunjukkan uang tunai di tangan."
         />
       </div>
+      )}
 
       <div className="space-y-8 mb-8">
         {/* Expenditure Visualization - Full Width Top */}
         <ChartCard title="Visualisasi Pengeluaran" className="w-full">
-          <div className="h-[300px] md:h-[450px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={expenseData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius="55%"
-                  outerRadius="75%"
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {expenseData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend layout="horizontal" verticalAlign="bottom" align="center" iconType="circle" />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+          {isLoading ? (
+            <SkeletonList count={4} />
+          ) : expenseData.length === 0 ? (
+            <EmptyState
+              icon={Receipt}
+              title="Belum ada pengeluaran bulan ini"
+              description="Tambahkan catatan pengeluaran untuk melihat visualisasi proporsi biaya."
+              actionLabel="Tambah Pengeluaran"
+              onAction={() => setIsExpenseModalOpen(true)}
+              variant="destructive"
+            />
+          ) : (
+            <div className="h-[300px] md:h-[450px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={expenseData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius="55%"
+                    outerRadius="75%"
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {expenseData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend layout="horizontal" verticalAlign="bottom" align="center" iconType="circle" />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </ChartCard>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -250,10 +268,11 @@ const DashboardPage = () => {
           >
             <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-6">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} aria-hidden="true" />
               <input 
                 type="text" 
                 placeholder="Cari pemasukan..." 
+                aria-label="Cari pemasukan"
                 value={searchIncome}
                 onChange={(e) => setSearchIncome(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all dark:text-white"
@@ -267,40 +286,55 @@ const DashboardPage = () => {
           </div>
 
           <div className="space-y-3 mb-6">
-            {sortedIncomes.map((inc) => (
-              <div key={inc.id} className="bg-card dark:bg-slate-800/60 p-3 sm:p-4 rounded-2xl flex justify-between items-center group cursor-pointer hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800 hover:border-primary/30 hover:bg-primary/5 dark:hover:bg-primary/10 dark:hover:border-primary/50">
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <div className={`p-2.5 sm:p-3 rounded-xl shadow-sm flex items-center justify-center transition-all group-hover:scale-110 ${inc.iconColor || 'bg-primary/10 text-primary'}`}>
-                    {(() => {
-                      const Icon = inc.icon || Wallet;
-                      return <Icon size={18} />;
-                    })()}
+            {isLoading ? (
+              <SkeletonList count={3} />
+            ) : sortedIncomes.length === 0 ? (
+              <EmptyState
+                icon={Wallet}
+                title="Belum ada pemasukan"
+                description="Catat pemasukan bulan ini untuk memantau arus kas Anda."
+                actionLabel="Tambah Pemasukan"
+                onAction={() => setIsIncomeModalOpen(true)}
+              />
+            ) : (
+              sortedIncomes.map((inc) => (
+                <div key={inc.id} className="bg-card dark:bg-slate-800/60 p-3 sm:p-4 rounded-2xl flex justify-between items-center group cursor-pointer hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800 hover:border-primary/30 hover:bg-primary/5 dark:hover:bg-primary/10 dark:hover:border-primary/50">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className={`p-2.5 sm:p-3 rounded-xl shadow-sm flex items-center justify-center transition-all group-hover:scale-110 ${inc.iconColor || 'bg-primary/10 text-primary'}`}>
+                      {(() => {
+                        const Icon = inc.icon || Wallet;
+                        return <Icon size={18} aria-hidden="true" />;
+                      })()}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">{inc.title}</h4>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{inc.date} • {inc.type}</span>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">{inc.title}</h4>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{inc.date} • {inc.type}</span>
+                  <div className="flex items-center gap-4">
+                    <div className="flex flex-col items-end">
+                      <span className="font-bold text-primary text-primary">{formatRupiah(inc.amount)}</span>
+                      <span className="text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider mt-1 bg-green-500/10 text-green-500">{inc.status || 'PAID'}</span>
+                    </div>
+                    <button 
+                      type="button"
+                      aria-label={`Hapus pemasukan ${inc.title}`}
+                      onClick={(e) => { e.stopPropagation(); deleteIncome(inc.id); }}
+                      className="opacity-100 md:opacity-0 group-hover:opacity-100 focus:opacity-100 p-2 text-slate-400 hover:text-destructive transition-all cursor-pointer"
+                    >
+                      <Trash2 size={16} aria-hidden="true" />
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex flex-col items-end">
-                    <span className="font-bold text-primary text-primary">{formatRupiah(inc.amount)}</span>
-                    <span className="text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider mt-1 bg-green-500/10 text-green-500">{inc.status || 'PAID'}</span>
-                  </div>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); deleteIncome(inc.id); }}
-                    className="opacity-100 md:opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-destructive transition-all cursor-pointer"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
             <button 
+              type="button"
               onClick={() => navigate('/income')}
               className="w-full mt-auto py-3 text-sm font-bold text-slate-400 hover:text-primary transition-all border-t border-slate-100 pt-6 uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer active:scale-95"
             >
-              Lihat Semua Pemasukan <ChevronRight size={14} />
+              Lihat Semua Pemasukan <ChevronRight size={14} aria-hidden="true" />
             </button>
           </ChartCard>
 
@@ -310,10 +344,11 @@ const DashboardPage = () => {
           >
             <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-6">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} aria-hidden="true" />
               <input 
                 type="text" 
                 placeholder="Cari pengeluaran..." 
+                aria-label="Cari pengeluaran"
                 value={searchExpense}
                 onChange={(e) => setSearchExpense(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-destructive/20 transition-all dark:text-white"
@@ -327,44 +362,62 @@ const DashboardPage = () => {
           </div>
 
           <div className="space-y-3 mb-6">
-            {sortedExpenses.map((ex) => (
-                <div key={ex.id} className="bg-card dark:bg-slate-800/60 p-3 sm:p-4 rounded-2xl flex justify-between items-center group cursor-pointer hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800 hover:border-destructive/30 hover:bg-destructive/5 dark:hover:bg-[#6e0a0a]/15 dark:hover:border-destructive/50">
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); toggleExpenseStatus(ex.id); }}
-                      className="p-2.5 sm:p-3 rounded-xl shadow-sm flex items-center justify-center transition-all cursor-pointer active:scale-95 hover:scale-105"
-                      style={{ backgroundColor: `${ex.hex}1A`, color: ex.hex }}
-                    >
-                      {(() => {
-                        const Icon = ex.icon || Receipt;
-                        return <Icon size={18} />;
-                      })()}
-                    </button>
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">{ex.title}</h4>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{ex.date} • {ex.categoryName || ex.category}</span>
+            {isLoading ? (
+              <SkeletonList count={3} />
+            ) : sortedExpenses.length === 0 ? (
+              <EmptyState
+                icon={Receipt}
+                title="Belum ada pengeluaran"
+                description="Catat pengeluaran rutin atau harian Anda di sini."
+                actionLabel="Tambah Pengeluaran"
+                onAction={() => setIsExpenseModalOpen(true)}
+                variant="destructive"
+              />
+            ) : (
+              sortedExpenses.map((ex) => (
+                  <div key={ex.id} className="bg-card dark:bg-slate-800/60 p-3 sm:p-4 rounded-2xl flex justify-between items-center group cursor-pointer hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800 hover:border-destructive/30 hover:bg-destructive/5 dark:hover:bg-[#6e0a0a]/15 dark:hover:border-destructive/50">
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <button 
+                        type="button"
+                        aria-label={`Ubah status lunas ${ex.title}`}
+                        onClick={(e) => { e.stopPropagation(); toggleExpenseStatus(ex.id); }}
+                        className="p-2.5 sm:p-3 rounded-xl shadow-sm flex items-center justify-center transition-all cursor-pointer active:scale-95 hover:scale-105"
+                        style={{ backgroundColor: `${ex.hex}1A`, color: ex.hex }}
+                      >
+                        {(() => {
+                          const Icon = ex.icon || Receipt;
+                          return <Icon size={18} aria-hidden="true" />;
+                        })()}
+                      </button>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200">{ex.title}</h4>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{ex.date} • {ex.categoryName || ex.category}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex flex-col items-end">
+                        <span className="font-bold text-destructive">{formatRupiah(ex.amount)}</span>
+                        <span className={`text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider mt-1 ${ex.status === 'done' ? 'bg-green-500/10 text-green-500' : 'bg-slate-500/10 text-slate-500'}`}>{ex.status === 'done' ? 'LUNAS' : 'BELUM LUNAS'}</span>
+                      </div>
+                      <button 
+                        type="button"
+                        aria-label={`Hapus pengeluaran ${ex.title}`}
+                        onClick={(e) => { e.stopPropagation(); deleteExpense(ex.id); }}
+                        className="opacity-100 md:opacity-0 group-hover:opacity-100 focus:opacity-100 p-2 text-slate-400 hover:text-destructive transition-all cursor-pointer"
+                      >
+                        <Trash2 size={16} aria-hidden="true" />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex flex-col items-end">
-                      <span className="font-bold text-destructive">{formatRupiah(ex.amount)}</span>
-                      <span className={`text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider mt-1 ${ex.status === 'done' ? 'bg-green-500/10 text-green-500' : 'bg-slate-500/10 text-slate-500'}`}>{ex.status === 'done' ? 'LUNAS' : 'BELUM LUNAS'}</span>
-                    </div>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); deleteExpense(ex.id); }}
-                      className="opacity-100 md:opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-destructive transition-all cursor-pointer"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))
+            )}
             </div>
             <button 
+              type="button"
               onClick={() => navigate('/expenses')}
               className="w-full mt-auto py-3 text-sm font-bold text-slate-400 hover:text-destructive transition-all border-t border-slate-100 pt-6 uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer active:scale-95"
             >
-              Lihat Semua Transaksi <ChevronRight size={14} />
+              Lihat Semua Transaksi <ChevronRight size={14} aria-hidden="true" />
             </button>
           </ChartCard>
         </div>
@@ -432,7 +485,18 @@ const DashboardPage = () => {
         </div>
 
         <div className="space-y-10">
-          {budgetProgress.map((item, idx) => (
+          {isLoading ? (
+            <SkeletonList count={3} />
+          ) : budgetProgress.length === 0 ? (
+            <EmptyState
+              icon={PiggyBank}
+              title="Belum ada target anggaran"
+              description="Atur batas anggaran kategori agar pengeluaran tetap terkendali."
+              actionLabel="Kelola Budget"
+              onAction={() => navigate('/budget')}
+            />
+          ) : (
+            budgetProgress.map((item, idx) => (
             <div key={idx} className="space-y-4">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
@@ -474,7 +538,8 @@ const DashboardPage = () => {
                 </div>
               </div>
             </div>
-          ))}
+            ))
+          )}
         </div>
       </ChartCard>
 
